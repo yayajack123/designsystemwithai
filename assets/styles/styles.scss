@@ -1,0 +1,58 @@
+// Write your overrides
+.invalid-border {
+  border: 1px solid rgb(var(--v-theme-error));
+}
+
+// Styling for navbar and removing scroll effect
+.layout-wrapper.layout-nav-type-vertical {
+  .layout-navbar {
+    background-color: rgb(var(--v-theme-surface)) !important;
+    border: none !important;
+    border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity)) !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+
+    .navbar-content-container {
+      background-color: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      padding-inline: 0 !important; 
+    }
+  }
+
+  &.window-scrolled.layout-navbar-sticky .layout-navbar {
+    box-shadow: none !important;
+    background-color: rgb(var(--v-theme-surface)) !important;
+    border: none !important;
+    border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity)) !important;
+
+    .navbar-content-container {
+      border: none !important;
+      box-shadow: none !important;
+      background-color: transparent !important;
+      padding-inline: 0 !important;
+    }
+  }
+}
+
+// Primary opacity utility classes (replaces Vuetify theme color tokens that don't support hex-with-alpha)
+.bg-primary-opacity-lighter {
+  background-color: rgba(var(--v-theme-primary), 0.08) !important;
+}
+
+.bg-primary-opacity-light {
+  background-color: rgba(var(--v-theme-primary), 0.16) !important;
+}
+
+.bg-primary-opacity-main {
+  background-color: rgba(var(--v-theme-primary), 0.24) !important;
+}
+
+.bg-primary-opacity-dark {
+  background-color: rgba(var(--v-theme-primary), 0.32) !important;
+}
+
+.bg-primary-opacity-darker {
+  background-color: rgba(var(--v-theme-primary), 0.38) !important;
+}
