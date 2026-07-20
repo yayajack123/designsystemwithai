@@ -22,13 +22,7 @@ const { userPermission } = storeToRefs(useAuthStore())
 interface Props {
   tag?: string | Component
   navItems: VerticalNavItems
-  isOverlayNavActive: boolean
-  toggleIsOverlayNavActive: (value: boolean) => void
-}
-
-interface Props {
-  tag?: string | Component
-  navItems: VerticalNavItems
+  bottomNavItems?: VerticalNavItems
   isOverlayNavActive: boolean
   toggleIsOverlayNavActive: (value: boolean) => void
 }
@@ -148,7 +142,25 @@ const hideTitleAndIcon = configStore.isVerticalNavMini(isHovered)
       </PerfectScrollbar>
     </slot>
 
-    <slot name="after-nav-items" />
+    <slot name="after-nav-items">
+      <div
+        v-if="props.bottomNavItems?.length"
+        class="nav-bottom-items pt-2 pb-2"
+      >
+        <ul class="nav-items-bottom p-0 m-0">
+          <template
+            v-for="(item, index) in props.bottomNavItems"
+            :key="index"
+          >
+            <Component
+              :is="resolveNavItemComponent(item)"
+              v-if="userPermission.includes(item.permission) || !item.permission"
+              :item="item"
+            />
+          </template>
+        </ul>
+      </div>
+    </slot>
   </Component>
 </template>
 
@@ -207,13 +219,24 @@ const hideTitleAndIcon = configStore.isVerticalNavMini(isHovered)
   }
 
   .nav-items {
-    block-size: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
 
     // ℹ️ We no loner needs this overflow styles as perfect scrollbar applies it
     // overflow-x: hidden;
 
     // // ℹ️ We used `overflow-y` instead of `overflow` to mitigate overflow x. Revert back if any issue found.
     // overflow-y: auto;
+  }
+
+  .nav-bottom-items {
+    flex-shrink: 0;
+    margin-top: auto;
+    border-top: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  }
+
+  .nav-items-bottom {
+    list-style: none;
   }
 
   .nav-item-title {

@@ -5,6 +5,7 @@ import type { VerticalNavItems } from '@layouts/types';
 
 interface Props {
   navItems: VerticalNavItems
+  bottomNavItems?: VerticalNavItems
   verticalNavAttrs?: {
     wrapper?: string
     wrapperProps?: Record<string, unknown>
@@ -69,6 +70,7 @@ const verticalNavAttrs = computed(() => {
         :is-overlay-nav-active="isOverlayNavActive"
         :toggle-is-overlay-nav-active="toggleIsOverlayNavActive"
         :nav-items="props.navItems"
+        :bottom-nav-items="props.bottomNavItems"
         v-bind="{ ...verticalNavAttrs.additionalVerticalNavAttrs }"
       >
         <template #nav-header>
@@ -76,6 +78,9 @@ const verticalNavAttrs = computed(() => {
         </template>
         <template #before-nav-items>
           <slot name="before-vertical-nav-items" />
+        </template>
+        <template #after-nav-items>
+          <slot name="after-vertical-nav-items" />
         </template>
       </VerticalNav>
     </component>

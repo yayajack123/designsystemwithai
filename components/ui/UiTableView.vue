@@ -72,7 +72,7 @@ const viewType = defineModel<string>('viewType', { default: 'list' })
         <span
           v-if="tab.count !== undefined"
           class="count-badge ms-2"
-          :class="activeTab === tab.value ? 'bg-primary text-white' : 'bg-secondary text-white'"
+          :class="tab.badgeColor ? `bg-${tab.badgeColor} text-white` : (activeTab === tab.value ? 'bg-primary text-white' : 'bg-secondary text-white')"
         >
           {{ tab.count }}
         </span>

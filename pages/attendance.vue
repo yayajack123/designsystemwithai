@@ -349,7 +349,44 @@ const hasActiveFilter = computed(() => {
     selectedBranch.value !== 'All Branch' ||
     selectedClassType.value !== 'Class type' ||
     selectedCourse.value !== 'Course' ||
+    selectedDate.value !== 'June 10, 2024' ||
     selectedTimeSegment.value !== '00:00 - 06:00'
+})
+
+const activeFiltersCount = computed(() => {
+  let count = 0
+  if (selectedBranch.value !== 'All Branch') count++
+  if (selectedClassType.value !== 'Class type') count++
+  if (selectedCourse.value !== 'Course') count++
+  return count
+})
+
+const formatFilterDate = (dateStr: string) => {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  if (isNaN(date.getTime())) return dateStr
+  
+  const day = date.getDate()
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const month = months[date.getMonth()]
+  const year = date.getFullYear()
+  
+  return `${day} ${month} ${year}`
+}
+
+const hasActiveDateTime = computed(() => {
+  return !!selectedDate.value || !!selectedTimeSegment.value
+})
+
+const activeDateTimeText = computed(() => {
+  const parts: string[] = []
+  if (selectedDate.value) {
+    parts.push(formatFilterDate(selectedDate.value))
+  }
+  if (selectedTimeSegment.value) {
+    parts.push(selectedTimeSegment.value)
+  }
+  return parts.length > 0 ? parts.join(', ') : 'Date & Time'
 })
 
 // ─────────────────────── Helper functions for time segments ───────────────────────
@@ -430,9 +467,36 @@ const paginatedClasses = computed(() => {
 })
 
 // Reset page on filter change
-watch([searchQuery, selectedBranch, selectedClassType, selectedCourse, selectedTimeSegment], () => {
+watch([searchQuery, selectedBranch, selectedClassType, selectedCourse, selectedDate, selectedTimeSegment], () => {
   currentPage.value = 1
 })
+
+// ─────────────────────── Responsive States ───────────────────────
+const isFilterModalActive = ref(false)
+const isDateModalActive = ref(false)
+const expandedCards = ref<Record<string, { teachers: boolean; students: boolean }>>({})
+
+const toggleTeachers = (classId: string) => {
+  if (!expandedCards.value[classId]) {
+    expandedCards.value[classId] = { teachers: false, students: false }
+  }
+  expandedCards.value[classId].teachers = !expandedCards.value[classId].teachers
+}
+
+const toggleStudents = (classId: string) => {
+  if (!expandedCards.value[classId]) {
+    expandedCards.value[classId] = { teachers: false, students: false }
+  }
+  expandedCards.value[classId].students = !expandedCards.value[classId].students
+}
+
+const isTeachersExpanded = (classId: string) => {
+  return expandedCards.value[classId]?.teachers ?? false
+}
+
+const isStudentsExpanded = (classId: string) => {
+  return expandedCards.value[classId]?.students ?? false
+}
 
 // ─────────────────────── Presence Dialog States ───────────────────────
 const isPresenceDialogActive = ref(false)
@@ -543,9 +607,105 @@ const changeAllPresence = (cls: ClassSession) => {
 
     <VCard class="mb-6">
       <VCardText class="py-5 px-5">
-        <!-- Filter Row 1 -->
-        <div class="d-flex align-center flex-wrap gap-4 w-100">
-          <div class="filter-input-search">
+        <!-- Desktop Filters (hidden on mobile/tablet) -->
+        <div class="d-none d-md-block">
+          <!-- Filter Row 1 -->
+          <div class="d-flex align-center flex-wrap gap-4 w-100">
+            <div class="filter-input-search">
+              <VTextField
+                v-model="searchQuery"
+                placeholder="Search class or student..."
+                prepend-inner-icon="ri-search-line"
+                clearable
+                density="compact"
+                hide-details
+              />
+            </div>
+
+            <div class="filter-input">
+              <VAutocomplete
+                v-model="selectedBranch"
+                :items="branchOptions"
+                density="compact"
+                hide-details
+              />
+            </div>
+
+            <div class="filter-input">
+              <VSelect
+                v-model="selectedClassType"
+                :items="classTypeOptions"
+                density="compact"
+                hide-details
+              />
+            </div>
+
+            <div class="filter-input">
+              <VSelect
+                v-model="selectedCourse"
+                :items="courseOptions"
+                density="compact"
+                hide-details
+              />
+            </div>
+
+            <VBtn
+              variant="text"
+              color="primary"
+              class="text-capitalize"
+              :disabled="!hasActiveFilter"
+              @click="resetFilters"
+            >
+              Reset Filter
+            </VBtn>
+          </div>
+
+          <!-- Horizontal Divider stretching to edges -->
+          <VDivider class="my-5 mx-n5" />
+
+          <!-- Filter Row 2 -->
+          <div class="d-flex align-center flex-wrap gap-5 w-100">
+            <div class="filter-input">
+              <AppDateTimePicker
+                v-model="selectedDate"
+                label="Select date"
+                placeholder="Select date"
+                append-inner-icon="ri-calendar-line"
+                density="compact"
+                hide-details
+                :config="{ dateFormat: 'F j, Y' }"
+              />
+            </div>
+
+            <div class="vertical-divider d-none d-md-block"></div>
+
+            <!-- Time segment capsules -->
+            <div class="d-flex align-center flex-wrap gap-4">
+              <VBtn
+                v-for="seg in timeSegments"
+                :key="seg.label"
+                :variant="selectedTimeSegment === seg.label ? 'flat' : 'outlined'"
+                :color="selectedTimeSegment === seg.label ? 'primary' : 'secondary'"
+                class="time-pill text-capitalize"
+                rounded="xl"
+                size="small"
+                @click="selectedTimeSegment = selectedTimeSegment === seg.label ? '' : seg.label"
+              >
+                <VIcon
+                  start
+                  :icon="seg.icon"
+                  size="18"
+                  class="me-1"
+                />
+                {{ seg.label }}
+              </VBtn>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tablet / Mobile Filters (hidden on desktop) -->
+        <div class="d-flex d-md-none align-center flex-wrap gap-4 w-100">
+          <div class="filter-input-search flex-grow-1 flex-sm-grow-0" style="width: 232px;">
             <VTextField
               v-model="searchQuery"
               placeholder="Search class or student..."
@@ -555,83 +715,33 @@ const changeAllPresence = (cls: ClassSession) => {
               hide-details
             />
           </div>
-
-          <div class="filter-input">
-            <VAutocomplete
-              v-model="selectedBranch"
-              :items="branchOptions"
-              density="compact"
-              hide-details
-            />
-          </div>
-
-          <div class="filter-input">
-            <VSelect
-              v-model="selectedClassType"
-              :items="classTypeOptions"
-              density="compact"
-              hide-details
-            />
-          </div>
-
-          <div class="filter-input">
-            <VSelect
-              v-model="selectedCourse"
-              :items="courseOptions"
-              density="compact"
-              hide-details
-            />
-          </div>
-
-          <VBtn
-            variant="text"
-            color="primary"
-            class="text-capitalize"
-            :disabled="!hasActiveFilter"
-            @click="resetFilters"
-          >
-            Reset Filter
-          </VBtn>
-        </div>
-
-        <!-- Horizontal Divider stretching to edges -->
-        <VDivider class="my-5 mx-n5" />
-
-        <!-- Filter Row 2 -->
-        <div class="d-flex align-center flex-wrap gap-5 w-100">
-          <div class="filter-input">
-            <AppDateTimePicker
-              v-model="selectedDate"
-              label="Select date"
-              placeholder="Select date"
-              append-inner-icon="ri-calendar-line"
-              density="compact"
-              hide-details
-              :config="{ dateFormat: 'F j, Y' }"
-            />
-          </div>
-
-          <div class="vertical-divider d-none d-md-block"></div>
-
-          <!-- Time segment capsules -->
-          <div class="d-flex align-center flex-wrap gap-4">
+          <div class="d-flex align-center flex-wrap gap-3 flex-grow-1 flex-sm-grow-0">
             <VBtn
-              v-for="seg in timeSegments"
-              :key="seg.label"
-              :variant="selectedTimeSegment === seg.label ? 'flat' : 'outlined'"
-              :color="selectedTimeSegment === seg.label ? 'primary' : 'secondary'"
-              class="time-pill text-capitalize"
-              rounded="xl"
-              size="small"
-              @click="selectedTimeSegment = selectedTimeSegment === seg.label ? '' : seg.label"
+              :variant="activeFiltersCount > 0 ? 'flat' : 'outlined'"
+              :color="activeFiltersCount > 0 ? 'primary' : 'secondary'"
+              class="time-pill text-capitalize flex-grow-1 flex-sm-grow-0"
+              @click="isFilterModalActive = true"
             >
-              <VIcon
-                start
-                :icon="seg.icon"
-                size="18"
-                class="me-1"
-              />
-              {{ seg.label }}
+              <VIcon start icon="ri-filter-line" class="me-1" />
+              {{ activeFiltersCount > 0 ? `${activeFiltersCount} Active` : 'Filter' }}
+            </VBtn>
+            <VBtn
+              :variant="hasActiveDateTime ? 'flat' : 'outlined'"
+              :color="hasActiveDateTime ? 'primary' : 'secondary'"
+              class="time-pill text-capitalize flex-grow-1 flex-sm-grow-0"
+              @click="isDateModalActive = true"
+            >
+              <VIcon start icon="ri-calendar-line" class="me-1" />
+              {{ activeDateTimeText }}
+            </VBtn>
+            <VBtn
+              variant="text"
+              color="primary"
+              class="text-capitalize"
+              :disabled="!hasActiveFilter"
+              @click="resetFilters"
+            >
+              Reset Filter
             </VBtn>
           </div>
         </div>
@@ -708,7 +818,8 @@ const changeAllPresence = (cls: ClassSession) => {
               </div>
             </div>
 
-            <div class="d-flex align-center gap-2">
+            <!-- Desktop Action Buttons (inline) -->
+            <div class="d-none d-md-flex align-center gap-2">
               <!-- See Details Tonal button -->
               <VBtn
                 variant="tonal"
@@ -753,14 +864,58 @@ const changeAllPresence = (cls: ClassSession) => {
                 Completed
               </VChip>
             </div>
+
+            <!-- Tablet/Mobile Action Buttons (stacked side-by-side below title) -->
+            <div class="d-flex d-md-none align-center gap-3 w-100 mt-2">
+              <VBtn
+                variant="tonal"
+                color="primary"
+                class="text-capitalize flex-grow-1"
+                rounded="xl"
+                @click="seeDetails(cls)"
+              >
+                See Details
+              </VBtn>
+
+              <VBtn
+                v-if="cls.status === 'Active' || cls.status === 'Waiting Approval'"
+                color="primary"
+                class="text-capitalize flex-grow-1"
+                rounded="xl"
+                @click="startClass(cls)"
+              >
+                Start Class
+              </VBtn>
+
+              <VBtn
+                v-else-if="cls.status === 'Ongoing'"
+                color="primary"
+                class="text-capitalize flex-grow-1"
+                rounded="xl"
+                @click="finishClass(cls)"
+              >
+                Finish Class
+              </VBtn>
+
+              <div v-else class="d-flex justify-center flex-grow-1">
+                <VChip
+                  color="success"
+                  variant="tonal"
+                  size="small"
+                  class="font-weight-medium w-100 justify-center py-4"
+                >
+                  Completed
+                </VChip>
+              </div>
+            </div>
           </div>
 
           <VDivider class="mb-5" />
 
-          <!-- Card Grid Content (Two Columns on Desktop) -->
-          <VRow>
+          <!-- Card Grid Content (Two Columns on Tablet/Desktop, hidden on Mobile) -->
+          <VRow class="d-none d-sm-flex">
             <!-- Left Column: Class Info & Teachers -->
-            <VCol cols="12" md="5" class="pe-md-6 border-r-md">
+            <VCol cols="12" sm="6" md="5" class="pe-sm-6 border-r-sm">
               <div class="d-flex flex-column gap-5">
                 <!-- Class Time / Details -->
                 <div class="d-flex flex-column gap-1">
@@ -834,7 +989,7 @@ const changeAllPresence = (cls: ClassSession) => {
             </VCol>
 
             <!-- Right Column: Student List -->
-            <VCol cols="12" md="7" class="ps-md-6">
+            <VCol cols="12" sm="6" md="7" class="ps-sm-6">
               <span class="text-body-2 text-medium-emphasis font-weight-medium mb-3 d-block">
                 Student
               </span>
@@ -942,6 +1097,195 @@ const changeAllPresence = (cls: ClassSession) => {
               </div>
             </VCol>
           </VRow>
+
+          <!-- Card Content Mobile Layout (Collapsible lists) -->
+          <div class="d-block d-sm-none">
+            <!-- Class Info -->
+            <div class="d-flex flex-column gap-1 mb-4">
+              <div class="d-flex align-center gap-2 mb-1">
+                <VIcon
+                  icon="ri-time-line"
+                  color="primary"
+                  size="20"
+                />
+                <span class="text-h6 font-weight-semibold text-primary mb-0">
+                  {{ cls.timeStart }} - {{ cls.timeEnd }}
+                </span>
+                <VChip
+                  color="primary"
+                  variant="tonal"
+                  size="small"
+                  density="comfortable"
+                >
+                  {{ cls.duration }}
+                </VChip>
+              </div>
+              <span class="text-body-1 font-weight-medium text-high-emphasis leading-tight">
+                {{ cls.className }}
+              </span>
+              <div class="d-flex align-center gap-2 mt-1">
+                <span class="text-body-2 text-medium-emphasis">{{ cls.meetingType }}</span>
+                <span class="dot-separator bg-secondary"></span>
+                <span class="text-body-2 text-medium-emphasis">
+                  {{ cls.meetingType.split(' ')[0] }} -
+                  <span class="text-primary font-weight-medium">{{ cls.meetingNumber }}</span>
+                </span>
+              </div>
+              <div class="d-flex align-center gap-2 mt-1">
+                <VChip
+                  color="success"
+                  size="small"
+                  class="font-weight-medium"
+                >
+                  Active
+                </VChip>
+                <VChip
+                  v-if="cls.status === 'Waiting Approval'"
+                  color="warning"
+                  size="small"
+                  class="font-weight-medium"
+                >
+                  Waiting Approval
+                </VChip>
+              </div>
+            </div>
+
+            <VDivider class="my-3" />
+
+            <!-- Show Links -->
+            <div class="d-flex align-center justify-space-between py-2 px-1">
+              <a
+                href="#"
+                class="text-body-2 text-primary font-weight-medium text-decoration-none"
+                @click.prevent="toggleTeachers(cls.id)"
+              >
+                {{ isTeachersExpanded(cls.id) ? 'Hide Teachers' : `Show Teachers (${cls.teachers.length})` }}
+              </a>
+              <a
+                href="#"
+                class="text-body-2 text-primary font-weight-medium text-decoration-none"
+                @click.prevent="toggleStudents(cls.id)"
+              >
+                {{ isStudentsExpanded(cls.id) ? 'Hide Students' : `Show Students (${cls.students.length})` }}
+              </a>
+            </div>
+
+            <!-- Collapsible Teachers List -->
+            <div v-if="isTeachersExpanded(cls.id)" class="py-3 px-1 d-flex flex-column gap-3 bg-light rounded mb-3">
+              <span class="text-body-2 font-weight-bold text-medium-emphasis">Teachers</span>
+              <div
+                v-for="(teacher, index) in cls.teachers"
+                :key="teacher.id"
+                class="d-flex flex-column"
+              >
+                <span class="text-body-2 text-medium-emphasis font-weight-medium mb-1">
+                  Teacher {{ index + 1 }}
+                </span>
+                <span class="text-body-1 text-high-emphasis font-weight-medium">
+                  {{ teacher.name }}
+                </span>
+                <VDivider v-if="index < cls.teachers.length - 1" class="mt-2" />
+              </div>
+            </div>
+
+            <!-- Collapsible Students List -->
+            <div v-if="isStudentsExpanded(cls.id)" class="py-3 px-1 d-flex flex-column gap-3 mb-3">
+              <span class="text-body-2 font-weight-bold text-medium-emphasis">Students</span>
+              <div class="d-flex flex-column gap-3 student-list-container">
+                <div
+                  v-for="(student, idx) in cls.students.slice(0, 5)"
+                  :key="student.id"
+                  class="student-row d-flex align-center justify-space-between gap-3 py-1"
+                >
+                  <div class="d-flex align-center gap-3 flex-grow-1 min-w-0">
+                    <div class="student-idx bg-grey-50 text-caption font-weight-medium rounded-circle d-flex align-center justify-center">
+                      {{ idx + 1 }}
+                    </div>
+                    <div class="d-flex flex-column min-w-0">
+                      <span class="text-body-2 text-high-emphasis font-weight-medium text-truncate">
+                        {{ student.name }}
+                      </span>
+                      <div class="d-flex align-center gap-1 mt-0.5">
+                        <VIcon
+                          icon="ri-book-2-line"
+                          size="14"
+                          color="secondary"
+                        />
+                        <span class="text-caption text-medium-emphasis text-truncate leading-none">
+                          {{ student.course }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="d-flex align-center gap-2">
+                    <VChip
+                      :color="student.badgeColor"
+                      variant="tonal"
+                      size="small"
+                      class="font-weight-medium"
+                    >
+                      {{ student.badgeText }}
+                    </VChip>
+
+                    <VBtn
+                      :color="student.isPresent ? 'success' : 'error'"
+                      icon
+                      variant="flat"
+                      size="x-small"
+                      class="toggle-btn"
+                      @click="toggleAttendance(cls.id, student.id)"
+                    >
+                      <VIcon
+                        :icon="student.isPresent ? 'ri-check-line' : 'ri-close-line'"
+                        size="14"
+                      />
+                    </VBtn>
+
+                    <VBtn
+                      :color="student.hasLaptop ? 'success' : 'error'"
+                      icon
+                      variant="flat"
+                      size="x-small"
+                      class="toggle-btn"
+                      @click="toggleLaptop(cls.id, student.id)"
+                    >
+                      <VIcon
+                        :icon="student.hasLaptop ? 'ri-macbook-line' : 'ri-subtract-line'"
+                        size="14"
+                      />
+                    </VBtn>
+                  </div>
+                </div>
+
+                <div v-if="cls.students.length > 5" class="mt-1">
+                  <VBtn
+                    variant="text"
+                    color="primary"
+                    size="small"
+                    class="px-0 font-weight-medium text-capitalize text-left justify-start"
+                    @click="openAllStudentDialog(cls)"
+                  >
+                    + {{ cls.students.length - 5 }} more student{{ cls.students.length - 5 > 1 ? 's' : '' }}
+                  </VBtn>
+                </div>
+              </div>
+            </div>
+
+            <VDivider class="my-3" />
+
+            <!-- Bottom Action -->
+            <VBtn
+              variant="outlined"
+              color="primary"
+              size="small"
+              class="text-capitalize w-100 change-presence-btn"
+              rounded="xl"
+              @click="changeAllPresence(cls)"
+            >
+              Change Presence
+            </VBtn>
+          </div>
         </VCardText>
       </VCard>
 
@@ -976,6 +1320,151 @@ const changeAllPresence = (cls: ClassSession) => {
     >
       {{ toastText }}
     </VSnackbar>
+
+    <!-- Mobile/Tablet Filter Modal -->
+    <VDialog
+      v-model="isFilterModalActive"
+      max-width="400"
+      transition="dialog-bottom-transition"
+    >
+      <VCard style="border-radius: 8px !important;">
+        <VCardTitle class="d-flex align-center justify-space-between pa-4 border-b">
+          <span class="text-h6 font-weight-semibold">Filter</span>
+          <VBtn
+            icon="ri-close-line"
+            variant="text"
+            color="secondary"
+            density="comfortable"
+            @click="isFilterModalActive = false"
+          />
+        </VCardTitle>
+        <VCardText class="pa-5 d-flex flex-column gap-5">
+          <div>
+            <label class="text-body-2 text-medium-emphasis font-weight-medium d-block mb-1">Branch</label>
+            <VAutocomplete
+              v-model="selectedBranch"
+              :items="branchOptions"
+              density="compact"
+              hide-details
+            />
+          </div>
+          <div>
+            <label class="text-body-2 text-medium-emphasis font-weight-medium d-block mb-1">Class Type</label>
+            <VSelect
+              v-model="selectedClassType"
+              :items="classTypeOptions"
+              density="compact"
+              hide-details
+            />
+          </div>
+          <div>
+            <label class="text-body-2 text-medium-emphasis font-weight-medium d-block mb-1">Course</label>
+            <VSelect
+              v-model="selectedCourse"
+              :items="courseOptions"
+              density="compact"
+              hide-details
+            />
+          </div>
+        </VCardText>
+        <VCardActions class="pa-4 d-flex justify-end gap-3 border-t">
+          <VBtn
+            variant="outlined"
+            color="secondary"
+            class="text-capitalize px-6"
+            rounded="xl"
+            @click="isFilterModalActive = false"
+          >
+            Back
+          </VBtn>
+          <VBtn
+            color="success"
+            class="text-capitalize px-6"
+            style="background-color: #10af13 !important; color: #ffffff !important;"
+            rounded="xl"
+            @click="isFilterModalActive = false"
+          >
+            Apply Filter
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+
+    <!-- Mobile/Tablet Date & Time Modal -->
+    <VDialog
+      v-model="isDateModalActive"
+      max-width="400"
+      transition="dialog-bottom-transition"
+    >
+      <VCard style="border-radius: 8px !important;">
+        <VCardTitle class="d-flex align-center justify-space-between pa-4 border-b">
+          <span class="text-h6 font-weight-semibold">Date & Time</span>
+          <VBtn
+            icon="ri-close-line"
+            variant="text"
+            color="secondary"
+            density="comfortable"
+            @click="isDateModalActive = false"
+          />
+        </VCardTitle>
+        <VCardText class="pa-5 d-flex flex-column gap-5">
+          <div>
+            <label class="text-body-2 text-medium-emphasis font-weight-medium d-block mb-1">Date</label>
+            <AppDateTimePicker
+              v-model="selectedDate"
+              placeholder="Select date"
+              append-inner-icon="ri-calendar-line"
+              density="compact"
+              hide-details
+              :config="{ dateFormat: 'F j, Y' }"
+            />
+          </div>
+          <div>
+            <label class="text-body-2 text-medium-emphasis font-weight-medium d-block mb-2">Time Segment</label>
+            <div class="time-segments-grid">
+              <VBtn
+                v-for="seg in timeSegments"
+                :key="seg.label"
+                :variant="selectedTimeSegment === seg.label ? 'flat' : 'outlined'"
+                :color="selectedTimeSegment === seg.label ? 'primary' : 'secondary'"
+                class="time-pill-modal text-capitalize"
+                rounded="xl"
+                size="small"
+                @click="selectedTimeSegment = selectedTimeSegment === seg.label ? '' : seg.label"
+              >
+                <VIcon
+                  start
+                  :icon="seg.icon"
+                  size="16"
+                  class="me-3"
+                />
+                {{ seg.label }}
+              </VBtn>
+            </div>
+          </div>
+        </VCardText>
+        <VCardActions class="pa-4 d-flex justify-end gap-3 border-t">
+          <VBtn
+            variant="outlined"
+            color="secondary"
+            class="text-capitalize px-6"
+            rounded="xl"
+            @click="isDateModalActive = false"
+          >
+            Back
+          </VBtn>
+          <VBtn
+            color="success"
+            class="text-capitalize px-6"
+            style="background-color: #10af13 !important; color: #ffffff !important;"
+            rounded="xl"
+            @click="isDateModalActive = false"
+          >
+            Apply Filter
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
   </section>
 </template>
 
@@ -1050,8 +1539,8 @@ const changeAllPresence = (cls: ClassSession) => {
     opacity: 0.5;
   }
 
-  .border-r-md {
-    @media (min-width: 960px) {
+  .border-r-sm {
+    @media (min-width: 600px) {
       border-right: 1px solid rgba(var(--v-theme-on-surface), 0.08);
     }
   }
@@ -1076,6 +1565,45 @@ const changeAllPresence = (cls: ClassSession) => {
 
   .change-presence-btn {
     height: 36px !important;
+  }
+
+}
+</style>
+
+<style lang="scss">
+.time-segments-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 16px !important;
+}
+
+.time-pill-modal {
+  height: 40px !important;
+  padding: 0 16px !important;
+  border-radius: 240px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.3px !important;
+  justify-content: center !important;
+  box-shadow: none !important;
+
+  &.v-btn--variant-outlined {
+    border: 1px solid rgba(46, 38, 61, 0.24) !important;
+    color: rgba(46, 38, 61, 0.7) !important;
+    background-color: transparent !important;
+
+    .v-icon {
+      color: rgba(46, 38, 61, 0.7) !important;
+    }
+  }
+
+  &.v-btn--variant-flat {
+    background-color: #10af13 !important;
+    color: #ffffff !important;
+
+    .v-icon {
+      color: #ffffff !important;
+    }
   }
 }
 </style>

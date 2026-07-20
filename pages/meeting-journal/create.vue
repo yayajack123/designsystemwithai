@@ -137,11 +137,41 @@ const currentTeacherName = computed(() => {
 })
 
 // ─────────────────────── Stepper & Form States ───────────────────────
-const currentStep = ref(1)
+const currentStep = computed({
+  get: () => {
+    const s = route.query.step as string
+    return s === '2' ? 2 : 1
+  },
+  set: (val) => {
+    router.replace({
+      query: {
+        ...route.query,
+        step: val.toString()
+      }
+    })
+  }
+})
+
+const backRoute = computed(() => {
+  if (currentStep.value === 2) {
+    return {
+      path: '/meeting-journal/create',
+      query: {
+        ...route.query,
+        step: '1'
+      }
+    }
+  }
+  return {
+    path: '/attendance-detail',
+    query: { id: classId.value }
+  }
+})
 
 const projectName = ref('Project A')
 const isActiveProject = ref(true)
 const teacherNotes = ref('Student already good to apply the pelajaran')
+const isDetailsCollapsed = ref(false)
 
 // AI Summary States
 const aiSummary = ref('')
@@ -169,6 +199,7 @@ interface Lesson {
   score: number
   maxScore: number
   objectives: string[]
+  expanded?: boolean
 }
 
 const coveredLessons = ref<Lesson[]>([
@@ -187,7 +218,8 @@ const coveredLessons = ref<Lesson[]>([
       'Know how to initialize FPS in Pygame',
       'Add another object to the Pygame canvas',
       'Understand list operations in Python'
-    ]
+    ],
+    expanded: true
   },
   {
     id: 2,
@@ -201,7 +233,8 @@ const coveredLessons = ref<Lesson[]>([
       'Introducing concepts related to Game development',
       'Know how to develop games using Pygame',
       'Understand basic variables and main loops'
-    ]
+    ],
+    expanded: false
   },
   {
     id: 3,
@@ -215,11 +248,10 @@ const coveredLessons = ref<Lesson[]>([
       'Know how to initialize FPS in Pygame',
       'Add another object to the Pygame canvas',
       'Understand list operations in Python'
-    ]
+    ],
+    expanded: false
   }
 ])
-
-const openedPanels = ref<number[]>([0]) // First panel expanded by default
 
 // Delete lesson handler
 const deleteLesson = (id: number) => {
@@ -227,42 +259,81 @@ const deleteLesson = (id: number) => {
   showToast('Lesson removed.', 'warning')
 }
 
-// Add lesson dialog states
+// ─────────────────────── Covered Lessons Selection Dialog ───────────────────────
 const showAddLessonDialog = ref(false)
-const newLessonTitle = ref('')
-const availableLessons = [
-  'Lesson 2 - Drawing Shapes in Pygame',
-  'Lesson 3 - Keyboard and Mouse Events',
-  'Lesson 4 - Sprites and Collisions',
-  'Lesson 5 - Game Loop and Sound FX',
-  'Lesson 6 - Project Build and Finalization'
-]
+const searchLessonQuery = ref('')
+const selectedLessonIds = ref<number[]>([])
 
-const addLesson = () => {
-  if (!newLessonTitle.value) return
-  
-  const newId = coveredLessons.value.length ? Math.max(...coveredLessons.value.map(l => l.id)) + 1 : 1
-  coveredLessons.value.push({
-    id: newId,
-    title: newLessonTitle.value,
-    progress: '100%',
-    statusText: 'Complete',
-    statusColor: 'success',
-    score: 0,
-    maxScore: 100,
-    objectives: [
-      'Understand basic logic of the selected module',
-      'Implement practical applications and verify results',
-      'Demonstrate capabilities in coding exercises'
-    ]
+interface AvailableLesson {
+  id: number
+  title: string
+  progress: string
+  statusText: 'Complete' | 'Progress'
+  statusColor: 'success' | 'info'
+  score: number
+  maxScore: number
+}
+
+const availableLessonsList = ref<AvailableLesson[]>([
+  { id: 1, title: 'Lesson 1 - Introduction to Pygame', progress: '100%', statusText: 'Complete', statusColor: 'success', score: 85, maxScore: 100 },
+  { id: 2, title: 'Lesson 2 - Drawing Shapes in Pygame', progress: '100%', statusText: 'Complete', statusColor: 'success', score: 85, maxScore: 100 },
+  { id: 3, title: 'Lesson 3 - Keyboard and Mouse Events', progress: '88%', statusText: 'Progress', statusColor: 'info', score: 0, maxScore: 100 },
+  { id: 4, title: 'Lesson 4 - Sprites and Collisions', progress: '0%', statusText: 'Progress', statusColor: 'info', score: 0, maxScore: 100 },
+  { id: 5, title: 'Lesson 5 - Game Loop and Sound FX', progress: '0%', statusText: 'Progress', statusColor: 'info', score: 0, maxScore: 100 },
+  { id: 6, title: 'Lesson 6 - Project Build and Finalization', progress: '0%', statusText: 'Progress', statusColor: 'info', score: 0, maxScore: 100 }
+])
+
+const filteredAvailableLessons = computed(() => {
+  if (!searchLessonQuery.value) return availableLessonsList.value
+  const q = searchLessonQuery.value.toLowerCase()
+  return availableLessonsList.value.filter(l => l.title.toLowerCase().includes(q))
+})
+
+const openAddLessonDialog = () => {
+  selectedLessonIds.value = coveredLessons.value.map(l => l.id)
+  searchLessonQuery.value = ''
+  showAddLessonDialog.value = true
+}
+
+const toggleLessonSelection = (id: number) => {
+  const index = selectedLessonIds.value.indexOf(id)
+  if (index > -1) {
+    selectedLessonIds.value.splice(index, 1)
+  } else {
+    selectedLessonIds.value.push(id)
+  }
+}
+
+const confirmLessonSelection = () => {
+  const newCovered: Lesson[] = []
+  selectedLessonIds.value.forEach(id => {
+    const existing = coveredLessons.value.find(l => l.id === id)
+    if (existing) {
+      newCovered.push(existing)
+    } else {
+      const avail = availableLessonsList.value.find(l => l.id === id)
+      if (avail) {
+        newCovered.push({
+          id: avail.id,
+          title: avail.title,
+          progress: avail.progress,
+          statusText: avail.statusText,
+          statusColor: avail.statusColor,
+          score: avail.score,
+          maxScore: avail.maxScore,
+          objectives: [
+            'Introducing concepts related to Game development',
+            'Understand basic logic of the selected module',
+            'Implement practical applications and verify results'
+          ],
+          expanded: true
+        })
+      }
+    }
   })
-  
-  // Auto-expand new panel
-  openedPanels.value.push(coveredLessons.value.length - 1)
-  
-  newLessonTitle.value = ''
+  coveredLessons.value = newCovered
   showAddLessonDialog.value = false
-  showToast('Lesson added successfully.', 'success')
+  showToast('Covered lessons updated.', 'success')
 }
 
 // ─────────────────────── Evidence Photo States & Handlers ───────────────────────
@@ -271,10 +342,18 @@ interface PhotoFile {
   url: string
 }
 const uploadedPhotos = ref<PhotoFile[]>([])
-const fileInput = ref<HTMLInputElement | null>(null)
+const cameraFileInput = ref<HTMLInputElement | null>(null)
+const galleryFileInput = ref<HTMLInputElement | null>(null)
+const showUploadPhotoDialog = ref(false)
 
-const triggerFileInput = () => {
-  fileInput.value?.click()
+const triggerCameraInput = () => {
+  showUploadPhotoDialog.value = false
+  cameraFileInput.value?.click()
+}
+
+const triggerGalleryInput = () => {
+  showUploadPhotoDialog.value = false
+  galleryFileInput.value?.click()
 }
 
 const onFileChange = (e: Event) => {
@@ -289,7 +368,6 @@ const onFileChange = (e: Event) => {
   }
 
   for (const file of files) {
-    // Check size < 1MB
     if (file.size > 1024 * 1024) {
       showToast(`File "${file.name}" exceeds 1MB limit.`, 'error')
       continue
@@ -307,8 +385,56 @@ const removePhoto = (index: number) => {
   showToast('Photo removed.', 'info')
 }
 
-// Example Dialog
+// Photo Guidelines Dialog
 const showExampleDialog = ref(false)
+
+// ─────────────────────── Back Button Confirmation Dialog ───────────────────────
+const showBackConfirmDialog = ref(false)
+
+const initialData = {
+  projectName: 'Project A',
+  isActiveProject: true,
+  teacherNotes: 'Student already good to apply the pelajaran',
+  uploadedPhotosCount: 0,
+  coveredLessonsCount: 3
+}
+
+const isDataChanged = computed(() => {
+  if (
+    projectName.value !== initialData.projectName ||
+    isActiveProject.value !== initialData.isActiveProject ||
+    teacherNotes.value !== initialData.teacherNotes ||
+    uploadedPhotos.value.length !== initialData.uploadedPhotosCount
+  ) {
+    return true
+  }
+  
+  if (coveredLessons.value.length !== initialData.coveredLessonsCount) {
+    return true
+  }
+  
+  const initialScores = [85, 85, 0]
+  for (let i = 0; i < coveredLessons.value.length; i++) {
+    if (i < initialScores.length && coveredLessons.value[i].score !== initialScores[i]) {
+      return true
+    }
+  }
+  
+  return false
+})
+
+const handleCustomBackClick = () => {
+  if (isDataChanged.value) {
+    showBackConfirmDialog.value = true
+  } else {
+    router.push(backRoute.value)
+  }
+}
+
+const confirmBackNavigation = () => {
+  showBackConfirmDialog.value = false
+  router.push(backRoute.value)
+}
 
 // ─────────────────────── Action Footer Handlers ───────────────────────
 const showToastActive = ref(false)
@@ -326,49 +452,62 @@ const saveAsDraft = () => {
 }
 
 const saveAndContinue = () => {
-  showToast('Journal Step 1 saved successfully!', 'success')
+  showToast('Journal Step 1 saved as draft.', 'success')
+  currentStep.value = 2
+}
+
+const downloadPDF = () => {
+  showToast('Report PDF downloaded successfully.', 'success')
+}
+
+const sendReport = () => {
+  showToast('Report sent to parents successfully!', 'success')
   setTimeout(() => {
     router.push({
       path: '/attendance-detail',
       query: { id: classId.value }
     })
-  }, 1000)
+  }, 1500)
 }
 </script>
 
 <template>
-  <div class="meeting-journal-create-page pa-4">
+  <div class="meeting-journal-create-page">
     <!-- Header with Back Button and Student Roster Details -->
-    <UiSectionHeader
-      :title="currentStudent.name"
-      :description="`${currentStudent.studentId} • ${currentStudent.sessionText} • ${currentStudent.bookTitle}`"
-      :back="({ path: '/attendance-detail', query: { id: classId } } as any)"
-      class="mb-6"
-    />
+    <div class="full-width-header bg-surface border-b px-6">
+      <UiSectionHeader
+        :title="currentStudent.name"
+        :description="`${currentStudent.studentId} • ${currentStudent.sessionText} • ${currentStudent.bookTitle}`"
+        :back="(backRoute as any)"
+        :custom-back="currentStep === 1"
+        @click:back="handleCustomBackClick"
+        class="mb-0"
+      />
+    </div>
 
     <!-- Stepper Banner -->
-    <VCard border class="mb-6" elevation="0">
-      <VCardText class="pa-4 d-flex align-center justify-space-between flex-wrap gap-4">
+    <div class="full-width-stepper bg-surface border-b px-6 py-4 mb-6">
+      <div class="d-flex align-center justify-space-between flex-wrap gap-4">
         <div class="d-flex align-center gap-4">
           <!-- circular stepper from presence dialog -->
           <VProgressCircular
-            :model-value="50"
+            :model-value="currentStep === 1 ? 50 : 100"
             color="primary"
             size="64"
             width="5"
             class="font-weight-bold"
           >
             <span class="text-body-1 font-weight-medium text-high-emphasis">
-              1/2
+              {{ currentStep }}/2
             </span>
           </VProgressCircular>
 
           <div class="d-flex flex-column">
             <h5 class="text-h5 font-weight-medium text-high-emphasis">
-              Lesson & Details
+              {{ currentStep === 1 ? 'Lesson & Details' : 'Preview' }}
             </h5>
             <span class="text-body-2 text-medium-emphasis">
-              Topics, Photo & Observation
+              {{ currentStep === 1 ? 'Topics, Photo & Observation' : 'Preview and send report to parents' }}
             </span>
           </div>
         </div>
@@ -380,11 +519,13 @@ const saveAndContinue = () => {
             {{ currentTeacherName }}
           </span>
         </div>
-      </VCardText>
-    </VCard>
+      </div>
+    </div>
 
-    <!-- SECTION: Covered Lessons -->
-    <div class="mb-6">
+    <!-- Step 1 Content Container -->
+    <div v-if="currentStep === 1" class="create-journal-content-container">
+      <!-- SECTION: Covered Lessons -->
+      <div class="mb-6">
       <div class="d-flex align-center justify-space-between mb-4">
         <div>
           <h5 class="text-h5 font-weight-medium text-high-emphasis">Covered lessons</h5>
@@ -396,329 +537,689 @@ const saveAndContinue = () => {
           prepend-icon="ri-add-line"
           class="rounded-pill"
           size="small"
-          @click="showAddLessonDialog = true"
+          @click="openAddLessonDialog"
         >
           Add Another
         </VBtn>
       </div>
 
-      <!-- Lessons Expansion List -->
-      <VExpansionPanels v-model="openedPanels" multiple class="custom-expansion-panels">
-        <VExpansionPanel
+      <!-- Custom Lesson Cards List -->
+      <div class="custom-lesson-list" v-if="coveredLessons.length > 0">
+        <div
           v-for="(lesson, idx) in coveredLessons"
           :key="lesson.id"
-          elevation="0"
-          border
-          class="mb-4 rounded-lg overflow-hidden border-solid"
+          class="lesson-card border rounded-lg mb-4 overflow-hidden"
         >
-          <VExpansionPanelTitle class="pa-4 bg-surface">
-            <div class="d-flex align-center w-100 flex-wrap justify-space-between pr-4 gap-4">
-              <!-- Left side: Status icon and Lesson Title -->
-              <div class="d-flex align-center">
-                <!-- Status icon badge -->
-                <VAvatar
-                  size="24"
-                  :color="lesson.statusColor === 'success' ? 'primary' : 'info'"
-                  class="me-3"
-                >
-                  <VIcon
-                    :icon="lesson.statusColor === 'success' ? 'ri-check-line' : 'ri-loader-line'"
-                    size="16"
-                    color="white"
-                  />
-                </VAvatar>
-
-                <div class="d-flex flex-column">
-                  <span class="text-body-1 font-weight-medium text-high-emphasis">{{ lesson.title }}</span>
-                  <div class="d-flex align-center gap-1 mt-1">
-                    <VIcon
-                      :icon="lesson.statusColor === 'success' ? 'ri-check-line' : 'ri-loader-2-line'"
-                      size="14"
-                      :class="`text-${lesson.statusColor}`"
-                    />
-                    <span class="text-caption" :class="`text-${lesson.statusColor} font-weight-medium`">
-                      {{ lesson.progress }} {{ lesson.statusText }}
-                    </span>
-                  </div>
-                </div>
+          <!-- Top Row: Always Visible -->
+          <div class="lesson-header-row d-flex align-center justify-space-between pa-4 bg-surface gap-4">
+            <!-- Left Side: Status & Title -->
+            <div class="d-flex align-center">
+              <!-- Status circle indicator (20px) -->
+              <div
+                :class="['status-circle d-flex align-center justify-center me-3', lesson.statusColor]"
+              >
+                <VIcon
+                  :icon="lesson.statusColor === 'success' ? 'ri-check-line' : 'ri-loader-line'"
+                  size="14"
+                  color="white"
+                />
               </div>
 
-              <!-- Right side: Score inputs, Divider, and Delete button -->
-              <div class="d-flex align-center gap-4 ml-auto" @click.stop>
-                <div class="d-flex align-center gap-2">
-                  <span class="text-body-2 text-medium-emphasis">Score :</span>
-                  <div class="score-input-box">
-                    <input
-                      type="number"
-                      v-model.number="lesson.score"
-                      min="0"
-                      max="100"
-                      class="text-center font-weight-medium"
-                      :class="lesson.score > 0 ? 'text-primary' : 'text-medium-emphasis'"
-                    />
-                  </div>
-                  <span class="text-body-2 text-medium-emphasis">/ 100</span>
+              <div class="d-flex flex-column">
+                <span class="text-body-1 font-weight-medium text-high-emphasis leading-normal">
+                  {{ lesson.title }}
+                </span>
+                <div class="d-flex align-center gap-1 mt-1">
+                  <VIcon
+                    :icon="lesson.statusColor === 'success' ? 'ri-check-line' : 'ri-loader-2-line'"
+                    size="12"
+                    :class="`text-${lesson.statusColor === 'success' ? 'primary' : 'info'}`"
+                  />
+                  <span
+                    class="text-caption font-weight-medium"
+                    :class="`text-${lesson.statusColor === 'success' ? 'primary' : 'info'}`"
+                  >
+                    {{ lesson.progress }} {{ lesson.statusText }}
+                  </span>
                 </div>
+              </div>
+            </div>
 
-                <div class="vertical-divider mx-2"></div>
+            <!-- Right Side: Score, Divider, Delete -->
+            <div class="d-flex align-center gap-4">
+              <!-- Score inputs -->
+              <div class="d-flex align-center gap-2">
+                <span class="text-body-2 text-medium-emphasis">Score :</span>
+                <div class="score-input-box">
+                  <input
+                    type="number"
+                    v-model.number="lesson.score"
+                    min="0"
+                    max="100"
+                    class="text-center font-weight-medium"
+                    :class="lesson.score > 0 ? 'text-primary' : 'text-medium-emphasis'"
+                  />
+                </div>
+                <span class="text-body-2 text-medium-emphasis">/ 100</span>
+              </div>
 
-                <VBtn
-                  icon="ri-delete-bin-line"
-                  variant="outlined"
-                  size="small"
-                  color="secondary"
-                  class="delete-btn rounded border-solid"
-                  @click="deleteLesson(lesson.id)"
+              <!-- Vertical Divider -->
+              <div class="vertical-divider"></div>
+
+              <!-- Styled Delete Button -->
+              <VBtn
+                icon="ri-delete-bin-line"
+                variant="outlined"
+                color="error"
+                class="delete-btn rounded border-solid"
+                @click="deleteLesson(lesson.id)"
+              />
+            </div>
+          </div>
+
+          <!-- Collapsible Accordion Part -->
+          <div class="lesson-accordion-section">
+            <!-- Accordion Header Row -->
+            <div
+              class="accordion-header d-flex align-center justify-space-between px-4 py-3 cursor-pointer"
+              @click="lesson.expanded = !lesson.expanded"
+            >
+              <div class="d-flex align-center gap-2">
+                <!-- Objective Circle Icon -->
+                <div class="objective-circle d-flex align-center justify-center">
+                  <VIcon icon="ri-focus-2-line" size="12" color="white" />
+                </div>
+                <span class="text-body-2 font-weight-medium text-high-emphasis">
+                  Lesson Objective
+                </span>
+              </div>
+
+              <!-- Collapse Arrow Wrapper -->
+              <div class="accordion-arrow bg-white border rounded">
+                <VIcon
+                  :icon="lesson.expanded ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'"
+                  size="18"
+                  class="text-medium-emphasis"
                 />
               </div>
             </div>
-          </VExpansionPanelTitle>
 
-          <VExpansionPanelText class="pa-0">
-            <div class="bg-expansion-inner pa-4">
-              <div class="d-flex align-center gap-2 mb-3">
-                <VAvatar size="20" color="primary" class="text-white">
-                  <VIcon icon="ri-focus-2-line" size="14" />
-                </VAvatar>
-                <span class="text-body-2 font-weight-medium text-high-emphasis">Lesson Objective</span>
+            <!-- Accordion Content (Visible when expanded) -->
+            <VExpandTransition>
+              <div v-show="lesson.expanded" class="accordion-content px-4 pb-4">
+                <ul class="objective-list text-body-2 text-medium-emphasis pl-6">
+                  <li v-for="(obj, oIdx) in lesson.objectives" :key="oIdx" class="mb-1 leading-relaxed">
+                    {{ obj }}
+                  </li>
+                </ul>
               </div>
-              <ul class="objective-list text-body-2 text-medium-emphasis pl-6">
-                <li v-for="(obj, oIdx) in lesson.objectives" :key="oIdx" class="mb-1">
-                  {{ obj }}
-                </li>
-              </ul>
-            </div>
-          </VExpansionPanelText>
-        </VExpansionPanel>
-      </VExpansionPanels>
+            </VExpandTransition>
+          </div>
+        </div>
+      </div>
       <div v-if="coveredLessons.length === 0" class="text-center py-6 border rounded-lg bg-surface">
         <span class="text-body-1 text-medium-emphasis">No covered lessons added yet. Click "Add Another" to add.</span>
       </div>
     </div>
 
-    <!-- SECTION: Details Grid -->
-    <VRow class="mb-6">
-      <!-- Left Column: Project details Form -->
-      <VCol cols="12" md="7">
-        <h5 class="text-h5 font-weight-medium text-high-emphasis mb-4">Add Details</h5>
-        <VCard border elevation="0" class="rounded-lg">
-          <VCardText class="pa-5">
-            <div class="d-flex flex-column gap-4">
-              <div>
-                <span class="text-body-2 text-medium-emphasis font-weight-medium mb-1 d-block">Project Details</span>
-                <div class="d-flex align-center gap-3">
-                  <VTextField
-                    v-model="projectName"
-                    variant="outlined"
-                    density="compact"
-                    hide-details
-                    placeholder="Enter project name"
-                    label="Project"
-                    class="bg-surface"
-                  />
-                  <VCheckbox
-                    v-model="isActiveProject"
-                    label="Active project"
-                    color="primary"
-                    hide-details
-                    class="mt-0"
-                  />
-                </div>
-              </div>
+    <!-- Full-width Divider -->
+    <VDivider class="my-6" />
 
-              <div>
-                <span class="text-body-2 text-medium-emphasis font-weight-medium mb-1 d-block">Teacher Notes</span>
-                <VTextarea
-                  v-model="teacherNotes"
+    <!-- SECTION: Details Grid -->
+    <div class="d-flex align-center justify-space-between mb-4 mt-6">
+      <div class="d-flex flex-column gap-1">
+        <h5 class="text-h5 font-weight-medium text-high-emphasis">Add Details</h5>
+        <span class="text-body-2 text-medium-emphasis">
+          Complete the project detail and your observation
+        </span>
+      </div>
+      <VBtn
+        variant="outlined"
+        color="secondary"
+        size="small"
+        style="border-color: rgba(46, 38, 61, 0.08) !important; background-color: white; border-radius: 4px;"
+        class="pa-0 min-width-0"
+        @click="isDetailsCollapsed = !isDetailsCollapsed"
+      >
+        <VIcon :icon="isDetailsCollapsed ? 'ri-arrow-down-s-line' : 'ri-arrow-up-s-line'" size="22" color="secondary" />
+      </VBtn>
+    </div>
+
+    <VExpandTransition>
+      <VRow v-show="!isDetailsCollapsed" class="mb-6 gap-y-6">
+        <!-- Left Column: Project Details & Evidence Photo -->
+        <VCol cols="12" md="6" class="d-flex flex-column gap-6">
+          <!-- Project Details Card -->
+          <VCard border elevation="0" class="rounded-lg py-6 px-5">
+            <h5 class="text-body-1 font-weight-medium text-high-emphasis mb-4">Project Details</h5>
+            <div class="d-flex flex-column gap-4">
+              <div class="d-flex align-center gap-3">
+                <VTextField
+                  v-model="projectName"
                   variant="outlined"
                   density="compact"
-                  placeholder="Write student observation notes..."
                   hide-details
-                  rows="4"
-                  class="bg-surface"
+                  placeholder="Enter project name"
+                  label="Project"
+                  class="bg-surface flex-grow-1"
+                />
+                <VCheckbox
+                  v-model="isActiveProject"
+                  label="Active project"
+                  color="primary"
+                  hide-details
+                  class="mt-0 pt-0"
                 />
               </div>
+
+              <VTextField
+                v-model="teacherNotes"
+                variant="outlined"
+                density="compact"
+                placeholder="Write student observation notes..."
+                hide-details
+                label="Teacher Notes"
+                class="bg-surface w-100"
+              />
             </div>
-          </VCardText>
-        </VCard>
-      </VCol>
+          </VCard>
 
-      <!-- Right Column: AI Summary Generation -->
-      <VCol cols="12" md="5">
-        <div class="d-flex align-center justify-space-between mb-4">
-          <div class="d-flex align-center gap-2">
-            <VIcon icon="ri-magic-line" color="primary" size="20" />
-            <h5 class="text-h5 font-weight-medium text-high-emphasis">AI Summary</h5>
-          </div>
-          <span class="text-caption text-medium-emphasis">
-            {{ aiGenerationCount }} AI Generation
-          </span>
-        </div>
+          <!-- Evidence Photo Card -->
+          <VCard border elevation="0" class="rounded-lg pa-5">
+            <div class="d-flex align-center justify-space-between mb-4">
+              <h5 class="text-body-1 font-weight-medium text-high-emphasis mb-0">Evidence Photo</h5>
+              <VBtn
+                variant="text"
+                color="primary"
+                density="compact"
+                prepend-icon="ri-information-line"
+                @click="showExampleDialog = true"
+                class="font-weight-medium text-capitalize pa-0"
+              >
+                See Example
+              </VBtn>
+            </div>
 
-        <VCard border elevation="0" class="rounded-lg h-100 d-flex flex-column justify-space-between">
-          <VCardText class="pa-5 d-flex flex-column gap-4">
+            <!-- Dashed upload box -->
+            <div class="upload-dashed-box d-flex flex-column align-center justify-center py-12 px-4 mb-4" @click="showUploadPhotoDialog = true">
+              <input
+                type="file"
+                ref="cameraFileInput"
+                accept="image/*"
+                capture="environment"
+                @change="onFileChange"
+                class="d-none"
+              />
+              <input
+                type="file"
+                ref="galleryFileInput"
+                accept="image/*"
+                multiple
+                @change="onFileChange"
+                class="d-none"
+              />
+              <VIcon icon="ri-image-line" size="24" class="text-medium-emphasis mb-2" />
+              
+              <span v-if="uploadedPhotos.length === 0" class="text-body-2 text-medium-emphasis text-center">
+                There are no photos uploaded yet.
+              </span>
+              <span v-else class="text-body-2 text-primary font-weight-medium text-center">
+                {{ uploadedPhotos.length }} photo(s) selected
+              </span>
+            </div>
+
+            <!-- Choose Photo Button below upload box -->
             <VBtn
               block
+              variant="outlined"
               color="primary"
+              class="rounded-pill mb-3 text-capitalize font-weight-medium"
+              size="small"
+              style="border-color: rgba(var(--v-theme-primary), 0.3) !important;"
+              prepend-icon="ri-upload-2-line"
+              @click="showUploadPhotoDialog = true"
+            >
+              Choose Photo
+            </VBtn>
+
+            <span class="text-caption text-medium-emphasis d-block">
+              You can upload up to 3 photos from your camera or gallery, and each photo can be a maximum of 1 MB.
+            </span>
+
+            <!-- Image Previews Grid -->
+            <VRow v-if="uploadedPhotos.length > 0" class="mt-4">
+              <VCol
+                v-for="(photo, idx) in uploadedPhotos"
+                :key="idx"
+                cols="4"
+                class="position-relative"
+              >
+                <VCard border flat class="rounded-lg overflow-hidden ratio-square">
+                  <VImg :src="photo.url" cover class="w-100 h-100" />
+                  <VBtn
+                    icon="ri-close-line"
+                    color="error"
+                    size="x-small"
+                    variant="flat"
+                    class="photo-delete-badge"
+                    @click="removePhoto(idx)"
+                  />
+                </VCard>
+              </VCol>
+            </VRow>
+          </VCard>
+        </VCol>
+
+        <!-- Right Column: AI Summary Card -->
+        <VCol cols="12" md="6">
+          <VCard border elevation="0" class="rounded-lg pa-5 h-100 d-flex flex-column">
+            <div class="d-flex align-center justify-space-between mb-4">
+              <div class="d-flex align-center gap-2">
+                <VAvatar size="24" color="primary" class="text-white">
+                  <VIcon icon="ri-magic-line" size="14" />
+                </VAvatar>
+                <h5 class="text-body-1 font-weight-medium text-high-emphasis mb-0">AI Summary</h5>
+              </div>
+              <div class="d-flex align-center gap-1">
+                <VIcon icon="ri-time-line" size="16" class="text-medium-emphasis" />
+                <span class="text-caption text-medium-emphasis font-weight-medium">
+                  {{ aiGenerationCount }} AI Generation
+                </span>
+              </div>
+            </div>
+
+            <VBtn
+              color="info"
               variant="flat"
+              rounded="xl"
+              size="default"
               :loading="isGeneratingAI"
               @click="generateAISummary"
-              class="font-weight-medium"
+              class="font-weight-medium text-capitalize mb-4 align-self-start"
             >
               Generate AI Summary
             </VBtn>
 
-            <VTextarea
-              v-model="aiSummary"
-              variant="outlined"
-              readonly
-              placeholder="AI Summary will shown here"
-              hide-details
-              rows="4"
-              class="bg-light-gray"
-            />
-          </VCardText>
-        </VCard>
-      </VCol>
-    </VRow>
+            <div class="flex-grow-1 ai-summary-box border rounded-lg pa-4 bg-light-gray">
+              <p class="text-body-2 mb-0" :class="aiSummary ? 'text-high-emphasis' : 'text-medium-emphasis'">
+                {{ aiSummary || 'AI Summary will shown here' }}
+              </p>
+            </div>
+          </VCard>
+        </VCol>
+      </VRow>
+    </VExpandTransition>
+    </div>
 
-    <!-- SECTION: Evidence Photo -->
-    <div class="mb-8">
+    <!-- Step 2 Content Container -->
+    <div v-else-if="currentStep === 2" class="create-journal-content-container">
+      <!-- SECTION: Preview Header -->
       <div class="d-flex align-center justify-space-between mb-4">
-        <h5 class="text-h5 font-weight-medium text-high-emphasis">Evidence Photo</h5>
-        <VBtn
-          variant="text"
-          color="primary"
-          density="compact"
-          prepend-icon="ri-information-line"
-          @click="showExampleDialog = true"
-          class="font-weight-medium"
-        >
-          See Example
-        </VBtn>
+        <div>
+          <h5 class="text-h5 font-weight-medium text-high-emphasis">Review report</h5>
+          <span class="text-body-2 text-medium-emphasis">Check the report below before sending to parents</span>
+        </div>
+        <!-- Last sent time badge -->
+        <div class="last-sent-badge px-4 py-2 rounded-pill d-flex align-center gap-2 border">
+          <VIcon icon="ri-send-plane-2-line" size="16" class="text-primary" />
+          <span class="text-body-2 text-medium-emphasis">Last sent time :</span>
+          <span class="text-body-2 font-weight-medium text-high-emphasis">24 Jun 2026, 20:30</span>
+        </div>
       </div>
 
-      <VCard border elevation="0" class="rounded-lg pa-5">
-        <!-- Dashed upload box -->
-        <div class="upload-dashed-box d-flex flex-column align-center justify-center py-6 px-4 mb-4" @click="triggerFileInput">
-          <input
-            type="file"
-            ref="fileInput"
-            multiple
-            accept="image/*"
-            @change="onFileChange"
-            class="d-none"
-          />
-          <VIcon icon="ri-image-line" size="48" class="text-medium-emphasis mb-3" />
-          
-          <span v-if="uploadedPhotos.length === 0" class="text-body-2 text-medium-emphasis mb-4 text-center">
-            There are no photos uploaded yet.
-          </span>
-          <span v-else class="text-body-2 text-primary font-weight-medium mb-4 text-center">
-            {{ uploadedPhotos.length }} photo(s) selected
-          </span>
-
-          <VBtn
-            variant="outlined"
-            color="primary"
-            class="rounded-pill px-6"
-            size="small"
-            @click.stop="triggerFileInput"
-          >
-            Choose Photo
-          </VBtn>
+      <!-- SECTION: Report Preview Card -->
+      <VCard border elevation="0" class="rounded-lg pa-4 bg-surface mb-6">
+        <!-- PDF / Document Preview Area (Placeholder) -->
+        <div class="report-document-preview border rounded-lg d-flex flex-column align-center justify-center py-16 bg-light-gray mb-4" style="min-height: 400px;">
+          <div class="pdf-icon-wrapper d-flex align-center justify-center rounded-circle bg-error-light mb-4" style="width: 72px; height: 72px;">
+            <VIcon icon="ri-file-pdf-2-line" size="40" color="error" />
+          </div>
+          <h4 class="text-h6 font-weight-medium text-high-emphasis mb-2">Report Preview</h4>
+          <p class="text-body-2 text-medium-emphasis text-center max-w-sm px-4">
+            In production, the system will generate and embed the final progress report PDF here for your review.
+          </p>
         </div>
 
-        <span class="text-caption text-medium-emphasis d-block text-center">
-          You can upload up to 3 photos from your camera or gallery, and each photo can be a maximum of 1 MB.
-        </span>
-
-        <!-- Image Previews Grid -->
-        <VRow v-if="uploadedPhotos.length > 0" class="mt-4">
-          <VCol
-            v-for="(photo, idx) in uploadedPhotos"
-            :key="idx"
-            cols="4"
-            sm="3"
-            md="2"
-            class="position-relative"
-          >
-            <VCard border flat class="rounded-lg overflow-hidden ratio-square">
-              <VImg :src="photo.url" cover class="w-100 h-100" />
-              <VBtn
-                icon="ri-close-line"
-                color="error"
-                size="x-small"
-                variant="flat"
-                class="photo-delete-badge"
-                @click="removePhoto(idx)"
-              />
-            </VCard>
-          </VCol>
-        </VRow>
+        <!-- Card Footer (Actions Container) -->
+        <div class="preview-card-footer d-flex align-center justify-space-between px-5 py-3 rounded-lg bg-light-gray">
+          <div class="d-flex align-center gap-3">
+            <div class="avatar-icon-box d-flex align-center justify-center rounded pa-1-5 bg-primary-light">
+              <VIcon icon="ri-user-line" size="16" color="primary" />
+            </div>
+            <div class="student-meta-info d-flex align-center gap-3 text-body-2">
+              <span class="font-weight-medium text-high-emphasis">
+                {{ currentStudent.name }}
+              </span>
+              <span class="text-medium-emphasis">•</span>
+              <span class="text-medium-emphasis">
+                {{ classSession?.name || 'DPS-Adaptive8C' }}
+              </span>
+              <span class="text-medium-emphasis">•</span>
+              <span class="text-medium-emphasis">
+                {{ currentStudent.bookTitle }}
+              </span>
+            </div>
+          </div>
+          <span class="text-body-2 text-medium-emphasis">
+            Mon, June 22, 2026 - 13:30
+          </span>
+        </div>
       </VCard>
     </div>
 
     <!-- ACTION FOOTER BAR -->
     <div class="action-footer-bar border-t d-flex align-center justify-end gap-3 py-4 bg-surface mt-6">
-      <VBtn
-        variant="outlined"
-        color="primary"
-        class="px-6 rounded-pill"
-        @click="saveAsDraft"
-      >
-        Save As Draft
-      </VBtn>
-      <VBtn
-        color="primary"
-        variant="flat"
-        class="px-6 rounded-pill"
-        @click="saveAndContinue"
-      >
-        Save & Continue
-      </VBtn>
+      <template v-if="currentStep === 1">
+        <VBtn
+          variant="outlined"
+          color="primary"
+          class="px-6 rounded-pill"
+          @click="saveAsDraft"
+        >
+          Save As Draft
+        </VBtn>
+        <VBtn
+          color="primary"
+          variant="flat"
+          class="px-6 rounded-pill"
+          @click="saveAndContinue"
+        >
+          Save & Continue
+        </VBtn>
+      </template>
+      <template v-else-if="currentStep === 2">
+        <VBtn
+          variant="outlined"
+          color="secondary"
+          class="px-6 rounded-pill me-auto"
+          :to="{ path: '/attendance-detail', query: { id: classId } }"
+          prepend-icon="ri-arrow-left-line"
+        >
+          Back to list
+        </VBtn>
+        <VBtn
+          variant="outlined"
+          color="primary"
+          class="px-6 rounded-pill"
+          prepend-icon="ri-download-line"
+          @click="downloadPDF"
+        >
+          Download PDF
+        </VBtn>
+        <VBtn
+          color="primary"
+          variant="flat"
+          class="px-6 rounded-pill"
+          prepend-icon="ri-send-plane-2-line"
+          @click="sendReport"
+        >
+          Send To Parent
+        </VBtn>
+      </template>
     </div>
 
-    <!-- DIALOG: Add Lesson -->
-    <VDialog v-model="showAddLessonDialog" max-width="450">
-      <VCard class="rounded-lg">
-        <VCardTitle class="text-h6 font-weight-medium pa-4 border-b">
-          Add Lesson
-        </VCardTitle>
-        <VCardText class="pa-4">
-          <span class="text-body-2 text-medium-emphasis mb-3 d-block">Select a lesson to add to the covered list:</span>
-          <VSelect
-            v-model="newLessonTitle"
-            :items="availableLessons"
-            label="Lesson Title"
-            variant="outlined"
-            density="compact"
-            class="bg-surface"
+    <!-- DIALOG 1: Select Covered Lessons -->
+    <VDialog v-model="showAddLessonDialog" max-width="700">
+      <VCard class="rounded-lg overflow-hidden shadow-xl bg-surface">
+        <VCardTitle class="px-6 pt-5 pb-3 border-b d-flex align-center justify-space-between position-relative">
+          <span class="text-h6 font-weight-medium text-high-emphasis">Select covered lessons</span>
+          <VBtn
+            icon="ri-close-line"
+            variant="text"
+            color="secondary"
+            class="rounded-circle"
+            size="small"
+            @click="showAddLessonDialog = false"
           />
+        </VCardTitle>
+        <VCardText class="pa-6">
+          <div class="mb-4">
+            <VTextField
+              v-model="searchLessonQuery"
+              placeholder="Search lessons"
+              variant="outlined"
+              density="compact"
+              hide-details
+              prepend-inner-icon="ri-search-line"
+              class="search-lessons-input"
+            />
+          </div>
+          <div class="lessons-selection-list" style="max-height: 400px; overflow-y: auto;">
+            <div
+              v-for="lesson in filteredAvailableLessons"
+              :key="lesson.id"
+              class="lesson-select-card border rounded-lg pa-4 mb-4 d-flex align-center cursor-pointer transition-all"
+              :class="{ 'border-primary bg-primary-light-tint': selectedLessonIds.includes(lesson.id) }"
+              @click="toggleLessonSelection(lesson.id)"
+            >
+              <div class="checkbox-box me-3 flex-shrink-0 d-flex align-center justify-center">
+                <div v-if="selectedLessonIds.includes(lesson.id)" class="checkbox-checked bg-primary d-flex align-center justify-center rounded">
+                  <VIcon icon="ri-check-line" size="14" color="white" />
+                </div>
+                <div v-else class="checkbox-unchecked rounded border-2"></div>
+              </div>
+              <div class="d-flex flex-column flex-grow-1">
+                <span class="text-body-1 font-weight-medium text-high-emphasis leading-normal">
+                  {{ lesson.title }}
+                </span>
+                <div class="d-flex align-center flex-wrap gap-1 mt-1 text-body-2 text-medium-emphasis">
+                  <VIcon
+                    :icon="lesson.statusColor === 'success' ? 'ri-check-line' : 'ri-loader-2-line'"
+                    size="12"
+                    :class="`text-${lesson.statusColor === 'success' ? 'primary' : 'info'}`"
+                  />
+                  <span
+                    class="font-weight-medium"
+                    :class="`text-${lesson.statusColor === 'success' ? 'primary' : 'info'}`"
+                  >
+                    {{ lesson.progress }} {{ lesson.statusText }}
+                  </span>
+                  <span class="mx-2 text-disabled">•</span>
+                  <span class="text-medium-emphasis">Score :</span>
+                  <span class="font-weight-medium text-high-emphasis ms-1">
+                    {{ lesson.score > 0 ? lesson.score : '85' }}
+                  </span>
+                  <span class="text-medium-emphasis">/ 100</span>
+                </div>
+              </div>
+            </div>
+            <div v-if="filteredAvailableLessons.length === 0" class="text-center py-6 text-body-2 text-medium-emphasis">
+              No lessons match your search.
+            </div>
+          </div>
         </VCardText>
-        <VCardActions class="pa-4 border-t">
+        <VCardActions class="px-6 py-4 bg-light-gray border-t d-flex justify-end gap-3">
           <VSpacer />
-          <VBtn color="secondary" variant="outlined" @click="showAddLessonDialog = false">Cancel</VBtn>
-          <VBtn color="primary" variant="flat" :disabled="!newLessonTitle" @click="addLesson">Add Lesson</VBtn>
+          <VBtn
+            variant="outlined"
+            color="secondary"
+            class="px-6 rounded-pill text-capitalize"
+            @click="showAddLessonDialog = false"
+          >
+            Close
+          </VBtn>
+          <VBtn
+            color="primary"
+            variant="flat"
+            class="px-6 rounded-pill text-capitalize"
+            @click="confirmLessonSelection"
+          >
+            Confirm Selection
+          </VBtn>
         </VCardActions>
       </VCard>
     </VDialog>
 
-    <!-- DIALOG: Photo Example -->
-    <VDialog v-model="showExampleDialog" max-width="500">
-      <VCard class="rounded-lg">
-        <VCardTitle class="text-h6 font-weight-medium pa-4 border-b d-flex align-center justify-space-between">
-          <span>Evidence Photo Example</span>
-          <VBtn icon="ri-close-line" variant="text" size="small" @click="showExampleDialog = false" />
+    <!-- DIALOG 2: Photo Guidelines -->
+    <VDialog v-model="showExampleDialog" max-width="700">
+      <VCard class="rounded-lg overflow-hidden shadow-xl bg-surface">
+        <VCardTitle class="px-6 pt-6 pb-4 d-flex align-center justify-space-between position-relative">
+          <span class="text-h5 font-weight-medium text-high-emphasis">Photo Guidelines</span>
+          <VBtn
+            icon="ri-close-line"
+            variant="text"
+            color="secondary"
+            class="rounded-circle"
+            size="small"
+            @click="showExampleDialog = false"
+          />
         </VCardTitle>
-        <VCardText class="pa-5 text-center">
-          <VCard border flat class="rounded-lg mb-4 bg-light-gray pa-6 d-flex align-center justify-center" style="height: 250px;">
-            <VIcon icon="ri-image-2-line" size="64" color="primary" />
-          </VCard>
-          <span class="text-body-1 font-weight-medium text-high-emphasis mb-1 d-block">High Quality Evidence Photo</span>
-          <p class="text-body-2 text-medium-emphasis mb-0">
-            Please capture clear visual progress of the student working on the dashboard, including code block or project output.
-          </p>
+        <VCardText class="px-6 py-4">
+          <div class="mb-6">
+            <h6 class="text-body-1 font-weight-medium text-high-emphasis mb-3">Guidelines</h6>
+            <div class="guideline-tips-box rounded-lg pa-4 bg-light-gray d-flex flex-column gap-3">
+              <div class="d-flex align-center gap-2">
+                <VIcon icon="ri-check-line" size="18" color="primary" />
+                <span class="text-body-2 text-high-emphasis">
+                  Show the student actively working or engaged in the lesson
+                </span>
+              </div>
+              <div class="d-flex align-center gap-2">
+                <VIcon icon="ri-check-line" size="18" color="primary" />
+                <span class="text-body-2 text-high-emphasis">
+                  Ensure the photo is clear and well-lit
+                </span>
+              </div>
+              <div class="d-flex align-center gap-2">
+                <VIcon icon="ri-check-line" size="18" color="primary" />
+                <span class="text-body-2 text-high-emphasis">
+                  Avoid capturing other students' faces without consent
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h6 class="text-body-1 font-weight-medium text-high-emphasis mb-3">Example</h6>
+            <VRow>
+              <VCol cols="12" sm="6">
+                <div class="example-card good border rounded-xl pa-3 bg-primary-light-tint">
+                  <div class="example-img-wrapper border rounded-lg overflow-hidden ratio-4-3 mb-3" style="border-color: rgb(var(--v-theme-primary)) !important;">
+                    <VImg src="/good-photo.png" cover class="w-100 h-100" />
+                  </div>
+                  <div class="d-flex align-center gap-2 mb-1">
+                    <div class="status-icon-wrapper good rounded-circle bg-primary d-flex align-center justify-center">
+                      <VIcon icon="ri-check-line" size="12" color="white" />
+                    </div>
+                    <span class="text-body-2 font-weight-medium text-high-emphasis">Good photo</span>
+                  </div>
+                  <p class="text-caption text-medium-emphasis mb-0">
+                    Student clearly visible, well-lit, activity shown
+                  </p>
+                </div>
+              </VCol>
+              <VCol cols="12" sm="6">
+                <div class="example-card bad border rounded-xl pa-3 bg-error-light-tint">
+                  <div class="example-img-wrapper border rounded-lg overflow-hidden ratio-4-3 mb-3" style="border-color: rgb(var(--v-theme-error)) !important;">
+                    <VImg src="/bad-photo.png" cover class="w-100 h-100" />
+                  </div>
+                  <div class="d-flex align-center gap-2 mb-1">
+                    <div class="status-icon-wrapper bad rounded-circle bg-error d-flex align-center justify-center">
+                      <VIcon icon="ri-close-line" size="12" color="white" />
+                    </div>
+                    <span class="text-body-2 font-weight-medium text-error">Bad Photo</span>
+                  </div>
+                  <p class="text-caption text-medium-emphasis mb-0">
+                    Dark, blurry, or unrelated to lesson
+                  </p>
+                </div>
+              </VCol>
+            </VRow>
+          </div>
+        </VCardText>
+        <VCardActions class="px-6 py-4 bg-light-gray border-t d-flex justify-end">
+          <VBtn
+            color="primary"
+            variant="flat"
+            class="px-8 rounded-pill text-capitalize font-weight-medium"
+            @click="showExampleDialog = false"
+          >
+            Got It
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+
+    <!-- DIALOG 3: Back Confirmation -->
+    <VDialog v-model="showBackConfirmDialog" max-width="500">
+      <VCard class="rounded-lg overflow-hidden shadow-xl bg-surface">
+        <VCardTitle class="px-6 pt-5 pb-3 border-b d-flex align-center justify-space-between">
+          <span class="text-h6 font-weight-medium text-high-emphasis">Back to detail attendance?</span>
+          <VBtn
+            icon="ri-close-line"
+            variant="text"
+            color="secondary"
+            class="rounded-circle"
+            size="small"
+            @click="showBackConfirmDialog = false"
+          />
+        </VCardTitle>
+        <VCardText class="px-6 py-4 text-body-2 text-medium-emphasis">
+          Are you sure you want to go back? Your current progress won't be saved. If you want to keep your changes, please click the 'Save as Draft' button below.
+        </VCardText>
+        <VCardActions class="px-6 py-4 bg-light-gray border-t d-flex justify-end gap-3">
+          <VSpacer />
+          <VBtn
+            variant="outlined"
+            color="secondary"
+            class="px-6 rounded-pill text-capitalize"
+            @click="confirmBackNavigation"
+          >
+            Back
+          </VBtn>
+          <VBtn
+            color="primary"
+            variant="flat"
+            class="px-6 rounded-pill text-capitalize"
+            @click="showBackConfirmDialog = false"
+          >
+            Stay on this page
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+
+    <!-- DIALOG 4: Upload Photo Source -->
+    <VDialog v-model="showUploadPhotoDialog" max-width="500">
+      <VCard class="rounded-lg overflow-hidden shadow-xl bg-surface">
+        <VCardTitle class="px-6 pt-5 pb-3 border-b d-flex align-center justify-space-between">
+          <span class="text-h6 font-weight-medium text-high-emphasis">Upload photo</span>
+          <VBtn
+            icon="ri-close-line"
+            variant="text"
+            color="secondary"
+            class="rounded-circle"
+            size="small"
+            @click="showUploadPhotoDialog = false"
+          />
+        </VCardTitle>
+        <VCardText class="pa-6">
+          <div class="d-flex flex-column gap-4">
+            <div
+              class="upload-option-card border rounded-lg pa-4 d-flex align-center cursor-pointer transition-all"
+              @click="triggerCameraInput"
+            >
+              <div class="upload-icon-box rounded me-3 d-flex align-center justify-center text-primary">
+                <VIcon icon="ri-camera-line" size="24" />
+              </div>
+              <span class="text-body-1 font-weight-medium text-high-emphasis flex-grow-1">
+                Pick from camera
+              </span>
+              <VIcon icon="ri-arrow-right-s-line" size="20" class="text-medium-emphasis" />
+            </div>
+            <div
+              class="upload-option-card border rounded-lg pa-4 d-flex align-center cursor-pointer transition-all"
+              @click="triggerGalleryInput"
+            >
+              <div class="upload-icon-box rounded me-3 d-flex align-center justify-center text-primary">
+                <VIcon icon="ri-folder-5-line" size="24" />
+              </div>
+              <span class="text-body-1 font-weight-medium text-high-emphasis flex-grow-1">
+                Select from gallery
+              </span>
+              <VIcon icon="ri-arrow-right-s-line" size="20" class="text-medium-emphasis" />
+            </div>
+          </div>
         </VCardText>
       </VCard>
     </VDialog>
@@ -737,9 +1238,27 @@ const saveAndContinue = () => {
 
 <style lang="scss" scoped>
 .meeting-journal-create-page {
+  padding-bottom: 100px !important; /* spacing for footer */
+}
+
+.full-width-header {
+  margin-inline: -1.5rem;
+  margin-block-start: -1.5rem;
+  padding-top: 20px;
+  padding-bottom: 20px;
+
+  :deep(.d-flex) {
+    margin-bottom: 0 !important;
+  }
+}
+
+.full-width-stepper {
+  margin-inline: -1.5rem;
+}
+
+.create-journal-content-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding-bottom: 100px !important; /* spacing for footer */
 }
 
 .teacher-info-badge {
@@ -747,18 +1266,74 @@ const saveAndContinue = () => {
   background-color: rgb(var(--v-theme-surface));
 }
 
-.custom-expansion-panels {
+.lesson-card {
   border-color: rgba(var(--v-border-color), 0.12) !important;
+  background-color: rgb(var(--v-theme-surface));
 }
 
-.bg-expansion-inner {
-  background-color: rgba(var(--v-theme-on-surface), 0.02);
+.lesson-header-row {
+  border-bottom: 2px solid rgb(var(--v-theme-primary)) !important;
+}
+
+.status-circle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  
+  &.success {
+    background-color: rgb(var(--v-theme-primary));
+  }
+  &.info {
+    background-color: rgb(var(--v-theme-info));
+  }
 }
 
 .vertical-divider {
   width: 1px;
   height: 32px;
   background-color: rgba(var(--v-border-color), 0.12);
+}
+
+.delete-btn {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  padding: 0 !important;
+  border-color: rgba(var(--v-border-color), 0.08) !important;
+  color: rgb(var(--v-theme-error)) !important;
+  background-color: transparent !important;
+
+  &:hover {
+    background-color: rgba(var(--v-theme-error), 0.04) !important;
+  }
+
+  :deep(.v-btn__content) {
+    font-size: 18px;
+  }
+}
+
+.lesson-accordion-section {
+  background-color: #f4f5fa;
+}
+
+.objective-circle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: rgb(var(--v-theme-primary));
+}
+
+.accordion-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-color: rgba(var(--v-border-color), 0.08) !important;
+}
+
+.objective-list {
+  list-style-type: disc;
 }
 
 .score-input-box {
@@ -823,6 +1398,12 @@ const saveAndContinue = () => {
   border-style: solid !important;
 }
 
+.ai-summary-box {
+  min-height: 120px;
+  background-color: #fafafa !important;
+  border-color: rgba(var(--v-border-color), 0.12) !important;
+}
+
 .action-footer-bar {
   position: fixed;
   bottom: 0;
@@ -838,5 +1419,115 @@ const saveAndContinue = () => {
   .action-footer-bar {
     left: 0; /* Full width if sidebar collapsed or on smaller screen */
   }
+}
+
+.last-sent-badge {
+  border-color: rgba(var(--v-border-color), 0.12) !important;
+  background-color: rgb(var(--v-theme-surface));
+}
+
+.bg-primary-light {
+  background-color: rgba(var(--v-theme-primary), 0.08) !important;
+}
+
+.bg-success-light {
+  background-color: rgba(var(--v-theme-success), 0.08) !important;
+}
+
+.bg-error-light {
+  background-color: rgba(var(--v-theme-error), 0.08) !important;
+}
+
+.pa-1-5 {
+  padding: 6px !important;
+}
+
+.report-document-preview {
+  border-color: rgba(var(--v-border-color), 0.12) !important;
+}
+
+/* Modal Styles */
+.bg-primary-light-tint {
+  background-color: rgba(var(--v-theme-primary), 0.04) !important;
+}
+
+.bg-error-light-tint {
+  background-color: rgba(var(--v-theme-error), 0.04) !important;
+}
+
+.ratio-4-3 {
+  aspect-ratio: 4 / 3;
+}
+
+.example-card {
+  border-radius: 16px !important;
+}
+
+.example-img-wrapper {
+  border-radius: 12px !important;
+}
+
+.lesson-select-card {
+  border-color: rgba(var(--v-border-color), 0.12) !important;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: rgba(var(--v-theme-primary), 0.02);
+    border-color: rgba(var(--v-theme-primary), 0.4) !important;
+  }
+}
+
+.checkbox-box {
+  width: 20px;
+  height: 20px;
+}
+
+.checkbox-checked {
+  width: 18px;
+  height: 18px;
+}
+
+.checkbox-unchecked {
+  width: 18px;
+  height: 18px;
+  border-color: rgba(var(--v-theme-on-surface), 0.3) !important;
+}
+
+.guideline-tips-box {
+  border-color: rgba(var(--v-border-color), 0.12) !important;
+}
+
+.status-icon-wrapper {
+  width: 20px;
+  height: 20px;
+  
+  &.good {
+    background-color: rgb(var(--v-theme-primary)) !important;
+  }
+  &.bad {
+    background-color: rgb(var(--v-theme-error)) !important;
+  }
+}
+
+.upload-option-card {
+  border-color: rgba(var(--v-border-color), 0.12) !important;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: rgba(var(--v-theme-primary), 0.04);
+    border-color: rgb(var(--v-theme-primary)) !important;
+    
+    .upload-icon-box {
+      background-color: rgb(var(--v-theme-primary)) !important;
+      color: white !important;
+    }
+  }
+}
+
+.upload-icon-box {
+  width: 44px;
+  height: 44px;
+  background-color: rgba(var(--v-theme-primary), 0.08) !important;
+  transition: all 0.2s ease;
 }
 </style>

@@ -1,0 +1,1 @@
+import{d as c,k as s,f as t,b as a,a as i,h as l,o as r}from"./DZv0r6sV.js";const f=c({__name:"DialogCloseBtn",props:{icon:{default:"ri-close-line"},iconSize:{default:"24"}},setup(e){const o=e;return(p,_)=>{const n=t("IconBtn");return r(),s(n,{class:"v-dialog-close-btn"},{default:a(()=>[i(l,{icon:o.icon,size:o.iconSize},null,8,["icon","size"])]),_:1})}}});export{f as _};

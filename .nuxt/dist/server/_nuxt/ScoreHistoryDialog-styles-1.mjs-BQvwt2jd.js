@@ -1,0 +1,4 @@
+const ScoreHistoryDialog_vue_vue_type_style_index_0_scoped_ad42eb92_lang = ".history-row[data-v-ad42eb92]{background-color:#fafafa;text-align:left;transition:background-color .2s ease}.history-row--default[data-v-ad42eb92]{border-color:rgba(var(--v-theme-on-surface),.12)!important}.history-row--best[data-v-ad42eb92]{background-color:rgb(var(--v-theme-surface));border-color:rgb(var(--v-theme-primary))!important}.history-row[data-v-ad42eb92]:hover{background-color:rgba(var(--v-theme-on-surface),.02)}.history-row__divider[data-v-ad42eb92]{align-self:stretch;height:auto}";
+export {
+  ScoreHistoryDialog_vue_vue_type_style_index_0_scoped_ad42eb92_lang as default
+};

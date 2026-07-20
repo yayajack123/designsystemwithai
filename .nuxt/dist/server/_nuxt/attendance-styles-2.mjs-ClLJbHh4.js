@@ -1,0 +1,4 @@
+const attendance_vue_vue_type_style_index_1_lang = ".time-segments-grid{display:grid!important;gap:16px!important;grid-template-columns:1fr 1fr!important}.time-pill-modal{border-radius:240px!important;box-shadow:none!important;font-size:14px!important;font-weight:500!important;height:40px!important;justify-content:center!important;letter-spacing:-.3px!important;padding:0 16px!important}.time-pill-modal.v-btn--variant-outlined{background-color:transparent!important;border:1px solid rgba(46,38,61,.24)!important;color:#2e263db3!important}.time-pill-modal.v-btn--variant-outlined .v-icon{color:#2e263db3!important}.time-pill-modal.v-btn--variant-flat{background-color:#10af13!important;color:#fff!important}.time-pill-modal.v-btn--variant-flat .v-icon{color:#fff!important}";
+export {
+  attendance_vue_vue_type_style_index_1_lang as default
+};

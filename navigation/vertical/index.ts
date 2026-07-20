@@ -1,13 +1,8 @@
-export default [
+export const mainNavItems = [
   {
-    title: 'Home',
-    to: { name: 'index' },
-    icon: { icon: 'ri-home-smile-line' },
-  },
-  {
-    title: 'Dashboard',
+    title: 'Dashboards',
     to: { name: 'dashboard-teacher' },
-    icon: { icon: 'ri-dashboard-3-line' },
+    icon: { icon: 'ri-home-smile-line' },
   },
   {
     heading: 'DAILY',
@@ -38,7 +33,22 @@ export default [
   {
     title: 'Classes',
     to: { name: 'classes' },
-    icon: { icon: 'ri-book-open-line' },
+    icon: { icon: 'ri-door-closed-line' },
+  },
+  {
+    title: 'Students',
+    to: { name: 'students' },
+    icon: { icon: 'ri-group-line' },
+  },
+  {
+    title: 'Course',
+    to: { name: 'course' },
+    icon: { icon: 'ri-calendar-event-line' },
+  },
+  {
+    title: 'Event',
+    to: { name: 'event' },
+    icon: { icon: 'ri-lightbulb-flash-line' },
   },
   {
     heading: 'DESIGN',
@@ -49,3 +59,19 @@ export default [
     icon: { icon: 'ri-palette-line' },
   },
 ]
+
+export const bottomNavItems = [
+  {
+    title: 'My Attendance',
+    to: { name: 'my-attendance' },
+    icon: { icon: 'ri-task-line' },
+  },
+  {
+    title: 'Account',
+    to: { name: 'account' },
+    icon: { icon: 'ri-user-line' },
+  },
+]
+
+export default mainNavItems
+

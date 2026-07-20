@@ -5,9 +5,19 @@ interface Props {
   title: string
   description?: string
   back?: RouteLocation
+  customBack?: boolean
 }
 
 const props = defineProps<Props>()
+const emit = defineEmits(['click:back'])
+
+const handleBackClick = (e: MouseEvent) => {
+  if (props.customBack) {
+    e.preventDefault()
+    e.stopPropagation()
+    emit('click:back')
+  }
+}
 </script>
 
 <template>
@@ -16,7 +26,8 @@ const props = defineProps<Props>()
       v-if="props.back"
       color="secondary"
       class="me-4"
-      :to="props.back"
+      :to="props.customBack ? undefined : props.back"
+      @click="handleBackClick"
     >
       <VIcon icon="ri-arrow-left-line" />
       <VTooltip
