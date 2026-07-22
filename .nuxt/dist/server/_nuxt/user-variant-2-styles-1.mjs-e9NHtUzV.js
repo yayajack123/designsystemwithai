@@ -1,4 +1,0 @@
-const userVariant2_vue_vue_type_style_index_0_lang = ".app-user-search-filter{inline-size:24.0625rem}.text-capitalize{text-transform:capitalize}.user-list-name:not(:hover){color:rgba(var(--v-theme-on-background),var(--v-high-emphasis-opacity))}";
-export {
-  userVariant2_vue_vue_type_style_index_0_lang as default
-};

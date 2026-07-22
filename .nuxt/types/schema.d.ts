@@ -1,144 +1,6 @@
-import { NuxtModule, RuntimeConfig } from '@nuxt/schema'
-declare module '@nuxt/schema' {
-  interface NuxtOptions {
-    /**
-     * Configuration for `@vueuse/nuxt`
-     */
-    ["vueuse"]: typeof import("@vueuse/nuxt").default extends NuxtModule<infer O> ? O : Record<string, any>
-    /**
-     * Configuration for `@nuxtjs/i18n`
-     */
-    ["i18n"]: typeof import("@nuxtjs/i18n").default extends NuxtModule<infer O> ? O : Record<string, any>
-    /**
-     * Configuration for `@nuxtjs/device`
-     */
-    ["device"]: typeof import("@nuxtjs/device").default extends NuxtModule<infer O> ? O : Record<string, any>
-    /**
-     * Configuration for `@pinia/nuxt`
-     */
-    ["pinia"]: typeof import("@pinia/nuxt").default extends NuxtModule<infer O> ? O : Record<string, any>
-    /**
-     * Configuration for `@kgierke/nuxt-basic-auth`
-     */
-    ["basicAuth"]: typeof import("@kgierke/nuxt-basic-auth").default extends NuxtModule<infer O> ? O : Record<string, any>
-    /**
-     * Configuration for `@nuxt/devtools`
-     */
-    ["devtools"]: typeof import("@nuxt/devtools").default extends NuxtModule<infer O> ? O : Record<string, any>
-    /**
-     * Configuration for `@nuxt/telemetry`
-     */
-    ["telemetry"]: typeof import("@nuxt/telemetry").default extends NuxtModule<infer O> ? O : Record<string, any>
-  }
-  interface NuxtConfig {
-    /**
-     * Configuration for `@vueuse/nuxt`
-     */
-    ["vueuse"]?: typeof import("@vueuse/nuxt").default extends NuxtModule<infer O> ? Partial<O> : Record<string, any>
-    /**
-     * Configuration for `@nuxtjs/i18n`
-     */
-    ["i18n"]?: typeof import("@nuxtjs/i18n").default extends NuxtModule<infer O> ? Partial<O> : Record<string, any>
-    /**
-     * Configuration for `@nuxtjs/device`
-     */
-    ["device"]?: typeof import("@nuxtjs/device").default extends NuxtModule<infer O> ? Partial<O> : Record<string, any>
-    /**
-     * Configuration for `@pinia/nuxt`
-     */
-    ["pinia"]?: typeof import("@pinia/nuxt").default extends NuxtModule<infer O> ? Partial<O> : Record<string, any>
-    /**
-     * Configuration for `@kgierke/nuxt-basic-auth`
-     */
-    ["basicAuth"]?: typeof import("@kgierke/nuxt-basic-auth").default extends NuxtModule<infer O> ? Partial<O> : Record<string, any>
-    /**
-     * Configuration for `@nuxt/devtools`
-     */
-    ["devtools"]?: typeof import("@nuxt/devtools").default extends NuxtModule<infer O> ? Partial<O> : Record<string, any>
-    /**
-     * Configuration for `@nuxt/telemetry`
-     */
-    ["telemetry"]?: typeof import("@nuxt/telemetry").default extends NuxtModule<infer O> ? Partial<O> : Record<string, any>
-    modules?: (undefined | null | false | NuxtModule<any> | string | [NuxtModule | string, Record<string, any>] | ["@vueuse/nuxt", Exclude<NuxtConfig["vueuse"], boolean>] | ["@nuxtjs/i18n", Exclude<NuxtConfig["i18n"], boolean>] | ["@nuxtjs/device", Exclude<NuxtConfig["device"], boolean>] | ["@pinia/nuxt", Exclude<NuxtConfig["pinia"], boolean>] | ["@kgierke/nuxt-basic-auth", Exclude<NuxtConfig["basicAuth"], boolean>] | ["@nuxt/devtools", Exclude<NuxtConfig["devtools"], boolean>] | ["@nuxt/telemetry", Exclude<NuxtConfig["telemetry"], boolean>])[],
-  }
-}
-declare module 'nuxt/schema' {
-  interface NuxtOptions {
-    /**
-     * Configuration for `@vueuse/nuxt`
-     * @see https://www.npmjs.com/package/@vueuse/nuxt
-     */
-    ["vueuse"]: typeof import("@vueuse/nuxt").default extends NuxtModule<infer O> ? O : Record<string, any>
-    /**
-     * Configuration for `@nuxtjs/i18n`
-     * @see https://www.npmjs.com/package/@nuxtjs/i18n
-     */
-    ["i18n"]: typeof import("@nuxtjs/i18n").default extends NuxtModule<infer O> ? O : Record<string, any>
-    /**
-     * Configuration for `@nuxtjs/device`
-     * @see https://www.npmjs.com/package/@nuxtjs/device
-     */
-    ["device"]: typeof import("@nuxtjs/device").default extends NuxtModule<infer O> ? O : Record<string, any>
-    /**
-     * Configuration for `@pinia/nuxt`
-     * @see https://www.npmjs.com/package/@pinia/nuxt
-     */
-    ["pinia"]: typeof import("@pinia/nuxt").default extends NuxtModule<infer O> ? O : Record<string, any>
-    /**
-     * Configuration for `@kgierke/nuxt-basic-auth`
-     * @see https://www.npmjs.com/package/@kgierke/nuxt-basic-auth
-     */
-    ["basicAuth"]: typeof import("@kgierke/nuxt-basic-auth").default extends NuxtModule<infer O> ? O : Record<string, any>
-    /**
-     * Configuration for `@nuxt/devtools`
-     * @see https://www.npmjs.com/package/@nuxt/devtools
-     */
-    ["devtools"]: typeof import("@nuxt/devtools").default extends NuxtModule<infer O> ? O : Record<string, any>
-    /**
-     * Configuration for `@nuxt/telemetry`
-     * @see https://www.npmjs.com/package/@nuxt/telemetry
-     */
-    ["telemetry"]: typeof import("@nuxt/telemetry").default extends NuxtModule<infer O> ? O : Record<string, any>
-  }
-  interface NuxtConfig {
-    /**
-     * Configuration for `@vueuse/nuxt`
-     * @see https://www.npmjs.com/package/@vueuse/nuxt
-     */
-    ["vueuse"]?: typeof import("@vueuse/nuxt").default extends NuxtModule<infer O> ? Partial<O> : Record<string, any>
-    /**
-     * Configuration for `@nuxtjs/i18n`
-     * @see https://www.npmjs.com/package/@nuxtjs/i18n
-     */
-    ["i18n"]?: typeof import("@nuxtjs/i18n").default extends NuxtModule<infer O> ? Partial<O> : Record<string, any>
-    /**
-     * Configuration for `@nuxtjs/device`
-     * @see https://www.npmjs.com/package/@nuxtjs/device
-     */
-    ["device"]?: typeof import("@nuxtjs/device").default extends NuxtModule<infer O> ? Partial<O> : Record<string, any>
-    /**
-     * Configuration for `@pinia/nuxt`
-     * @see https://www.npmjs.com/package/@pinia/nuxt
-     */
-    ["pinia"]?: typeof import("@pinia/nuxt").default extends NuxtModule<infer O> ? Partial<O> : Record<string, any>
-    /**
-     * Configuration for `@kgierke/nuxt-basic-auth`
-     * @see https://www.npmjs.com/package/@kgierke/nuxt-basic-auth
-     */
-    ["basicAuth"]?: typeof import("@kgierke/nuxt-basic-auth").default extends NuxtModule<infer O> ? Partial<O> : Record<string, any>
-    /**
-     * Configuration for `@nuxt/devtools`
-     * @see https://www.npmjs.com/package/@nuxt/devtools
-     */
-    ["devtools"]?: typeof import("@nuxt/devtools").default extends NuxtModule<infer O> ? Partial<O> : Record<string, any>
-    /**
-     * Configuration for `@nuxt/telemetry`
-     * @see https://www.npmjs.com/package/@nuxt/telemetry
-     */
-    ["telemetry"]?: typeof import("@nuxt/telemetry").default extends NuxtModule<infer O> ? Partial<O> : Record<string, any>
-    modules?: (undefined | null | false | NuxtModule<any> | string | [NuxtModule | string, Record<string, any>] | ["@vueuse/nuxt", Exclude<NuxtConfig["vueuse"], boolean>] | ["@nuxtjs/i18n", Exclude<NuxtConfig["i18n"], boolean>] | ["@nuxtjs/device", Exclude<NuxtConfig["device"], boolean>] | ["@pinia/nuxt", Exclude<NuxtConfig["pinia"], boolean>] | ["@kgierke/nuxt-basic-auth", Exclude<NuxtConfig["basicAuth"], boolean>] | ["@nuxt/devtools", Exclude<NuxtConfig["devtools"], boolean>] | ["@nuxt/telemetry", Exclude<NuxtConfig["telemetry"], boolean>])[],
-  }
-  interface RuntimeConfig {
+import { RuntimeConfig as UserRuntimeConfig, PublicRuntimeConfig as UserPublicRuntimeConfig } from 'nuxt/schema'
+import { NuxtModule, ModuleDependencyMeta } from '@nuxt/schema'
+  interface SharedRuntimeConfig {
    app: {
       buildId: string,
 
@@ -165,7 +27,7 @@ declare module 'nuxt/schema' {
       allowedRoutes: Array<string>,
    },
   }
-  interface PublicRuntimeConfig {
+  interface SharedPublicRuntimeConfig {
    appEnv: string,
 
    appBaseUrl: string,
@@ -246,9 +108,170 @@ declare module 'nuxt/schema' {
       multiDomainLocales: boolean,
    },
   }
+declare module '@nuxt/schema' {
+  interface ModuleDependencies {
+    ["vueuse"]?: ModuleDependencyMeta<typeof import("@vueuse/nuxt").default extends NuxtModule<infer O> ? O | false : Record<string, unknown>> | false
+    ["@nuxtjs/i18n"]?: ModuleDependencyMeta<typeof import("@nuxtjs/i18n").default extends NuxtModule<infer O> ? O | false : Record<string, unknown>> | false
+    ["device-module"]?: ModuleDependencyMeta<typeof import("@nuxtjs/device").default extends NuxtModule<infer O> ? O | false : Record<string, unknown>> | false
+    ["pinia"]?: ModuleDependencyMeta<typeof import("@pinia/nuxt").default extends NuxtModule<infer O> ? O | false : Record<string, unknown>> | false
+    ["@kgierke/nuxt-basic-auth"]?: ModuleDependencyMeta<typeof import("@kgierke/nuxt-basic-auth").default extends NuxtModule<infer O> ? O | false : Record<string, unknown>> | false
+    ["@nuxt/devtools"]?: ModuleDependencyMeta<typeof import("@nuxt/devtools").default extends NuxtModule<infer O> ? O | false : Record<string, unknown>> | false
+    ["@nuxt/telemetry"]?: ModuleDependencyMeta<typeof import("@nuxt/telemetry").default extends NuxtModule<infer O> ? O | false : Record<string, unknown>> | false
+  }
+  interface NuxtOptions {
+    /**
+     * Configuration for `@vueuse/nuxt`
+     */
+    ["vueuse"]: typeof import("@vueuse/nuxt").default extends NuxtModule<infer O, unknown, boolean> ? O | false : Record<string, any> | false
+    /**
+     * Configuration for `@nuxtjs/i18n`
+     */
+    ["i18n"]: typeof import("@nuxtjs/i18n").default extends NuxtModule<infer O, unknown, boolean> ? O | false : Record<string, any> | false
+    /**
+     * Configuration for `@nuxtjs/device`
+     */
+    ["device"]: typeof import("@nuxtjs/device").default extends NuxtModule<infer O, unknown, boolean> ? O | false : Record<string, any> | false
+    /**
+     * Configuration for `@pinia/nuxt`
+     */
+    ["pinia"]: typeof import("@pinia/nuxt").default extends NuxtModule<infer O, unknown, boolean> ? O | false : Record<string, any> | false
+    /**
+     * Configuration for `@kgierke/nuxt-basic-auth`
+     */
+    ["basicAuth"]: typeof import("@kgierke/nuxt-basic-auth").default extends NuxtModule<infer O, unknown, boolean> ? O | false : Record<string, any> | false
+    /**
+     * Configuration for `@nuxt/devtools`
+     */
+    ["devtools"]: typeof import("@nuxt/devtools").default extends NuxtModule<infer O, unknown, boolean> ? O | false : Record<string, any> | false
+    /**
+     * Configuration for `@nuxt/telemetry`
+     */
+    ["telemetry"]: typeof import("@nuxt/telemetry").default extends NuxtModule<infer O, unknown, boolean> ? O | false : Record<string, any> | false
+  }
+  interface NuxtConfig {
+    /**
+     * Configuration for `@vueuse/nuxt`
+     */
+    ["vueuse"]?: typeof import("@vueuse/nuxt").default extends NuxtModule<infer O, unknown, boolean> ? Partial<O> | false : Record<string, any> | false
+    /**
+     * Configuration for `@nuxtjs/i18n`
+     */
+    ["i18n"]?: typeof import("@nuxtjs/i18n").default extends NuxtModule<infer O, unknown, boolean> ? Partial<O> | false : Record<string, any> | false
+    /**
+     * Configuration for `@nuxtjs/device`
+     */
+    ["device"]?: typeof import("@nuxtjs/device").default extends NuxtModule<infer O, unknown, boolean> ? Partial<O> | false : Record<string, any> | false
+    /**
+     * Configuration for `@pinia/nuxt`
+     */
+    ["pinia"]?: typeof import("@pinia/nuxt").default extends NuxtModule<infer O, unknown, boolean> ? Partial<O> | false : Record<string, any> | false
+    /**
+     * Configuration for `@kgierke/nuxt-basic-auth`
+     */
+    ["basicAuth"]?: typeof import("@kgierke/nuxt-basic-auth").default extends NuxtModule<infer O, unknown, boolean> ? Partial<O> | false : Record<string, any> | false
+    /**
+     * Configuration for `@nuxt/devtools`
+     */
+    ["devtools"]?: typeof import("@nuxt/devtools").default extends NuxtModule<infer O, unknown, boolean> ? Partial<O> | false : Record<string, any> | false
+    /**
+     * Configuration for `@nuxt/telemetry`
+     */
+    ["telemetry"]?: typeof import("@nuxt/telemetry").default extends NuxtModule<infer O, unknown, boolean> ? Partial<O> | false : Record<string, any> | false
+    modules?: (undefined | null | false | NuxtModule<any> | string | [NuxtModule | string, Record<string, any>] | ["@vueuse/nuxt", Exclude<NuxtConfig["vueuse"], boolean>] | ["@nuxtjs/i18n", Exclude<NuxtConfig["i18n"], boolean>] | ["@nuxtjs/device", Exclude<NuxtConfig["device"], boolean>] | ["@pinia/nuxt", Exclude<NuxtConfig["pinia"], boolean>] | ["@kgierke/nuxt-basic-auth", Exclude<NuxtConfig["basicAuth"], boolean>] | ["@nuxt/devtools", Exclude<NuxtConfig["devtools"], boolean>] | ["@nuxt/telemetry", Exclude<NuxtConfig["telemetry"], boolean>])[],
+  }
+  interface RuntimeConfig extends UserRuntimeConfig {}
+  interface PublicRuntimeConfig extends UserPublicRuntimeConfig {}
+}
+declare module 'nuxt/schema' {
+  interface ModuleDependencies {
+    ["vueuse"]?: ModuleDependencyMeta<typeof import("@vueuse/nuxt").default extends NuxtModule<infer O> ? O | false : Record<string, unknown>> | false
+    ["@nuxtjs/i18n"]?: ModuleDependencyMeta<typeof import("@nuxtjs/i18n").default extends NuxtModule<infer O> ? O | false : Record<string, unknown>> | false
+    ["device-module"]?: ModuleDependencyMeta<typeof import("@nuxtjs/device").default extends NuxtModule<infer O> ? O | false : Record<string, unknown>> | false
+    ["pinia"]?: ModuleDependencyMeta<typeof import("@pinia/nuxt").default extends NuxtModule<infer O> ? O | false : Record<string, unknown>> | false
+    ["@kgierke/nuxt-basic-auth"]?: ModuleDependencyMeta<typeof import("@kgierke/nuxt-basic-auth").default extends NuxtModule<infer O> ? O | false : Record<string, unknown>> | false
+    ["@nuxt/devtools"]?: ModuleDependencyMeta<typeof import("@nuxt/devtools").default extends NuxtModule<infer O> ? O | false : Record<string, unknown>> | false
+    ["@nuxt/telemetry"]?: ModuleDependencyMeta<typeof import("@nuxt/telemetry").default extends NuxtModule<infer O> ? O | false : Record<string, unknown>> | false
+  }
+  interface NuxtOptions {
+    /**
+     * Configuration for `@vueuse/nuxt`
+     * @see https://www.npmjs.com/package/@vueuse/nuxt
+     */
+    ["vueuse"]: typeof import("@vueuse/nuxt").default extends NuxtModule<infer O, unknown, boolean> ? O | false : Record<string, any> | false
+    /**
+     * Configuration for `@nuxtjs/i18n`
+     * @see https://www.npmjs.com/package/@nuxtjs/i18n
+     */
+    ["i18n"]: typeof import("@nuxtjs/i18n").default extends NuxtModule<infer O, unknown, boolean> ? O | false : Record<string, any> | false
+    /**
+     * Configuration for `@nuxtjs/device`
+     * @see https://www.npmjs.com/package/@nuxtjs/device
+     */
+    ["device"]: typeof import("@nuxtjs/device").default extends NuxtModule<infer O, unknown, boolean> ? O | false : Record<string, any> | false
+    /**
+     * Configuration for `@pinia/nuxt`
+     * @see https://www.npmjs.com/package/@pinia/nuxt
+     */
+    ["pinia"]: typeof import("@pinia/nuxt").default extends NuxtModule<infer O, unknown, boolean> ? O | false : Record<string, any> | false
+    /**
+     * Configuration for `@kgierke/nuxt-basic-auth`
+     * @see https://www.npmjs.com/package/@kgierke/nuxt-basic-auth
+     */
+    ["basicAuth"]: typeof import("@kgierke/nuxt-basic-auth").default extends NuxtModule<infer O, unknown, boolean> ? O | false : Record<string, any> | false
+    /**
+     * Configuration for `@nuxt/devtools`
+     * @see https://www.npmjs.com/package/@nuxt/devtools
+     */
+    ["devtools"]: typeof import("@nuxt/devtools").default extends NuxtModule<infer O, unknown, boolean> ? O | false : Record<string, any> | false
+    /**
+     * Configuration for `@nuxt/telemetry`
+     * @see https://www.npmjs.com/package/@nuxt/telemetry
+     */
+    ["telemetry"]: typeof import("@nuxt/telemetry").default extends NuxtModule<infer O, unknown, boolean> ? O | false : Record<string, any> | false
+  }
+  interface NuxtConfig {
+    /**
+     * Configuration for `@vueuse/nuxt`
+     * @see https://www.npmjs.com/package/@vueuse/nuxt
+     */
+    ["vueuse"]?: typeof import("@vueuse/nuxt").default extends NuxtModule<infer O, unknown, boolean> ? Partial<O> | false : Record<string, any> | false
+    /**
+     * Configuration for `@nuxtjs/i18n`
+     * @see https://www.npmjs.com/package/@nuxtjs/i18n
+     */
+    ["i18n"]?: typeof import("@nuxtjs/i18n").default extends NuxtModule<infer O, unknown, boolean> ? Partial<O> | false : Record<string, any> | false
+    /**
+     * Configuration for `@nuxtjs/device`
+     * @see https://www.npmjs.com/package/@nuxtjs/device
+     */
+    ["device"]?: typeof import("@nuxtjs/device").default extends NuxtModule<infer O, unknown, boolean> ? Partial<O> | false : Record<string, any> | false
+    /**
+     * Configuration for `@pinia/nuxt`
+     * @see https://www.npmjs.com/package/@pinia/nuxt
+     */
+    ["pinia"]?: typeof import("@pinia/nuxt").default extends NuxtModule<infer O, unknown, boolean> ? Partial<O> | false : Record<string, any> | false
+    /**
+     * Configuration for `@kgierke/nuxt-basic-auth`
+     * @see https://www.npmjs.com/package/@kgierke/nuxt-basic-auth
+     */
+    ["basicAuth"]?: typeof import("@kgierke/nuxt-basic-auth").default extends NuxtModule<infer O, unknown, boolean> ? Partial<O> | false : Record<string, any> | false
+    /**
+     * Configuration for `@nuxt/devtools`
+     * @see https://www.npmjs.com/package/@nuxt/devtools
+     */
+    ["devtools"]?: typeof import("@nuxt/devtools").default extends NuxtModule<infer O, unknown, boolean> ? Partial<O> | false : Record<string, any> | false
+    /**
+     * Configuration for `@nuxt/telemetry`
+     * @see https://www.npmjs.com/package/@nuxt/telemetry
+     */
+    ["telemetry"]?: typeof import("@nuxt/telemetry").default extends NuxtModule<infer O, unknown, boolean> ? Partial<O> | false : Record<string, any> | false
+    modules?: (undefined | null | false | NuxtModule<any> | string | [NuxtModule | string, Record<string, any>] | ["@vueuse/nuxt", Exclude<NuxtConfig["vueuse"], boolean>] | ["@nuxtjs/i18n", Exclude<NuxtConfig["i18n"], boolean>] | ["@nuxtjs/device", Exclude<NuxtConfig["device"], boolean>] | ["@pinia/nuxt", Exclude<NuxtConfig["pinia"], boolean>] | ["@kgierke/nuxt-basic-auth", Exclude<NuxtConfig["basicAuth"], boolean>] | ["@nuxt/devtools", Exclude<NuxtConfig["devtools"], boolean>] | ["@nuxt/telemetry", Exclude<NuxtConfig["telemetry"], boolean>])[],
+  }
+  interface RuntimeConfig extends SharedRuntimeConfig {}
+  interface PublicRuntimeConfig extends SharedPublicRuntimeConfig {}
 }
 declare module 'vue' {
         interface ComponentCustomProperties {
-          $config: RuntimeConfig
+          $config: UserRuntimeConfig
         }
       }
