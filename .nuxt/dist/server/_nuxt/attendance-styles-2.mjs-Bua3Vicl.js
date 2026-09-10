@@ -1,0 +1,4 @@
+const AllStudentDialog_vue_vue_type_style_index_0_scoped_3708fbdf_lang = ".all-student-dialog[data-v-3708fbdf]{border-radius:12px;box-shadow:0 8px 28px #2e263d3d!important}.student-idx[data-v-3708fbdf]{height:26px;line-height:26px;min-width:26px;text-align:center;width:26px}.student-row[data-v-3708fbdf]{transition:background-color .15s ease}.student-row[data-v-3708fbdf]:hover{background-color:rgba(var(--v-theme-on-surface),.02)}.action-icon-btn[data-v-3708fbdf]{border-radius:50%;height:28px!important;min-width:28px!important;width:28px!important}.border-b[data-v-3708fbdf]{border-bottom:1px solid rgba(var(--v-theme-on-surface),.08)!important}.border-light[data-v-3708fbdf]{border-color:rgba(var(--v-theme-on-surface),.08)!important}";
+export {
+  AllStudentDialog_vue_vue_type_style_index_0_scoped_3708fbdf_lang as default
+};
