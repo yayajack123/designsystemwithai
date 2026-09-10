@@ -1132,7 +1132,7 @@ const _routes = [
     name: "user",
     path: "/user",
     meta: __nuxt_page_meta$l || {},
-    component: () => import('./user-DP8rHCBa.mjs')
+    component: () => import('./user-BWQyFvxw.mjs')
   },
   {
     name: "event",
@@ -1150,19 +1150,19 @@ const _routes = [
     name: "login",
     path: "/login",
     meta: { ...__nuxt_page_meta$i || {}, ...{ "middleware": ["guest"] } },
-    component: () => import('./login-BQpi8qQd.mjs')
+    component: () => import('./login-Bh83GhET.mjs')
   },
   {
     name: "course",
     path: "/course",
     meta: __nuxt_page_meta$h || {},
-    component: () => import('./course-Ti09raRc.mjs')
+    component: () => import('./course-CfY-2k6g.mjs')
   },
   {
     name: "themes",
     path: "/themes",
     meta: __nuxt_page_meta$g || {},
-    component: () => import('./themes-oq4z-T0G.mjs')
+    component: () => import('./themes-kkacYF-B.mjs')
   },
   {
     name: "account",
@@ -1174,31 +1174,31 @@ const _routes = [
     name: "classes",
     path: "/classes",
     meta: __nuxt_page_meta$e || {},
-    component: () => import('./classes-RKPC5w9-.mjs')
+    component: () => import('./classes-CsbkUU-d.mjs')
   },
   {
     name: "reports",
     path: "/reports",
     meta: __nuxt_page_meta$d || {},
-    component: () => import('./reports-BBb6hOMK.mjs')
+    component: () => import('./reports-CgOIUvgQ.mjs')
   },
   {
     name: "schedule",
     path: "/schedule",
     meta: __nuxt_page_meta$c || {},
-    component: () => import('./schedule-BbASwFfR.mjs')
+    component: () => import('./schedule-QKMqV2qI.mjs')
   },
   {
     name: "students",
     path: "/students",
     meta: __nuxt_page_meta$b || {},
-    component: () => import('./students-DbOhiX26.mjs')
+    component: () => import('./students-DBPsr1ZY.mjs')
   },
   {
     name: "attendance",
     path: "/attendance",
     meta: __nuxt_page_meta$a || {},
-    component: () => import('./attendance-DFKqNxbt.mjs')
+    component: () => import('./attendance-DlV_jNzJ.mjs')
   },
   {
     name: "permission",
@@ -1210,19 +1210,19 @@ const _routes = [
     name: "assessments",
     path: "/assessments",
     meta: __nuxt_page_meta$8 || {},
-    component: () => import('./assessments-CLoZFpCH.mjs')
+    component: () => import('./assessments-Bez0YIyz.mjs')
   },
   {
     name: "design-system",
     path: "/design-system",
     meta: __nuxt_page_meta$7 || {},
-    component: () => import('./design-system-DaPuTd_1.mjs')
+    component: () => import('./design-system-B_-dtbCj.mjs')
   },
   {
     name: "my-attendance",
     path: "/my-attendance",
     meta: __nuxt_page_meta$6 || {},
-    component: () => import('./my-attendance-DvSS4VL-.mjs')
+    component: () => import('./my-attendance-D5BBhCSd.mjs')
   },
   {
     name: "student-detail",
@@ -1234,31 +1234,31 @@ const _routes = [
     name: "user-variant-2",
     path: "/user-variant-2",
     meta: __nuxt_page_meta$4 || {},
-    component: () => import('./user-variant-2-CO0izBFG.mjs')
+    component: () => import('./user-variant-2-B150fDp5.mjs')
   },
   {
     name: "account-settings",
     path: "/account-settings",
     meta: { ...__nuxt_page_meta$3 || {}, ...{ "middleware": ["auth"] } },
-    component: () => import('./account-settings-naSogN9a.mjs')
+    component: () => import('./account-settings-C6raqi2z.mjs')
   },
   {
     name: "attendance-detail",
     path: "/attendance-detail",
     meta: __nuxt_page_meta$2 || {},
-    component: () => import('./attendance-detail-CG3_DAZk.mjs')
+    component: () => import('./attendance-detail-BViSPU8A.mjs')
   },
   {
     name: "dashboard-teacher",
     path: "/dashboard-teacher",
     meta: __nuxt_page_meta$1 || {},
-    component: () => import('./dashboard-teacher-BkWA9Su_.mjs')
+    component: () => import('./dashboard-teacher-D4wue5PN.mjs')
   },
   {
     name: "meeting-journal-create",
     path: "/meeting-journal/create",
     meta: __nuxt_page_meta || {},
-    component: () => import('./create-O_ljXsUH.mjs')
+    component: () => import('./create-6mRKpt2H.mjs')
   }
 ];
 const _wrapInTransition = (props, children) => {
@@ -11933,7 +11933,8 @@ const defaults = {
   },
   VBtn: {
     // set v-btn default color to primary
-    color: "primary"
+    color: "primary",
+    rounded: "pill"
   },
   VChip: {
     elevation: 0
@@ -13855,7 +13856,7 @@ const layouts = {
   "components-default-layout-with-vertical-nav": defineAsyncComponent(() => import('./DefaultLayoutWithVerticalNav-C61k4Aa5.mjs').then((m) => m.default || m)),
   "components-footer": defineAsyncComponent(() => import('./Footer-CgBf2AWj.mjs').then((m) => m.default || m)),
   "components-nav-bar-notifications": defineAsyncComponent(() => import('./NavBarNotifications-CBiSFxoh.mjs').then((m) => m.default || m)),
-  "components-nav-search-bar": defineAsyncComponent(() => import('./NavSearchBar-DcV4dzpg.mjs').then((m) => m.default || m)),
+  "components-nav-search-bar": defineAsyncComponent(() => import('./NavSearchBar-CY66e_Yy.mjs').then((m) => m.default || m)),
   "components-navbar-shortcuts": defineAsyncComponent(() => import('./NavbarShortcuts-Di0wExRN.mjs').then((m) => m.default || m)),
   "components-navbar-theme-switcher": defineAsyncComponent(() => import('./NavbarThemeSwitcher-C6RXK2Po.mjs').then((m) => m.default || m)),
   "components-user-profile": defineAsyncComponent(() => import('./UserProfile-MTJs3d-E.mjs').then((m) => m.default || m)),

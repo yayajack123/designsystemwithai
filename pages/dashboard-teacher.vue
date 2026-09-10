@@ -1,1074 +1,1344 @@
 <script setup lang="ts">
+import teacherWelcomeIllustration from '@images/pages/teacher-welcome-illustration.png'
+import UiTableView from '@/components/ui/UiTableView.vue'
+
 definePageMeta({
   sidebarRoute: 'dashboard-teacher',
 })
 
-// ─────────────────────── Mock Data: Stats ───────────────────────
-const skillCount = ref(3)
-const studentCount = ref(20)
-const classCount = ref(24)
-const pendingJournalCount = ref(20)
-const pendingReportCount = ref(12)
+type WatchlistType = 'Attendance' | 'Productivity' | 'Quiz'
+type RiskLevel = 'Green' | 'Yellow' | 'Red'
+type WatchlistStatus = 'Open' | 'In Progress' | 'Resolved' | 'Failed' | 'No Action' | 'Closed'
+type PendingTab = 'Journal' | 'Reports' | 'Projects'
+type ScheduleStatus = 'ready' | 'soon' | 'live'
 
-// Stat items for the "Your statistic" card
-const statItems = [
+interface AppreciationItem {
+  title: string
+  quote: string
+  detail: string
+  icon: string
+}
+
+interface SummaryItem {
+  label: string
+  value: number
+  period: string
+  helper: string
+  icon: string
+  tone: 'primary' | 'info' | 'warning' | 'success'
+}
+
+interface WatchlistItem {
+  id: string
+  name: string
+  initials: string
+  course: string
+  issue: string
+  metric: string
+  type: WatchlistType
+  risk: RiskLevel
+  status: WatchlistStatus
+  window: string
+}
+
+interface PendingTask {
+  id: string
+  student: string
+  course: string
+  lesson: string
+  due: string
+  action: string
+  category: PendingTab
+}
+
+interface ScheduleItem {
+  id: string
+  startsAt: string
+  endsAt: string
+  dateLabel: string
+  timeLabel: string
+  name: string
+  type: string
+  students: number
+  status: ScheduleStatus
+}
+
+const appreciationItems: AppreciationItem[] = [
   {
-    icon: 'ri-pie-chart-2-line',
-    iconColor: 'primary',
-    label: 'Skill',
-    value: skillCount,
+    title: 'Your consistency gives students room to grow.',
+    quote: 'Small moments of clarity become big leaps over time.',
+    detail: 'You have sent 12 parent updates this month.',
+    icon: 'ri-sparkling-2-line',
   },
   {
-    icon: 'ri-group-line',
-    iconColor: 'primary',
-    label: 'Student',
-    value: studentCount,
+    title: 'Eight students moved up a level this month.',
+    quote: 'Progress looks different for every student. You keep making space for it.',
+    detail: 'Student impact is up from your previous review window.',
+    icon: 'ri-flag-2-line',
   },
   {
-    icon: 'ri-book-2-line',
-    iconColor: 'info',
-    label: 'Class',
-    value: classCount,
+    title: 'You are in the top 10% for student satisfaction.',
+    quote: 'The way you listen is part of what students remember.',
+    detail: 'Based on the latest student survey cycle.',
+    icon: 'ri-heart-3-line',
+  },
+  {
+    title: 'Three new skills are now part of your toolkit.',
+    quote: 'A prepared teacher makes curiosity feel safe.',
+    detail: 'Your learning record is up to date.',
+    icon: 'ri-lightbulb-flash-line',
   },
 ]
 
-// ─────────────────────── Types ───────────────────────
-interface UpcomingStudent {
-  id: string
-  name: string
-  studentId: string
-  avatar: string
-  course: string
-  lesson: string
-  isPresent: boolean
-  quota: number
-  isLate: boolean
-  lateMinutes: number
-  notes: string
-  addOns: number
-  rentLaptop: string
-}
+const summaryItems: SummaryItem[] = [
+  { label: 'Parents updated', value: 12, period: 'This month', helper: 'Journal updates sent', icon: 'ri-chat-3-line', tone: 'primary' },
+  { label: 'Students impacted', value: 8, period: 'This month', helper: 'Reached a new level', icon: 'ri-arrow-up-circle-line', tone: 'info' },
+  { label: 'Skill growth', value: 3, period: 'This month', helper: 'New skills mastered', icon: 'ri-lightbulb-line', tone: 'warning' },
+  { label: 'Projects submitted', value: 6, period: 'Ready to review', helper: 'Waiting for your review', icon: 'ri-folder-check-line', tone: 'success' },
+]
 
-interface UpcomingClass {
-  id: string
-  name: string
-  date: string
-  startTime: string
-  endTime: string
-  status: 'Ongoing' | 'Active' | 'Completed'
-  sessionType: string
-  students: UpcomingStudent[]
-}
-
-// ─────────────────────── Mock Data: Upcoming Classes ───────────────────────
-const upcomingClasses = ref<UpcomingClass[]>([
-  {
-    id: 'u1',
-    name: 'Regular Kids',
-    date: '8 Sep',
-    startTime: '10:30',
-    endTime: '12:00',
-    status: 'Ongoing',
-    sessionType: 'Adaptive',
-    students: [
-      { id: 'us1', name: 'Alice Johnson', studentId: 'STD-120392032-551', avatar: 'AJ', course: 'Coding Xplorer - Adaptive with Robot New', lesson: 'Lesson 1', isPresent: true, quota: 2, isLate: false, lateMinutes: 0, notes: '', addOns: 2, rentLaptop: '2x Session' },
-      { id: 'us2', name: 'Bob Smith', studentId: 'STD-120392032-552', avatar: 'BS', course: 'Coding Xplorer - Adaptive with Robot New', lesson: 'Lesson 1', isPresent: false, quota: 0, isLate: false, lateMinutes: 0, notes: '', addOns: 0, rentLaptop: '' },
-      { id: 'us3', name: 'Charlie Brown', studentId: 'STD-120392032-553', avatar: 'CB', course: 'Coding Xplorer - Adaptive with Robot New', lesson: 'Lesson 1', isPresent: true, quota: 1, isLate: true, lateMinutes: 10, notes: 'Forgot homework', addOns: 1, rentLaptop: '1x Session' },
-      { id: 'us4', name: 'Diana Prince', studentId: 'STD-120392032-554', avatar: 'DP', course: 'Coding Xplorer - Adaptive with Robot New', lesson: 'Lesson 1', isPresent: true, quota: 3, isLate: false, lateMinutes: 0, notes: '', addOns: 0, rentLaptop: '' },
-      { id: 'us5', name: 'Eve Adams', studentId: 'STD-120392032-555', avatar: 'EA', course: 'Coding Xplorer - Adaptive with Robot New', lesson: 'Lesson 1', isPresent: false, quota: 0, isLate: false, lateMinutes: 0, notes: '', addOns: 0, rentLaptop: '' },
-    ],
-  },
-  {
-    id: 'u2',
-    name: 'Advanced Teens',
-    date: '12 Sep',
-    startTime: '14:00',
-    endTime: '15:30',
-    status: 'Active',
-    sessionType: 'Dynamic',
-    students: [
-      { id: 'us6', name: 'Frank Castle', studentId: 'STD-120392032-556', avatar: 'FC', course: 'Advanced Python', lesson: 'Lesson 5', isPresent: true, quota: 2, isLate: false, lateMinutes: 0, notes: '', addOns: 0, rentLaptop: '' },
-      { id: 'us7', name: 'Grace Hopper', studentId: 'STD-120392032-557', avatar: 'GH', course: 'Advanced Python', lesson: 'Lesson 5', isPresent: true, quota: 1, isLate: true, lateMinutes: 5, notes: '', addOns: 0, rentLaptop: '' },
-    ],
-  },
-  {
-    id: 'u3',
-    name: 'Future Coders',
-    date: '14 Sep',
-    startTime: '08:00',
-    endTime: '09:30',
-    status: 'Active',
-    sessionType: 'Adaptive',
-    students: [
-      { id: 'us8', name: 'Hank Pym', studentId: 'STD-120392032-558', avatar: 'HP', course: 'Game Design Basics', lesson: 'Lesson 3', isPresent: true, quota: 1, isLate: false, lateMinutes: 0, notes: '', addOns: 0, rentLaptop: '' },
-      { id: 'us9', name: 'Ivy League', studentId: 'STD-120392032-559', avatar: 'IL', course: 'Game Design Basics', lesson: 'Lesson 3', isPresent: false, quota: 0, isLate: false, lateMinutes: 0, notes: '', addOns: 0, rentLaptop: '' },
-      { id: 'us10', name: 'Jack Sparrow', studentId: 'STD-120392032-560', avatar: 'JS', course: 'Game Design Basics', lesson: 'Lesson 3', isPresent: true, quota: 2, isLate: false, lateMinutes: 0, notes: '', addOns: 0, rentLaptop: '' },
-    ],
-  },
-  {
-    id: 'u4',
-    name: 'Web Dev Novices',
-    date: '15 Sep',
-    startTime: '13:00',
-    endTime: '14:30',
-    status: 'Active',
-    sessionType: 'Dynamic',
-    students: [
-      { id: 'us11', name: 'Kate Bishop', studentId: 'STD-120392032-561', avatar: 'KB', course: 'HTML & CSS', lesson: 'Lesson 2', isPresent: true, quota: 0, isLate: false, lateMinutes: 0, notes: '', addOns: 0, rentLaptop: '' },
-      { id: 'us12', name: 'Logan Howlett', studentId: 'STD-120392032-562', avatar: 'LH', course: 'HTML & CSS', lesson: 'Lesson 2', isPresent: false, quota: 0, isLate: false, lateMinutes: 0, notes: '', addOns: 0, rentLaptop: '' },
-    ],
-  },
-  {
-    id: 'u5',
-    name: 'Robotics Club',
-    date: '16 Sep',
-    startTime: '16:00',
-    endTime: '18:00',
-    status: 'Active',
-    sessionType: 'Adaptive',
-    students: [
-      { id: 'us13', name: 'Miles Morales', studentId: 'STD-120392032-563', avatar: 'MM', course: 'Robotics Engineering', lesson: 'Lesson 4', isPresent: true, quota: 2, isLate: true, lateMinutes: 15, notes: '', addOns: 0, rentLaptop: '' },
-    ],
-  },
-  {
-    id: 'u6',
-    name: 'AI Researchers',
-    date: '18 Sep',
-    startTime: '10:00',
-    endTime: '12:00',
-    status: 'Active',
-    sessionType: 'Dynamic',
-    students: [
-      { id: 'us14', name: 'Natasha Romanoff', studentId: 'STD-120392032-564', avatar: 'NR', course: 'Neural Networks 101', lesson: 'Lesson 6', isPresent: true, quota: 1, isLate: false, lateMinutes: 0, notes: '', addOns: 0, rentLaptop: '' },
-      { id: 'us15', name: 'Otto Octavius', studentId: 'STD-120392032-565', avatar: 'OO', course: 'Neural Networks 101', lesson: 'Lesson 6', isPresent: true, quota: 1, isLate: false, lateMinutes: 0, notes: '', addOns: 0, rentLaptop: '' },
-    ],
-  },
+const watchlistTabs: WatchlistType[] = ['Attendance', 'Productivity', 'Quiz']
+const watchlistTab = ref<WatchlistType>('Attendance')
+const watchlistItems = ref<WatchlistItem[]>([
+  { id: 'wl-1', name: 'Alice Johnson', initials: 'AJ', course: 'Coding Xplorer', issue: 'Missed 2 assigned meetings', metric: '2 absences', type: 'Attendance', risk: 'Red', status: 'Open', window: 'Meetings 9–12' },
+  { id: 'wl-2', name: 'Fajar Ramadhan', initials: 'FR', course: 'Python Foundations', issue: 'Learning velocity dropped', metric: '0.25 lessons / meeting', type: 'Productivity', risk: 'Red', status: 'In Progress', window: 'Meetings 9–12' },
+  { id: 'wl-3', name: 'Gita Permata', initials: 'GP', course: 'Web Design Basics', issue: 'Quiz score needs attention', metric: '62 average score', type: 'Quiz', risk: 'Red', status: 'No Action', window: 'Meetings 5–8' },
+  { id: 'wl-4', name: 'Diana Prince', initials: 'DP', course: 'Coding Xplorer', issue: 'One absence in the window', metric: '1 absence', type: 'Attendance', risk: 'Yellow', status: 'Resolved', window: 'Meetings 9–12' },
+  { id: 'wl-5', name: 'Bima Putra', initials: 'BP', course: 'Python Foundations', issue: 'Progress is slower than target', metric: '0.50 lessons / meeting', type: 'Productivity', risk: 'Yellow', status: 'Open', window: 'Meetings 5–8' },
+  { id: 'wl-6', name: 'Nadia Sari', initials: 'NS', course: 'Game Design', issue: 'Quiz score is below target', metric: '74 average score', type: 'Quiz', risk: 'Yellow', status: 'Open', window: 'Meetings 9–12' },
 ])
 
-// ─────────────────────── Toast State ───────────────────────
+const filteredWatchlist = computed(() => watchlistItems.value.filter(item => item.type === watchlistTab.value))
+const watchlistRedCount = computed(() => watchlistItems.value.filter(item => item.risk === 'Red').length)
+const watchlistTableTabs = watchlistTabs.map(tab => ({ label: tab, value: tab }))
+const watchlistHeaders = [
+  { title: 'STUDENT', key: 'student', sortable: false },
+  { title: 'ISSUE', key: 'issue', sortable: false },
+  { title: 'RISK', key: 'risk', sortable: false },
+  { title: 'STATUS', key: 'status', sortable: false },
+  { title: 'ACTION', key: 'action', sortable: false, align: 'center', width: 120 },
+]
+
+const getInitials = (name: string) => {
+  const cleanName = name.replace(/^(Mr\.|Ms\.|Mrs\.|Dr\.)\s+/i, '')
+
+  return cleanName
+    .split(' ')
+    .map(word => word.charAt(0))
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+}
+
+const pendingTab = ref<PendingTab>('Journal')
+const pendingItems: Record<PendingTab, PendingTask[]> = {
+  Journal: [
+    { id: 'task-1', student: 'Alice Johnson', course: 'Coding Xplorer', lesson: 'Mtg 12', due: 'Today · 16:00', action: 'Create', category: 'Journal' },
+    { id: 'task-2', student: 'Diana Prince', course: 'Coding Xplorer', lesson: 'Mtg 12', due: 'Today · 18:00', action: 'Create', category: 'Journal' },
+    { id: 'task-3', student: 'Fajar Ramadhan', course: 'Python Foundations', lesson: 'Mtg 11', due: 'Tomorrow', action: 'Create', category: 'Journal' },
+  ],
+  Reports: [
+    { id: 'task-4', student: 'Gita Permata', course: 'Web Design Basics', lesson: 'Mtg 8', due: 'Today · 17:00', action: 'Write report', category: 'Reports' },
+    { id: 'task-5', student: 'Bima Putra', course: 'Python Foundations', lesson: 'Mtg 8', due: 'Tomorrow', action: 'Write report', category: 'Reports' },
+  ],
+  Projects: [
+    { id: 'task-6', student: 'Nadia Sari', course: 'Game Design', lesson: 'Project 2', due: 'Today · 19:00', action: 'Review', category: 'Projects' },
+    { id: 'task-7', student: 'Raka Aditya', course: 'Scratch Studio', lesson: 'Project 1', due: '12 Sep', action: 'Review', category: 'Projects' },
+  ],
+}
+
+const activePendingItems = computed(() => pendingItems[pendingTab.value])
+const pendingTotal = computed(() => Object.values(pendingItems).flat().length)
+const pendingTableTabs = computed(() => (Object.keys(pendingItems) as PendingTab[]).map(tab => ({
+  label: tab,
+  value: tab,
+  count: pendingItems[tab].length,
+})))
+const pendingHeaders = [
+  { title: 'STUDENT', key: 'student', sortable: false },
+  { title: 'COURSE', key: 'course', sortable: false },
+  { title: 'MTG / LESSON', key: 'lesson', sortable: false },
+  { title: 'DUE', key: 'due', sortable: false },
+  { title: 'ACTION', key: 'action', sortable: false, align: 'center', width: 140 },
+]
+
+const scheduleItems: ScheduleItem[] = [
+  { id: 'schedule-1', startsAt: '2026-09-11T09:00:00+08:00', endsAt: '2026-09-11T10:30:00+08:00', dateLabel: 'Tomorrow', timeLabel: '09:00–10:30', name: 'Regular Kids', type: 'Adaptive', students: 5, status: 'soon' },
+  { id: 'schedule-2', startsAt: '2026-09-11T14:00:00+08:00', endsAt: '2026-09-11T15:30:00+08:00', dateLabel: 'Tomorrow', timeLabel: '14:00–15:30', name: 'Advanced Teens', type: 'Dynamic', students: 7, status: 'ready' },
+  { id: 'schedule-3', startsAt: '2026-09-12T08:00:00+08:00', endsAt: '2026-09-12T09:30:00+08:00', dateLabel: '12 Sep', timeLabel: '08:00–09:30', name: 'Future Coders', type: 'Adaptive', students: 6, status: 'ready' },
+]
+
+const currentTime = ref<number | null>(null)
+let countdownTimer: ReturnType<typeof setInterval> | undefined
+
+const getCountdown = (item: ScheduleItem) => {
+  if (!currentTime.value) return item.status === 'soon' ? 'In 45 min' : item.dateLabel
+
+  const start = new Date(item.startsAt).getTime()
+  const end = new Date(item.endsAt).getTime()
+  const diff = start - currentTime.value
+
+  if (currentTime.value >= start && currentTime.value < end) return 'Live now'
+  if (diff <= 0) return item.dateLabel
+  if (diff < 60 * 60 * 1000) return `In ${Math.max(1, Math.round(diff / 60000))} min`
+  if (diff < 24 * 60 * 60 * 1000) return `In ${Math.floor(diff / 3600000)} hrs`
+  return item.dateLabel
+}
+
+onMounted(() => {
+  const updateClock = () => { currentTime.value = Date.now() }
+  updateClock()
+  countdownTimer = setInterval(updateClock, 60000)
+})
+
+onBeforeUnmount(() => {
+  if (countdownTimer) clearInterval(countdownTimer)
+})
+
+const currentAppreciation = ref(0)
+let appreciationTimer: ReturnType<typeof setInterval> | undefined
+
+const activeAppreciation = computed(() => appreciationItems[currentAppreciation.value])
+
+const changeAppreciation = (direction: 1 | -1) => {
+  currentAppreciation.value = (currentAppreciation.value + direction + appreciationItems.length) % appreciationItems.length
+}
+
+const startAppreciationRotation = () => {
+  if (appreciationTimer) clearInterval(appreciationTimer)
+  appreciationTimer = setInterval(() => changeAppreciation(1), 5000)
+}
+
+const pauseAppreciationRotation = () => {
+  if (!appreciationTimer) return
+
+  clearInterval(appreciationTimer)
+  appreciationTimer = undefined
+}
+
+onMounted(() => {
+  startAppreciationRotation()
+})
+
+onBeforeUnmount(() => {
+  pauseAppreciationRotation()
+})
+
+const riskColor = (risk: RiskLevel) => ({ Green: 'success', Yellow: 'warning', Red: 'error' })[risk]
+const statusColor = (status: WatchlistStatus) => ({
+  Open: 'secondary',
+  'In Progress': 'info',
+  Resolved: 'success',
+  Failed: 'error',
+  'No Action': 'warning',
+  Closed: 'secondary',
+}[status])
+
+const getTaskRoute = (task: PendingTask) => task.category === 'Projects' ? { name: 'assessments' } : { name: 'reports' }
+
+const isActionDialogOpen = ref(false)
+const activeWatchlistItem = ref<WatchlistItem | null>(null)
+const actionNote = ref('')
 const toastShow = ref(false)
 const toastText = ref('')
-const toastColor = ref('success')
 
-// ─────────────────────── Accordion Toggle ───────────────────────
-const isStudentListExpanded = ref(true)
-
-const toggleStudentList = () => {
-  isStudentListExpanded.value = !isStudentListExpanded.value
+const openActionDialog = (item: WatchlistItem) => {
+  activeWatchlistItem.value = item
+  actionNote.value = ''
+  isActionDialogOpen.value = true
 }
 
-// ─────────────────────── Selection State ───────────────────────
-const selectedClassId = ref(upcomingClasses.value.find(c => c.status === 'Ongoing')?.id ?? upcomingClasses.value[0]?.id ?? '')
+const submitAction = () => {
+  if (!activeWatchlistItem.value) return
 
-const selectClass = (id: string) => {
-  selectedClassId.value = id
-}
-
-const selectedClass = computed(() => upcomingClasses.value.find(c => c.id === selectedClassId.value))
-
-// ─────────────────────── Per-student state helpers ───────────────────────
-const togglePresence = (studentId: string) => {
-  const cls = selectedClass.value
-  if (!cls) return
-  const student = cls.students.find(s => s.id === studentId)
-  if (student) student.isPresent = !student.isPresent
-}
-
-const toggleLate = (studentId: string) => {
-  const cls = selectedClass.value
-  if (!cls) return
-  const student = cls.students.find(s => s.id === studentId)
-  if (student) student.isLate = !student.isLate
-}
-
-// ─────────────────────── Real Time Progress Types ───────────────────────
-type SupportStatus = 'need-support' | 'on-track' | 'completed'
-type PaceStatus = 'too-fast' | 'on-pace' | 'too-slow'
-type RatingLabel = 'great' | 'good' | 'average' | 'needs-improvement'
-
-interface ProgressStudent {
-  id: string
-  name: string
-  avatar: string
-  course: string
-  meetingLabel: string
-  progress: number
-  lessonLabel: string
-  lessonTitle: string
-  duration: string
-  pace: PaceStatus
-  rating: RatingLabel
-  supportStatus: SupportStatus
-  isPresent: boolean
-  checkedByTeacher: boolean
-}
-
-// ─────────────────────── Helper Maps ───────────────────────
-const supportStatusMap: Record<SupportStatus, { color: string; label: string }> = {
-  'need-support': { color: 'error', label: 'Need Support' },
-  'on-track': { color: 'success', label: 'On Track' },
-  'completed': { color: 'primary', label: 'Completed' },
-}
-
-const paceMap: Record<PaceStatus, { color: string; label: string }> = {
-  'too-fast': { color: 'warning', label: 'Too Fast' },
-  'on-pace': { color: 'success', label: 'On Pace' },
-  'too-slow': { color: 'error', label: 'Too Slow' },
-}
-
-const ratingMap: Record<RatingLabel, { color: string; label: string }> = {
-  'great': { color: 'info', label: 'Great' },
-  'good': { color: 'success', label: 'Good' },
-  'average': { color: 'warning', label: 'Average' },
-  'needs-improvement': { color: 'error', label: 'Needs Improvement' },
-}
-
-const getSupportColor = (status: SupportStatus) => supportStatusMap[status]?.color ?? 'grey'
-const getSupportLabel = (status: SupportStatus) => supportStatusMap[status]?.label ?? status
-const getPaceLabel = (pace: PaceStatus) => paceMap[pace]?.label ?? pace
-const getRatingLabel = (rating: RatingLabel) => ratingMap[rating]?.label ?? rating
-
-// ─────────────────────── Mock Data: Real Time Progress ───────────────────────
-const progressStudents = ref<ProgressStudent[]>([
-  {
-    id: 'rp1',
-    name: 'Alice Johnson',
-    avatar: 'AJ',
-    course: 'Coding Xplorer - Adaptive with Robot New',
-    meetingLabel: 'Meeting 5',
-    progress: 72,
-    lessonLabel: 'Lesson 2',
-    lessonTitle: 'UX/UI Fundamentals',
-    duration: '3h',
-    pace: 'too-fast',
-    rating: 'great',
-    supportStatus: 'need-support',
-    isPresent: true,
-    checkedByTeacher: true,
-  },
-  {
-    id: 'rp2',
-    name: 'Bob Smith',
-    avatar: 'BS',
-    course: 'Coding Xplorer - Adaptive with Robot New',
-    meetingLabel: 'Meeting 5',
-    progress: 45,
-    lessonLabel: 'Lesson 2',
-    lessonTitle: 'UX/UI Fundamentals',
-    duration: '2h',
-    pace: 'on-pace',
-    rating: 'good',
-    supportStatus: 'on-track',
-    isPresent: false,
-    checkedByTeacher: false,
-  },
-  {
-    id: 'rp3',
-    name: 'Charlie Brown',
-    avatar: 'CB',
-    course: 'Coding Xplorer - Adaptive with Robot New',
-    meetingLabel: 'Meeting 5',
-    progress: 88,
-    lessonLabel: 'Lesson 2',
-    lessonTitle: 'UX/UI Fundamentals',
-    duration: '4h',
-    pace: 'too-slow',
-    rating: 'average',
-    supportStatus: 'completed',
-    isPresent: true,
-    checkedByTeacher: true,
-  },
-  {
-    id: 'rp4',
-    name: 'Diana Prince',
-    avatar: 'DP',
-    course: 'Coding Xplorer - Adaptive with Robot New',
-    meetingLabel: 'Meeting 5',
-    progress: 60,
-    lessonLabel: 'Lesson 2',
-    lessonTitle: 'UX/UI Fundamentals',
-    duration: '2.5h',
-    pace: 'on-pace',
-    rating: 'great',
-    supportStatus: 'need-support',
-    isPresent: true,
-    checkedByTeacher: false,
-  },
-  {
-    id: 'rp5',
-    name: 'Eve Adams',
-    avatar: 'EA',
-    course: 'Advanced Python',
-    meetingLabel: 'Meeting 3',
-    progress: 30,
-    lessonLabel: 'Lesson 5',
-    lessonTitle: 'Data Structures',
-    duration: '1.5h',
-    pace: 'too-fast',
-    rating: 'needs-improvement',
-    supportStatus: 'on-track',
-    isPresent: false,
-    checkedByTeacher: false,
-  },
-  {
-    id: 'rp6',
-    name: 'Frank Castle',
-    avatar: 'FC',
-    course: 'Game Design Basics',
-    meetingLabel: 'Meeting 2',
-    progress: 95,
-    lessonLabel: 'Lesson 3',
-    lessonTitle: 'Level Design Principles',
-    duration: '3.5h',
-    pace: 'on-pace',
-    rating: 'great',
-    supportStatus: 'completed',
-    isPresent: true,
-    checkedByTeacher: true,
-  },
-])
-
-// ─────────────────────── Checked by teacher toggle ───────────────────────
-const toggleCheckedByTeacher = (studentId: string) => {
-  const student = progressStudents.value.find(s => s.id === studentId)
-  if (student && student.isPresent) {
-    student.checkedByTeacher = !student.checkedByTeacher
-  }
+  activeWatchlistItem.value.status = 'In Progress'
+  isActionDialogOpen.value = false
+  toastText.value = `Action saved for ${activeWatchlistItem.value.name}`
+  toastShow.value = true
 }
 </script>
 
 <template>
-  <section>
-    <!-- Page Header -->
-    <div class="mb-5">
-      <h4 class="text-h4 font-weight-medium text-high-emphasis">
-        Dashboard teacher
-      </h4>
-      <p class="text-body-1 text-medium-emphasis mb-0">
-        See the progress of each student on dashboard
-      </p>
-    </div>
+  <section class="teacher-dashboard">
+    <header class="dashboard-header dashboard-reveal dashboard-reveal--1">
+      <div class="dashboard-header__content">
+        <h1 class="text-h4 text-high-emphasis mb-2">
+          Good morning, Julie.
+        </h1>
+        <p class="text-body-1 text-medium-emphasis mb-0">
+          Here’s your teaching brief. Start with what needs your attention today.
+        </p>
+      </div>
+      <div class="dashboard-header__art" aria-hidden="true">
+        <img
+          :src="teacherWelcomeIllustration"
+          alt=""
+          class="dashboard-header__illustration"
+        >
+      </div>
+    </header>
 
-    <!-- Stats Row -->
-    <VRow>
-      <!-- Card 1: Your statistic (wide) -->
-      <VCol
-        cols="12"
-        md="6"
-      >
-        <VCard class="overflow-hidden h-100">
-          <div class="pa-5 pb-4">
-            <span class="text-body-1 font-weight-medium text-high-emphasis d-block mb-5">
-              Your statistic
-            </span>
-
-            <div class="d-flex align-start gap-8 flex-wrap">
-              <div
-                v-for="item in statItems"
-                :key="item.label"
-                class="d-flex align-center gap-3"
-              >
-                <div
-                  class="d-flex align-center justify-center rounded"
-                  style="width: 40px; height: 40px;"
-                  :style="{ backgroundColor: `rgba(var(--v-theme-${item.iconColor}), 0.12)` }"
-                >
-                  <VIcon
-                    :icon="item.icon"
-                    :color="item.iconColor"
-                    size="22"
-                  />
+    <div class="dashboard-layout">
+      <main class="dashboard-main">
+        <section
+          class="recognition-card dashboard-reveal dashboard-reveal--2"
+          aria-label="Personal achievement"
+          @mouseenter="pauseAppreciationRotation"
+          @mouseleave="startAppreciationRotation"
+        >
+          <div class="recognition-banner">
+            <div class="recognition-rail" aria-hidden="true">
+              <VIcon :icon="activeAppreciation.icon" size="20" />
+            </div>
+            <div class="recognition-content">
+              <div class="appreciation-copy" aria-live="polite">
+                <h2 class="text-h6 font-weight-medium text-high-emphasis mb-1">
+                  {{ activeAppreciation.title }}
+                </h2>
+                <p class="text-body-2 text-medium-emphasis mb-1 appreciation-quote">
+                  “{{ activeAppreciation.quote }}”
+                </p>
+                <div class="d-flex align-center gap-2 text-caption text-medium-emphasis">
+                  <VIcon icon="ri-checkbox-circle-line" size="15" />
+                  <span>{{ activeAppreciation.detail }}</span>
                 </div>
+              </div>
+            </div>
+            <div class="recognition-banner-nav d-flex align-center gap-2">
+              <IconBtn
+                class="recognition-nav"
+                aria-label="Previous appreciation"
+                @click="changeAppreciation(-1)"
+              >
+                <VIcon icon="ri-arrow-left-line" size="18" />
+              </IconBtn>
+              <IconBtn
+                class="recognition-nav"
+                aria-label="Next appreciation"
+                @click="changeAppreciation(1)"
+              >
+                <VIcon icon="ri-arrow-right-line" size="18" />
+              </IconBtn>
+            </div>
+          </div>
+          <div class="recognition-progress" aria-label="Appreciation carousel position">
+            <span
+              v-for="(_, index) in appreciationItems"
+              :key="index"
+              class="recognition-progress__item"
+              :class="{ 'recognition-progress__item--active': index === currentAppreciation }"
+            />
+          </div>
+        </section>
+
+        <section class="dashboard-section dashboard-reveal dashboard-reveal--3" aria-labelledby="summary-heading">
+          <div class="section-heading">
+            <div>
+              <h2 id="summary-heading" class="text-h5 text-high-emphasis mb-0">
+                Your Statistic
+              </h2>
+            </div>
+            <span class="section-meta text-caption">Updated today</span>
+          </div>
+          <div class="summary-grid">
+            <VCard
+              v-for="item in summaryItems"
+              :key="item.label"
+              class="summary-card"
+              :class="`summary-card--${item.tone}`"
+              elevation="0"
+            >
+              <div class="summary-card__top">
+                <VIcon :icon="item.icon" size="19" />
+                <span class="summary-card__period text-caption">{{ item.period }}</span>
+              </div>
+              <span class="summary-card__value text-h3 font-weight-medium">{{ item.value }}</span>
+              <span class="summary-card__label text-body-2 font-weight-medium">{{ item.label }}</span>
+              <span class="summary-card__helper text-caption">{{ item.helper }}</span>
+            </VCard>
+          </div>
+        </section>
+
+        <section class="dashboard-section dashboard-reveal dashboard-reveal--4" aria-labelledby="watchlist-heading">
+          <UiTableView
+            v-model:activeTab="watchlistTab"
+            title=""
+            :tabs="watchlistTableTabs"
+            :headers="watchlistHeaders"
+            :items="filteredWatchlist"
+            :items-per-page="-1"
+            hide-filters
+            hide-pagination
+            tabs-inside-card
+            card-class="dashboard-card"
+            table-class="dashboard-table watchlist-table"
+            flat
+            class="dashboard-table-view"
+          >
+            <template #card-header>
+              <div class="card-heading">
                 <div>
-                  <span class="text-caption text-medium-emphasis d-block">
-                    {{ item.label }}
-                  </span>
-                  <span class="text-h4 font-weight-medium text-high-emphasis">
-                    {{ item.value }}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Green bottom accent bar -->
-          <div class="bg-primary" style="height: 4px;" />
-        </VCard>
-      </VCol>
-
-      <!-- Card 2: Pending Journal -->
-      <VCol
-        cols="12"
-        sm="6"
-        md="3"
-      >
-        <VCard class="overflow-hidden h-100">
-          <div class="pa-5 pb-4 d-flex flex-column gap-1">
-            <span class="text-caption text-medium-emphasis">
-              Pending Journal
-            </span>
-            <span class="text-h3 font-weight-medium text-high-emphasis">
-              {{ pendingJournalCount }}
-            </span>
-            <NuxtLink
-              :to="{ name: 'reports' }"
-              class="text-primary text-decoration-none font-weight-medium text-body-2 mt-1"
-            >
-              See Details
-            </NuxtLink>
-          </div>
-
-          <!-- Amber bottom accent bar -->
-          <div class="bg-warning" style="height: 4px;" />
-        </VCard>
-      </VCol>
-
-      <!-- Card 3: Pending Report -->
-      <VCol
-        cols="12"
-        sm="6"
-        md="3"
-      >
-        <VCard class="overflow-hidden h-100">
-          <div class="pa-5 pb-4 d-flex flex-column gap-1">
-            <span class="text-caption text-medium-emphasis">
-              Pending Report
-            </span>
-            <span class="text-h3 font-weight-medium text-high-emphasis">
-              {{ pendingReportCount }}
-            </span>
-            <NuxtLink
-              :to="{ name: 'reports' }"
-              class="text-error text-decoration-none font-weight-medium text-body-2 mt-1"
-            >
-              See Details
-            </NuxtLink>
-          </div>
-
-          <!-- Red bottom accent bar -->
-          <div class="bg-error" style="height: 4px;" />
-        </VCard>
-      </VCol>
-    </VRow>
-
-    <!-- ─────────────────────── Upcoming Class Section ─────────────────────── -->
-    <div class="mt-7">
-      <VRow>
-        <!-- Left Panel: Class List -->
-        <VCol
-          cols="12"
-          md="4"
-        >
-          <VCard
-            class="border overflow-hidden h-100 d-flex flex-column"
-            style="border-color: rgba(var(--v-theme-on-surface), 0.12) !important;"
-          >
-            <!-- Card Header -->
-            <div
-              class="pa-4 d-flex align-center border-b"
-              style="border-color: rgba(var(--v-theme-on-surface), 0.08) !important;"
-            >
-              <h5 class="text-h5 font-weight-medium text-high-emphasis mb-0">
-                Upcoming class
-              </h5>
-            </div>
-
-            <!-- Scrollable Body -->
-            <div
-              class="d-flex flex-column gap-2 pa-4 overflow-y-auto"
-              style="max-height: 475px;"
-            >
-              <div
-                v-for="cls in upcomingClasses"
-                :key="cls.id"
-                class="upcoming-row d-flex align-start ga-3 pa-3 rounded-lg cursor-pointer"
-                :class="cls.id === selectedClassId ? 'bg-primary text-white' : 'bg-surface'"
-                style="border: 1px solid rgba(var(--v-theme-on-surface), 0.08);"
-                @click="selectClass(cls.id)"
-              >
-                <!-- Time Column -->
-                <div class="d-flex flex-column align-center" style="min-width: 48px;">
-                  <span
-                    class="text-body-1 font-weight-medium lh-sm"
-                    :class="cls.id === selectedClassId ? 'text-white' : 'text-primary'"
-                  >
-                    {{ cls.startTime }}
-                  </span>
-                  <span
-                    class="text-caption"
-                    :class="cls.id === selectedClassId ? 'text-white text-opacity-70' : 'text-medium-emphasis'"
-                  >
-                    {{ cls.endTime }}
-                  </span>
-                </div>
-
-                <!-- Divider line -->
-                <div
-                  class="align-self-stretch"
-                  style="width: 1px; background-color: rgba(var(--v-theme-on-surface), 0.12);"
-                />
-
-                <!-- Info Column -->
-                <div class="d-flex flex-column flex-grow-1 min-w-0">
-                  <span
-                    class="text-body-1 font-weight-medium text-truncate"
-                    :class="cls.id === selectedClassId ? 'text-white' : 'text-high-emphasis'"
-                  >
-                    {{ cls.name }}
-                  </span>
-                  <span
-                    class="text-caption"
-                    :class="cls.id === selectedClassId ? 'text-white text-opacity-70' : 'text-medium-emphasis'"
-                  >
-                    {{ cls.date }}
-                    <span class="mx-1">·</span>
-                    {{ cls.sessionType }}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </VCard>
-        </VCol>
-
-        <!-- Right Panel: Class Detail -->
-        <VCol
-          cols="12"
-          md="8"
-        >
-          <VCard
-            v-if="selectedClass"
-            class="border overflow-hidden h-100 d-flex flex-column"
-            style="border-color: rgba(var(--v-theme-on-surface), 0.12) !important;"
-          >
-            <!-- Right Panel Header -->
-            <div class="pa-4 d-flex align-center justify-space-between flex-wrap gap-3 border-b" style="border-color: rgba(var(--v-theme-on-surface), 0.08) !important;">
-              <div class="d-flex align-center gap-3">
-                <VAvatar
-                  size="40"
-                  class="rounded bg-primary-opacity-lighter"
-                >
-                  <VIcon
-                    icon="ri-user-line"
-                    color="primary"
-                    size="22"
-                  />
-                </VAvatar>
-
-                <div class="d-flex flex-column">
-                  <div class="d-flex align-center flex-wrap gap-2">
-                    <span class="text-body-1 font-weight-medium text-high-emphasis">
-                      {{ selectedClass.name }}
-                    </span>
-                    <span class="text-body-2 font-weight-medium text-primary">
-                      {{ selectedClass.startTime }} - {{ selectedClass.endTime }}
-                    </span>
-                    <VChip
-                      color="primary"
-                      variant="tonal"
-                      size="x-small"
-                      class="font-weight-medium"
-                    >
-                      {{ selectedClass.status }}
-                    </VChip>
+                  <div class="watchlist-title-row">
+                    <h2 id="watchlist-heading" class="text-h5 text-high-emphasis mb-0">
+                      Priority Watchlist
+                    </h2>
+                    <VChip color="error" variant="tonal" size="x-small">{{ watchlistRedCount }} red risks</VChip>
                   </div>
+                  <p class="text-body-2 text-medium-emphasis mb-0">
+                    Latest fixed-block evaluation · refreshed every Monday
+                  </p>
                 </div>
-              </div>
-
-              <div class="d-flex align-center gap-2">
                 <VBtn
+                  variant="text"
                   color="primary"
-                  class="text-capitalize"
-                  rounded="xl"
                   size="small"
+                  class="section-link"
+                  :to="{ name: 'students' }"
                 >
-                  Finish Class
-                </VBtn>
-                <VBtn
-                  icon
-                  variant="outlined"
-                  size="small"
-                  rounded="lg"
-                >
-                  <VIcon
-                    icon="ri-eye-line"
-                    size="18"
-                  />
-                </VBtn>
-                <VBtn
-                  icon
-                  variant="outlined"
-                  size="small"
-                  rounded="lg"
-                  @click="toggleStudentList"
-                >
-                  <VIcon
-                    :icon="isStudentListExpanded ? 'ri-arrow-down-s-line' : 'ri-arrow-up-s-line'"
-                    size="18"
-                  />
+                  View all
+                  <VIcon end icon="ri-arrow-right-line" size="16" />
                 </VBtn>
               </div>
-            </div>
+            </template>
 
-            <!-- Student List (collapsible) -->
-            <VExpandTransition>
-              <div
-                v-show="isStudentListExpanded"
-                class="pa-4 d-flex flex-column gap-4 overflow-y-auto"
-                style="max-height: 475px;"
-              >
-                <div
-                  v-for="student in selectedClass.students"
-                  :key="student.id"
-                  class="student-card pa-4 rounded-lg"
-                  style="background-color: rgba(var(--v-theme-on-surface), 0.02); border: 1px solid rgba(var(--v-theme-on-surface), 0.08);"
-                >
-                <!-- Row 1: Identity + Presence + Send Key + Add-Ons -->
-                <div class="d-flex align-center justify-space-between flex-wrap gap-3 mb-3">
-                  <div class="d-flex align-center gap-3 flex-grow-1 min-w-0">
-                    <VAvatar
-                      size="34"
-                      color="grey-50"
-                      class="border"
-                      style="border-color: rgba(var(--v-theme-on-surface), 0.08) !important;"
-                    >
-                      <span class="text-caption font-weight-medium text-high-emphasis">{{ student.avatar }}</span>
-                    </VAvatar>
-
-                    <div class="d-flex flex-column min-w-0">
-                      <span class="text-body-1 font-weight-medium text-high-emphasis text-truncate">
-                        {{ student.name }}
-                      </span>
-                      <span class="text-caption text-medium-emphasis text-truncate">
-                        {{ student.studentId }}
-                      </span>
-                    </div>
-
-                    <!-- Presence Indicator -->
-                    <div class="d-flex align-center gap-1 ms-2">
-                      <VIcon
-                        :icon="student.isPresent ? 'ri-checkbox-circle-fill' : 'ri-checkbox-blank-circle-line'"
-                        :color="student.isPresent ? 'success' : 'disabled'"
-                        size="20"
-                      />
-                      <span
-                        class="text-caption font-weight-medium"
-                        :class="student.isPresent ? 'text-success' : 'text-disabled'"
-                      >
-                        Presence
-                      </span>
-                    </div>
-                  </div>
-
-                  <div class="d-flex align-center gap-2">
-                    <!-- Send Key Button -->
-                    <VBtn
-                      variant="outlined"
-                      color="primary"
-                      size="x-small"
-                      rounded="xl"
-                      class="text-capitalize font-weight-medium"
-                    >
-                      <VIcon
-                        start
-                        icon="ri-key-line"
-                        size="14"
-                      />
-                      Send Key
-                    </VBtn>
-
-                    <!-- Add-Ons chip -->
-                    <VBtn
-                      v-if="student.addOns > 0"
-                      variant="outlined"
-                      color="secondary"
-                      size="x-small"
-                      rounded="xl"
-                      class="text-capitalize font-weight-medium"
-                    >
-                      {{ student.addOns }} Add-Ons
-                    </VBtn>
-                  </div>
-                </div>
-
-                <!-- Row 2: Course + Lesson -->
-                <div class="d-flex align-center gap-1 mb-3">
-                  <VIcon
-                    icon="ri-book-2-line"
-                    size="14"
-                    color="secondary"
-                  />
-                  <span class="text-caption text-medium-emphasis text-truncate">
-                    {{ student.course }}
+            <template #item.student="{ item }">
+              <div class="student-cell">
+                <VAvatar size="34" color="grey-100" class="border">
+                  <span class="text-caption font-weight-medium text-high-emphasis">
+                    {{ getInitials(item.name) }}
                   </span>
-                  <span class="dot-separator bg-secondary mx-1" />
-                  <span class="text-caption font-weight-medium text-medium-emphasis">
-                    {{ student.lesson }}
-                  </span>
-                </div>
-
-                <!-- Row 3: Attendance Controls -->
-                <div class="d-flex align-center flex-wrap gap-3">
-                  <!-- Quota pill -->
-                  <VChip
-                    color="success"
-                    variant="tonal"
-                    size="x-small"
-                    class="font-weight-medium"
-                  >
-                    Quota : {{ student.quota }}
-                  </VChip>
-
-                  <!-- Rent Laptop chip -->
-                  <VChip
-                    v-if="student.rentLaptop"
-                    color="info"
-                    variant="tonal"
-                    size="x-small"
-                    class="font-weight-medium"
-                  >
-                    Rent Laptop {{ student.rentLaptop }}
-                  </VChip>
-
-                  <!-- Late / On Time toggle -->
-                  <div class="d-flex align-center gap-1">
-                    <VCheckbox
-                      :model-value="student.isLate"
-                      hide-details
-                      density="compact"
-                      class="late-checkbox"
-                      @change="toggleLate(student.id)"
-                    />
-                    <span class="text-caption font-weight-medium" :class="student.isLate ? 'text-error' : 'text-success'">
-                      {{ student.isLate ? 'Late' : 'On Time' }}
-                    </span>
-                  </div>
-
-                  <!-- Minutes input (shown only when late) -->
-                  <div
-                    v-if="student.isLate"
-                    style="width: 80px;"
-                  >
-                    <VTextField
-                      :model-value="student.lateMinutes"
-                      label="Minutes"
-                      type="number"
-                      density="compact"
-                      hide-details
-                      variant="outlined"
-                      class="minutes-input"
-                    />
-                  </div>
-
-                  <!-- Notes input -->
-                  <div style="min-width: 160px; flex: 1;">
-                    <VTextField
-                      v-model="student.notes"
-                      placeholder="Notes"
-                      density="compact"
-                      hide-details
-                      variant="outlined"
-                    />
-                  </div>
+                </VAvatar>
+                <div class="min-w-0">
+                  <span class="student-name font-weight-medium">{{ item.name }}</span>
+                  <span class="student-course text-caption">{{ item.course }} · {{ item.window }}</span>
                 </div>
               </div>
-            </div>
-            </VExpandTransition>
+            </template>
 
-            <!-- Footer -->
-            <VDivider />
-            <div class="pa-4 d-flex align-center justify-end gap-3">
+            <template #item.issue="{ item }">
+              <div class="issue-cell">
+                <span class="issue-title font-weight-medium">{{ item.issue }}</span>
+                <span class="issue-metric text-caption">{{ item.metric }}</span>
+              </div>
+            </template>
+
+            <template #item.risk="{ item }">
+              <VChip :color="riskColor(item.risk)" variant="tonal" size="small" class="status-chip text-caption font-weight-medium">
+                <span class="status-dot" />
+                {{ item.risk }}
+              </VChip>
+            </template>
+
+            <template #item.status="{ item }">
+              <VChip :color="statusColor(item.status)" variant="outlined" size="small" class="status-chip text-caption font-weight-medium">
+                {{ item.status }}
+              </VChip>
+            </template>
+
+            <template #item.action="{ item }">
               <VBtn
                 variant="outlined"
-                color="secondary"
-                class="text-capitalize"
-                rounded="xl"
-                @click="toastShow = true; toastText = 'Changes discarded'; toastColor = 'info'"
-              >
-                Discard
-              </VBtn>
-              <VBtn
                 color="primary"
-                class="text-capitalize"
-                rounded="xl"
-                @click="toastShow = true; toastText = 'Changes saved successfully'; toastColor = 'success'"
+                size="small"
+                class="action-button"
+                @click="openActionDialog(item)"
               >
-                Save Changes
+                Action
               </VBtn>
-            </div>
-          </VCard>
+            </template>
 
-          <!-- Empty state if no class selected -->
-          <VCard
-            v-else
-            class="d-flex align-center justify-center pa-12 border"
-            style="border-color: rgba(var(--v-theme-on-surface), 0.12) !important;"
-          >
-            <p class="text-body-1 text-medium-emphasis mb-0">
-              Select a class to view details
-            </p>
-          </VCard>
-        </VCol>
-      </VRow>
-    </div>
-
-    <!-- ─────────────────────── Real Time Progress ─────────────────────── -->
-    <div class="mt-7">
-      <h5 class="text-h5 font-weight-medium text-high-emphasis mb-4">
-        Real Time Progress
-      </h5>
-
-      <VRow>
-        <VCol
-          v-for="student in progressStudents"
-          :key="student.id"
-          cols="12"
-          sm="6"
-          md="4"
-        >
-          <VCard
-            class="border overflow-hidden position-relative"
-            :class="{ 'card-disabled': !student.isPresent }"
-            :style="{
-              borderColor: student.isPresent
-                ? 'rgba(var(--v-theme-primary), 0.24) !important'
-                : 'rgba(var(--v-theme-on-surface), 0.08) !important',
-            }"
-          >
-            <!-- 1. Header Row: Avatar + Name + Status Pill -->
-            <div class="pa-4 d-flex align-center justify-space-between gap-2">
-              <div class="d-flex align-center gap-3 min-w-0">
-                <VAvatar
-                  size="36"
-                  color="primary"
-                  class="rounded"
-                >
-                  <span class="text-caption font-weight-medium text-white">{{ student.avatar }}</span>
-                </VAvatar>
-                <span class="text-body-1 font-weight-medium text-high-emphasis text-truncate">
-                  {{ student.name }}
-                </span>
+            <template #no-data>
+              <div class="empty-cell">
+                No students in this evaluation view.
               </div>
-              <VChip
-                size="x-small"
-                :color="getSupportColor(student.supportStatus)"
-                variant="flat"
-                class="font-weight-medium text-white flex-shrink-0"
-              >
-                {{ getSupportLabel(student.supportStatus) }}
-              </VChip>
-            </div>
+            </template>
+          </UiTableView>
+        </section>
 
-            <!-- 2. Course / Meeting sub-row -->
-            <div class="px-4 pb-3 d-flex align-center gap-2">
-              <VIcon
-                icon="ri-book-2-line"
-                size="16"
-                color="secondary"
-              />
-              <span class="text-caption text-medium-emphasis text-truncate">
-                {{ student.course }}
-              </span>
-              <VChip
-                size="x-small"
-                color="info"
-                variant="tonal"
-                class="font-weight-medium flex-shrink-0"
-              >
-                {{ student.meetingLabel }}
-              </VChip>
-            </div>
-
-            <!-- 3. Progress Bar -->
-            <div class="px-4 pb-4">
-              <VProgressLinear
-                :model-value="student.progress"
-                color="success"
-                height="6"
-                rounded
-                track-color="rgba(var(--v-theme-on-surface), 0.08)"
-              />
-            </div>
-
-            <!-- 4. Bottom Detail Box -->
-            <div
-              class="mx-4 mb-4 pa-3 rounded-lg"
-              :style="{
-                border: `1px solid ${student.isPresent
-                  ? 'rgba(var(--v-theme-primary), 0.24)'
-                  : 'rgba(var(--v-theme-on-surface), 0.08)'}`,
-              }"
-            >
-              <!-- Lesson + Duration row -->
-              <div class="d-flex align-start justify-space-between mb-2">
-                <div class="min-w-0">
-                  <span class="text-caption font-weight-medium text-primary">
-                    {{ student.lessonLabel }}
-                  </span>
-                  <span class="text-body-2 text-high-emphasis d-block text-truncate">
-                    {{ student.lessonTitle }}
-                  </span>
+        <section class="dashboard-section dashboard-reveal dashboard-reveal--5" aria-labelledby="pending-heading">
+          <UiTableView
+            v-model:activeTab="pendingTab"
+            title=""
+            :tabs="pendingTableTabs"
+            :headers="pendingHeaders"
+            :items="activePendingItems"
+            :items-per-page="-1"
+            hide-filters
+            hide-pagination
+            tabs-inside-card
+            card-class="dashboard-card"
+            table-class="dashboard-table pending-table"
+            flat
+            class="dashboard-table-view"
+          >
+            <template #card-header>
+              <div class="card-heading">
+                <div>
+                  <h2 id="pending-heading" class="text-h5 text-high-emphasis mb-1">
+                    Pending Task
+                  </h2>
+                  <p class="text-body-2 text-medium-emphasis mb-0">
+                    {{ pendingTotal }} items are waiting across your workflows
+                  </p>
                 </div>
-                <div class="text-right flex-shrink-0">
-                  <div class="d-flex align-center gap-1 justify-end">
-                    <VIcon
-                      icon="ri-flashlight-line"
-                      size="14"
-                      color="warning"
-                    />
-                    <span class="text-body-1 font-weight-medium text-high-emphasis">
-                      {{ student.duration }}
-                    </span>
+                <VBtn
+                  variant="text"
+                  color="primary"
+                  size="small"
+                  class="section-link"
+                  :to="{ name: 'reports' }"
+                >
+                  View all
+                  <VIcon end icon="ri-arrow-right-line" size="16" />
+                </VBtn>
+              </div>
+            </template>
+
+            <template #item.student="{ item }">
+              <span class="student-name font-weight-medium">{{ item.student }}</span>
+            </template>
+
+            <template #item.course="{ item }">
+              <span class="table-muted text-caption">{{ item.course }}</span>
+            </template>
+
+            <template #item.lesson="{ item }">
+              <span class="table-muted text-caption">{{ item.lesson }}</span>
+            </template>
+
+            <template #item.due="{ item }">
+              <span class="due-label text-body-2 font-weight-medium">{{ item.due }}</span>
+            </template>
+
+            <template #item.action="{ item }">
+              <VBtn :to="getTaskRoute(item)" variant="text" color="primary" size="small" class="action-link">
+                {{ item.action }}
+                <VIcon end icon="ri-arrow-right-up-line" size="15" />
+              </VBtn>
+            </template>
+
+            <template #no-data>
+              <div class="empty-cell">
+                Nothing is waiting here. Keep the good rhythm going.
+              </div>
+            </template>
+          </UiTableView>
+        </section>
+      </main>
+
+      <aside class="dashboard-aside dashboard-reveal dashboard-reveal--2">
+        <VCard class="schedule-card dashboard-card" elevation="0">
+          <div class="schedule-card__header">
+            <div>
+              <h2 class="text-h5 text-high-emphasis mb-1">Upcoming schedule</h2>
+              <p class="text-body-2 text-medium-emphasis mb-0">Three moments to prepare for</p>
+            </div>
+            <VIcon icon="ri-calendar-schedule-line" color="primary" size="22" />
+          </div>
+          <div class="schedule-list">
+            <div v-for="item in scheduleItems" :key="item.id" class="schedule-item">
+              <div class="schedule-item__time">
+                <span class="schedule-item__date text-caption">{{ item.dateLabel }}</span>
+                <span class="schedule-item__clock text-body-2 font-weight-medium">{{ item.timeLabel }}</span>
+              </div>
+              <div class="schedule-item__rule" />
+              <div class="schedule-item__content">
+                <div class="d-flex align-start justify-space-between gap-2">
+                  <div class="min-w-0">
+                    <span class="schedule-item__name text-body-2 font-weight-medium">{{ item.name }}</span>
+                    <span class="schedule-item__meta text-caption">{{ item.type }} · {{ item.students }} students</span>
                   </div>
                   <span
-                    class="text-caption font-weight-medium"
-                    :style="{ color: `rgb(var(--v-theme-${paceMap[student.pace]?.color ?? 'warning'}))` }"
+                    class="schedule-status"
+                    :class="`schedule-status--${item.status}`"
+                    :aria-label="`Schedule status: ${item.status}`"
                   >
-                    {{ getPaceLabel(student.pace) }}
+                    <span class="status-dot" />
                   </span>
                 </div>
-              </div>
-
-              <!-- Checked by teacher + Rating row -->
-              <div class="d-flex align-center justify-space-between gap-2">
-                <VCheckbox
-                  :model-value="student.checkedByTeacher"
-                  :disabled="!student.isPresent"
-                  label="Checked by teacher"
-                  hide-details
-                  density="compact"
-                  color="success"
-                  class="progress-checkbox"
-                  @change="toggleCheckedByTeacher(student.id)"
-                />
-                <VChip
-                  size="x-small"
-                  color="info"
-                  variant="tonal"
-                  class="font-weight-medium flex-shrink-0"
-                >
-                  {{ getRatingLabel(student.rating) }}
-                </VChip>
+                <span class="schedule-item__countdown text-caption font-weight-medium">{{ getCountdown(item) }}</span>
               </div>
             </div>
+          </div>
+          <VDivider />
+          <VBtn :to="{ name: 'schedule' }" variant="outlined" rounded="pill" color="primary" size="small" class="schedule-view-all">
+            View full schedule
+            <VIcon end icon="ri-arrow-right-line" size="16" />
+          </VBtn>
+        </VCard>
 
-            <!-- 5. Disabled overlay (visible on hover) -->
-            <div
-              v-if="!student.isPresent"
-              class="disabled-overlay"
-            >
-              <div class="d-flex align-center justify-center gap-2">
-                <VIcon
-                  icon="ri-information-line"
-                  size="16"
-                  color="white"
-                />
-                <span class="text-caption text-white font-weight-medium">
-                  This student not presence yet.
-                </span>
-              </div>
-            </div>
-          </VCard>
-        </VCol>
-      </VRow>
+        <VCard class="freshness-card dashboard-reveal dashboard-reveal--3" elevation="0">
+          <div class="freshness-icon">
+            <VIcon icon="ri-refresh-line" color="primary" size="19" />
+          </div>
+          <div>
+            <p class="text-body-2 text-high-emphasis mb-1">Risk signals refresh every Monday.</p>
+            <p class="text-caption text-medium-emphasis mb-0">Your next watchlist review is ready.</p>
+          </div>
+        </VCard>
+      </aside>
     </div>
 
-    <!-- Toast Snackbar -->
-    <VSnackbar
-      v-model="toastShow"
-      :color="toastColor"
-      timeout="3000"
-    >
+    <VDialog v-model="isActionDialogOpen" max-width="520">
+      <VCard class="action-dialog" elevation="0">
+        <VCardTitle class="d-flex align-start justify-space-between gap-4 pa-6 pb-2">
+          <div>
+            <span class="text-h5 text-high-emphasis">Follow up with {{ activeWatchlistItem?.name }}</span>
+          </div>
+          <DialogCloseBtn aria-label="Close action dialog" @click="isActionDialogOpen = false" />
+        </VCardTitle>
+        <VCardText class="px-6 pt-3">
+          <div class="action-context mb-5">
+            <VChip v-if="activeWatchlistItem" :color="riskColor(activeWatchlistItem.risk)" variant="tonal" size="small">
+              {{ activeWatchlistItem.risk }} risk
+            </VChip>
+            <span class="text-body-2 text-medium-emphasis">{{ activeWatchlistItem?.issue }}</span>
+          </div>
+          <VTextarea
+            v-model="actionNote"
+            label="Action note"
+            placeholder="Write the next step you will take…"
+            rows="4"
+            variant="outlined"
+            autofocus
+          />
+        </VCardText>
+        <VCardActions class="px-6 pb-6 pt-0 justify-end gap-2">
+          <VBtn variant="text" color="secondary" @click="isActionDialogOpen = false">Cancel</VBtn>
+          <VBtn color="primary" @click="submitAction">Save action</VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+
+    <VSnackbar v-model="toastShow" color="success" timeout="3000">
       {{ toastText }}
     </VSnackbar>
   </section>
 </template>
 
 <style lang="scss" scoped>
-.upcoming-row {
-  transition: all 0.15s ease;
-
-  &.bg-primary {
-    border-color: transparent !important;
-  }
-
-  &:not(.bg-primary):hover {
-    background-color: rgba(var(--v-theme-primary), 0.04) !important;
-  }
+.teacher-dashboard {
+  --dashboard-line: rgba(var(--v-theme-on-surface), 0.1);
+  --dashboard-muted-line: rgba(var(--v-theme-on-surface), 0.07);
+  --dashboard-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  padding-block: 64px 20px;
 }
 
-.dot-separator {
-  display: inline-block;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  opacity: 0.5;
-  flex-shrink: 0;
+.card-heading,
+.section-heading,
+.schedule-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
 }
 
-.student-card {
-  transition: background-color 0.15s ease;
-  &:hover {
-    background-color: rgba(var(--v-theme-on-surface), 0.04) !important;
-  }
-}
-
-:deep(.late-checkbox) {
-  .v-checkbox .v-selection-control {
-    min-height: unset;
-  }
-  .v-selection-control__wrapper {
-    width: 18px;
-    height: 18px;
-  }
-}
-
-.card-disabled {
-  filter: grayscale(0.6);
-  opacity: 0.75;
+.dashboard-header {
   position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.7fr);
+  align-items: stretch;
+  min-height: 140px;
+  margin-block-end: 28px;
+  overflow: visible;
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
+  border-radius: 6px;
+  background: rgb(var(--v-theme-surface));
 }
 
-.disabled-overlay {
+.dashboard-header__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 12px 20px;
+}
+
+.dashboard-header__content > p {
+  max-width: 560px;
+}
+
+.dashboard-header__art {
+  position: relative;
+  min-width: 0;
+  min-height: 140px;
+}
+
+.dashboard-header__illustration {
   position: absolute;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.55);
-  border-radius: inherit;
+  bottom: 0;
+  right: 20px;
+  width: auto;
+  height: 220px;
+  max-width: none;
+  object-fit: contain;
+}
+
+.status-dot {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.dashboard-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(280px, 1fr);
+  align-items: start;
+  gap: 24px;
+}
+
+.dashboard-main,
+.dashboard-aside {
+  min-width: 0;
+}
+
+.dashboard-main {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.dashboard-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.recognition-card {
+  padding: 0;
+}
+
+.recognition-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 82px;
+  border: 1px solid rgba(var(--v-theme-warning), 0.52);
+  border-radius: 6px;
+  background: rgba(var(--v-theme-warning), 0.08);
+  padding: 14px 16px;
+}
+
+.recognition-rail {
+  display: grid;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 6px;
+  background: rgb(var(--v-theme-surface));
+  color: rgb(var(--v-theme-warning-darken-1));
+}
+
+.recognition-content {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.recognition-banner-nav {
+  flex: 0 0 auto;
+}
+
+.recognition-nav {
+  min-width: 44px !important;
+  width: 44px;
+  height: 44px !important;
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.14) !important;
+  border-radius: 6px;
+  background: rgb(var(--v-theme-surface));
+  color: rgb(var(--v-theme-on-surface)) !important;
+  transition: transform 140ms var(--dashboard-ease-out), border-color 160ms ease, background-color 160ms ease;
+}
+
+.recognition-progress {
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  cursor: pointer;
-  z-index: 1;
+  gap: 5px;
+  margin-block-start: 14px;
 }
 
-.card-disabled:hover .disabled-overlay {
-  opacity: 1;
+.appreciation-quote {
+  max-width: 620px;
 }
 
-:deep(.progress-checkbox) {
-  .v-checkbox .v-selection-control {
-    min-height: unset;
+.recognition-progress__item {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(var(--v-theme-on-surface), 0.16);
+  transition: background-color 180ms ease;
+}
+
+.recognition-progress__item--active {
+  width: 18px;
+  background: rgb(var(--v-theme-primary));
+}
+
+.recognition-nav:active,
+.action-button:active,
+.section-link:active,
+.action-link:active {
+  transform: scale(0.97);
+}
+
+.dashboard-section {
+  min-width: 0;
+}
+
+.section-heading {
+  align-items: end;
+  margin-block-end: 14px;
+}
+
+.section-meta {
+  color: rgb(var(--v-theme-secondary));
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.summary-card {
+  position: relative;
+  min-height: 148px;
+  overflow: hidden;
+  border: 1px solid var(--dashboard-line);
+  border-radius: 6px;
+  padding: 18px;
+  transition: transform 180ms var(--dashboard-ease-out), border-color 180ms ease, background-color 180ms ease;
+}
+
+.summary-card::before {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 3px;
+  background: rgb(var(--summary-tone));
+  content: '';
+}
+
+.summary-card--primary { --summary-tone: var(--v-theme-primary); }
+.summary-card--info { --summary-tone: var(--v-theme-info); }
+.summary-card--warning { --summary-tone: var(--v-theme-warning); }
+.summary-card--success { --summary-tone: var(--v-theme-success); }
+
+.summary-card__top,
+.summary-card__helper,
+.summary-card__label,
+.summary-card__period {
+  display: block;
+}
+
+.summary-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: rgb(var(--summary-tone));
+}
+
+.summary-card__period {
+  color: rgb(var(--v-theme-secondary));
+}
+
+.summary-card__value {
+  display: block;
+  color: rgb(var(--v-theme-on-surface));
+  margin-block: 18px 4px;
+}
+
+.summary-card__label {
+  color: rgb(var(--v-theme-on-surface));
+}
+
+.summary-card__helper {
+  color: rgb(var(--v-theme-secondary));
+  margin-block-start: 3px;
+}
+
+.dashboard-card {
+  border: 1px solid var(--dashboard-line);
+  border-radius: 6px;
+  background: rgb(var(--v-theme-surface));
+}
+
+.card-heading {
+  padding: 22px 20px 16px;
+}
+
+.watchlist-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block-end: 4px;
+}
+
+.section-link {
+  flex: 0 0 auto;
+  margin-block-start: 2px;
+}
+
+.dashboard-table-view :deep(.v-tabs) {
+  padding-inline: 20px;
+}
+
+.dashboard-table-view :deep(.v-tab) {
+  min-width: auto;
+  padding-inline: 14px;
+  color: rgb(var(--v-theme-secondary));
+  text-transform: none;
+}
+
+.dashboard-table-view :deep(.v-tab--selected) {
+  color: rgb(var(--v-theme-primary));
+}
+
+.tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: rgba(var(--v-theme-primary), 0.1);
+  color: rgb(var(--v-theme-primary));
+  margin-inline-start: 6px;
+  padding-inline: 5px;
+}
+
+.dashboard-table {
+  width: 100%;
+}
+
+.dashboard-table-view :deep(.dashboard-table table) {
+  border-collapse: collapse;
+}
+
+.dashboard-table-view :deep(.dashboard-table th) {
+  border-block-end: 1px solid var(--dashboard-muted-line);
+  color: rgb(var(--v-theme-secondary));
+  padding: 13px 20px;
+  text-align: start;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.dashboard-table-view :deep(.dashboard-table td) {
+  border-block-end: 1px solid var(--dashboard-muted-line);
+  color: rgb(var(--v-theme-on-surface));
+  padding: 14px 20px;
+  vertical-align: middle;
+}
+
+.dashboard-table-view :deep(.dashboard-table tbody tr:last-child td) {
+  border-block-end: 0;
+}
+
+.dashboard-table-view :deep(.dashboard-table tbody tr) {
+  transition: background-color 160ms ease;
+}
+
+.dashboard-table-view :deep(.dashboard-table tbody tr:hover) {
+  background: rgba(var(--v-theme-primary), 0.025);
+}
+
+.student-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 165px;
+}
+
+.student-name,
+.student-course,
+.issue-title,
+.issue-metric {
+  display: block;
+}
+
+.student-name,
+.issue-title {
+  color: rgb(var(--v-theme-on-surface));
+}
+
+.student-course,
+.issue-metric,
+.table-muted {
+  color: rgb(var(--v-theme-secondary));
+  margin-block-start: 3px;
+}
+
+.issue-cell {
+  min-width: 185px;
+}
+
+.status-chip .status-dot {
+  margin-inline-end: 5px;
+}
+
+.action-button {
+  min-width: 72px;
+  text-transform: none;
+}
+
+.empty-cell {
+  color: rgb(var(--v-theme-secondary)) !important;
+  padding: 28px 20px !important;
+  text-align: center;
+}
+
+.due-label {
+  color: rgb(var(--v-theme-warning));
+  white-space: nowrap;
+}
+
+.action-link {
+  text-transform: none;
+}
+
+.schedule-card {
+  overflow: hidden;
+}
+
+.schedule-card__header {
+  padding: 22px 20px 20px;
+}
+
+.schedule-list {
+  padding: 0 20px 10px;
+}
+
+.schedule-item {
+  display: grid;
+  grid-template-columns: 74px 1px minmax(0, 1fr);
+  gap: 12px;
+  min-height: 104px;
+}
+
+.schedule-item__time {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-block-start: 2px;
+}
+
+.schedule-item__date {
+  color: rgb(var(--v-theme-secondary));
+}
+
+.schedule-item__clock {
+  color: rgb(var(--v-theme-on-surface));
+}
+
+.schedule-item__rule {
+  width: 1px;
+  background: var(--dashboard-line);
+}
+
+.schedule-item__content {
+  min-width: 0;
+  padding-block-end: 18px;
+}
+
+.schedule-item__name,
+.schedule-item__meta,
+.schedule-item__countdown {
+  display: block;
+}
+
+.schedule-item__name {
+  overflow: hidden;
+  color: rgb(var(--v-theme-on-surface));
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.schedule-item__meta {
+  color: rgb(var(--v-theme-secondary));
+  margin-block-start: 3px;
+}
+
+.schedule-item__countdown {
+  color: rgb(var(--v-theme-primary));
+  margin-block-start: 13px;
+}
+
+.schedule-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+}
+
+.schedule-status--ready { color: rgb(var(--v-theme-success)); background: rgba(var(--v-theme-success), 0.12); }
+.schedule-status--soon { color: rgb(var(--v-theme-warning)); background: rgba(var(--v-theme-warning), 0.14); }
+.schedule-status--live { color: rgb(var(--v-theme-error)); background: rgba(var(--v-theme-error), 0.12); }
+
+.schedule-view-all {
+  box-sizing: border-box;
+  justify-content: center;
+  width: calc(100% - 32px);
+  min-height: 40px;
+  margin: 12px 16px 16px;
+  padding-inline: 16px;
+  text-transform: none;
+}
+
+.freshness-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border: 1px dashed rgba(var(--v-theme-primary), 0.28);
+  border-radius: 6px;
+  background: rgba(var(--v-theme-primary), 0.035);
+  padding: 16px;
+}
+
+.freshness-icon {
+  display: grid;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 6px;
+  background: rgba(var(--v-theme-primary), 0.1);
+}
+
+.action-dialog {
+  border: 1px solid var(--dashboard-line);
+  border-radius: 6px;
+}
+
+.action-context {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 6px;
+  background: rgba(var(--v-theme-on-surface), 0.035);
+  padding: 10px 12px;
+}
+
+.dashboard-reveal {
+  animation: dashboard-enter 220ms var(--dashboard-ease-out) both;
+}
+
+.dashboard-reveal--1 { animation-delay: 0ms; }
+.dashboard-reveal--2 { animation-delay: 40ms; }
+.dashboard-reveal--3 { animation-delay: 80ms; }
+.dashboard-reveal--4 { animation-delay: 120ms; }
+.dashboard-reveal--5 { animation-delay: 160ms; }
+
+@keyframes dashboard-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
   }
-  .v-label {
-    font-size: 0.8125rem;
-    opacity: 0.8;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-:deep(.minutes-input) {
-  .v-field--variant-outlined {
-    --v-field-padding-bottom: 4px;
-    --v-field-padding-top: 4px;
+@media (hover: hover) and (pointer: fine) {
+  .summary-card:hover {
+    border-color: rgba(var(--v-theme-primary), 0.28);
+    transform: translateY(-2px);
   }
-  .v-field__input {
-    min-height: 28px;
-    padding-top: 2px;
-    padding-bottom: 2px;
-    font-size: 0.8125rem;
+
+  .recognition-nav:hover {
+    background: rgba(var(--v-theme-primary), 0.08);
   }
-  .v-label {
-    font-size: 0.75rem;
+}
+
+@media (max-width: 1100px) {
+  .dashboard-header__illustration {
+    right: 0;
+  }
+
+  .dashboard-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dashboard-aside {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(240px, 1fr);
+    align-items: start;
+  }
+}
+
+@media (max-width: 760px) {
+  .teacher-dashboard {
+    padding-block: 72px 20px;
+  }
+
+  .card-heading,
+  .section-heading,
+  .schedule-card__header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .dashboard-header {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .dashboard-header__content {
+    padding: 12px 20px 8px;
+  }
+
+  .dashboard-header__art {
+    min-height: 180px;
+  }
+
+  .dashboard-header__illustration {
+    top: -20px;
+    bottom: auto;
+    right: 50%;
+    height: 220px;
+    transform: translateX(50%);
+  }
+
+  .recognition-card {
+    padding: 14px;
+  }
+
+  .recognition-banner {
+    align-items: flex-start;
+    padding: 12px;
+  }
+
+  .recognition-banner-nav {
+    gap: 4px !important;
+  }
+
+  .summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-aside {
+    display: flex;
+  }
+
+  .dashboard-table-view :deep(.v-table__wrapper) {
+    padding: 0 14px 10px;
+  }
+
+  .dashboard-table-view :deep(.dashboard-table .v-data-table__thead) {
+    display: none;
+  }
+
+  .dashboard-table-view :deep(.dashboard-table table),
+  .dashboard-table-view :deep(.dashboard-table .v-data-table__tbody),
+  .dashboard-table-view :deep(.dashboard-table .v-data-table__tr),
+  .dashboard-table-view :deep(.dashboard-table .v-data-table__td) {
+    display: block;
+    width: 100%;
+  }
+
+  .dashboard-table-view :deep(.dashboard-table .v-data-table__tr) {
+    border-block-end: 1px solid var(--dashboard-muted-line);
+    padding-block: 12px;
+  }
+
+  .dashboard-table-view :deep(.dashboard-table .v-data-table__tbody .v-data-table__tr:last-child) {
+    border-block-end: 0;
+  }
+
+  .dashboard-table-view :deep(.dashboard-table .v-data-table__td) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border: 0;
+    padding: 7px 6px;
+    text-align: end;
+  }
+
+  .dashboard-table-view :deep(.dashboard-table .v-data-table__td::before) {
+    color: rgb(var(--v-theme-secondary));
+    content: '';
+    flex: 0 0 auto;
+    font: inherit;
+    font-weight: 500;
+    text-align: start;
+    text-transform: uppercase;
+  }
+
+  .dashboard-table-view :deep(.watchlist-table .v-data-table__td:nth-child(1)::before) { content: 'Student'; }
+  .dashboard-table-view :deep(.watchlist-table .v-data-table__td:nth-child(2)::before) { content: 'Issue'; }
+  .dashboard-table-view :deep(.watchlist-table .v-data-table__td:nth-child(3)::before) { content: 'Risk'; }
+  .dashboard-table-view :deep(.watchlist-table .v-data-table__td:nth-child(4)::before) { content: 'Status'; }
+  .dashboard-table-view :deep(.watchlist-table .v-data-table__td:nth-child(5)::before) { content: 'Action'; }
+  .dashboard-table-view :deep(.pending-table .v-data-table__td:nth-child(1)::before) { content: 'Student'; }
+  .dashboard-table-view :deep(.pending-table .v-data-table__td:nth-child(2)::before) { content: 'Course'; }
+  .dashboard-table-view :deep(.pending-table .v-data-table__td:nth-child(3)::before) { content: 'Mtg / Lesson'; }
+  .dashboard-table-view :deep(.pending-table .v-data-table__td:nth-child(4)::before) { content: 'Due'; }
+  .dashboard-table-view :deep(.pending-table .v-data-table__td:nth-child(5)::before) { content: 'Action'; }
+
+  .dashboard-table-view :deep(.dashboard-table .v-data-table__td:first-child) {
+    align-items: flex-start;
+  }
+
+  .dashboard-table-view :deep(.dashboard-table .v-data-table__td:first-child::before) {
+    margin-block-start: 8px;
+  }
+
+  .dashboard-table-view :deep(.dashboard-table .v-data-table__td:nth-child(5)) {
+    justify-content: space-between;
+  }
+
+  .dashboard-table-view :deep(.dashboard-table .empty-cell) {
+    display: block;
+    text-align: center;
+  }
+
+  .dashboard-table-view :deep(.dashboard-table .empty-cell::before) {
+    display: none;
+  }
+
+  .student-cell,
+  .issue-cell {
+    min-width: 0;
+    text-align: end;
+  }
+
+  .student-cell {
+    flex-direction: row-reverse;
+    text-align: end;
+  }
+
+  .issue-cell {
+    max-width: 70%;
+  }
+
+  .action-button {
+    min-width: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-reveal {
+    animation: none;
+  }
+
+  .recognition-progress__item,
+  .recognition-nav,
+  .summary-card,
+  .dashboard-table-view :deep(.dashboard-table tbody tr) {
+    transition: none;
   }
 }
 </style>

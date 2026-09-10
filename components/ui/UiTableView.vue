@@ -17,6 +17,12 @@ const props = withDefaults(defineProps<{
   items?: any[]
   loading?: boolean
   itemsPerPage?: number
+  hideFilters?: boolean
+  hidePagination?: boolean
+  tabsInsideCard?: boolean
+  cardClass?: string
+  tableClass?: string
+  flat?: boolean
   showViewToggle?: boolean
   back?: any
 }>(), {
@@ -25,6 +31,12 @@ const props = withDefaults(defineProps<{
   items: () => [],
   loading: false,
   itemsPerPage: 10,
+  hideFilters: false,
+  hidePagination: false,
+  tabsInsideCard: false,
+  cardClass: undefined,
+  tableClass: undefined,
+  flat: false,
   showViewToggle: false,
 })
 
@@ -53,7 +65,7 @@ const viewType = defineModel<string>('viewType', { default: 'list' })
 
     <!-- Tab navigation -->
     <VTabs
-      v-if="props.tabs && props.tabs.length"
+      v-if="!props.tabsInsideCard && props.tabs && props.tabs.length"
       v-model="activeTab"
       class="v-tabs-bordered mb-6"
     >
@@ -61,6 +73,7 @@ const viewType = defineModel<string>('viewType', { default: 'list' })
         v-for="tab in props.tabs"
         :key="tab.value"
         :value="tab.value"
+        class="text-body-2 font-weight-medium"
       >
         <VIcon
           v-if="tab.icon"
@@ -80,9 +93,50 @@ const viewType = defineModel<string>('viewType', { default: 'list' })
     </VTabs>
 
     <!-- Main Card View -->
-    <VCard>
+    <VCard
+      :class="props.cardClass"
+      :elevation="props.flat ? 0 : undefined"
+    >
+      <slot
+        v-if="props.tabsInsideCard && props.tabs && props.tabs.length"
+        name="card-header"
+      />
+
+      <VTabs
+        v-if="props.tabsInsideCard && props.tabs && props.tabs.length"
+        v-model="activeTab"
+        class="v-tabs-bordered"
+      >
+        <VTab
+          v-for="tab in props.tabs"
+          :key="tab.value"
+          :value="tab.value"
+          class="text-body-2 font-weight-medium"
+        >
+          <VIcon
+            v-if="tab.icon"
+            start
+            :icon="tab.icon"
+            class="me-2"
+          />
+          {{ tab.label }}
+          <span
+            v-if="tab.count !== undefined"
+            class="count-badge ms-2"
+            :class="tab.badgeColor ? `bg-${tab.badgeColor} text-white` : (activeTab === tab.value ? 'bg-primary text-white' : 'bg-secondary text-white')"
+          >
+            {{ tab.count }}
+          </span>
+        </VTab>
+      </VTabs>
+
+      <VDivider v-if="props.tabsInsideCard && props.tabs && props.tabs.length" />
+
       <!-- Filter Inputs section (up to 2 rows filter) -->
-      <VCardText class="d-flex align-center justify-space-between flex-wrap gap-4 py-4">
+      <VCardText
+        v-if="!props.hideFilters"
+        class="d-flex align-center justify-space-between flex-wrap gap-4 py-4"
+      >
         <div class="d-flex align-center flex-wrap gap-4 flex-grow-1">
           <slot name="filters" />
           
@@ -122,7 +176,7 @@ const viewType = defineModel<string>('viewType', { default: 'list' })
         </div>
       </VCardText>
 
-      <VDivider />
+      <VDivider v-if="!props.hideFilters" />
 
       <!-- Loading State -->
       <template v-if="props.loading">
@@ -145,7 +199,8 @@ const viewType = defineModel<string>('viewType', { default: 'list' })
               :headers="props.headers"
               :items="props.items"
               :items-per-page="props.itemsPerPage"
-              class="text-no-wrap"
+              :hide-default-footer="props.hidePagination"
+              :class="[props.tableClass, 'text-no-wrap']"
             >
               <!-- Forward all dynamic slots (like #item.status, #no-data, etc.) to parent -->
               <template

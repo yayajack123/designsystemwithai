@@ -777,7 +777,7 @@ const _routes = [
     name: "user",
     path: "/user",
     meta: __nuxt_page_meta$l || {},
-    component: () => import("./_nuxt/user-DP8rHCBa.js")
+    component: () => import("./_nuxt/user-BWQyFvxw.js")
   },
   {
     name: "event",
@@ -795,19 +795,19 @@ const _routes = [
     name: "login",
     path: "/login",
     meta: { ...__nuxt_page_meta$i || {}, ...{ "middleware": ["guest"] } },
-    component: () => import("./_nuxt/login-BQpi8qQd.js")
+    component: () => import("./_nuxt/login-Bh83GhET.js")
   },
   {
     name: "course",
     path: "/course",
     meta: __nuxt_page_meta$h || {},
-    component: () => import("./_nuxt/course-Ti09raRc.js")
+    component: () => import("./_nuxt/course-CfY-2k6g.js")
   },
   {
     name: "themes",
     path: "/themes",
     meta: __nuxt_page_meta$g || {},
-    component: () => import("./_nuxt/themes-oq4z-T0G.js")
+    component: () => import("./_nuxt/themes-kkacYF-B.js")
   },
   {
     name: "account",
@@ -819,31 +819,31 @@ const _routes = [
     name: "classes",
     path: "/classes",
     meta: __nuxt_page_meta$e || {},
-    component: () => import("./_nuxt/classes-RKPC5w9-.js")
+    component: () => import("./_nuxt/classes-CsbkUU-d.js")
   },
   {
     name: "reports",
     path: "/reports",
     meta: __nuxt_page_meta$d || {},
-    component: () => import("./_nuxt/reports-BBb6hOMK.js")
+    component: () => import("./_nuxt/reports-CgOIUvgQ.js")
   },
   {
     name: "schedule",
     path: "/schedule",
     meta: __nuxt_page_meta$c || {},
-    component: () => import("./_nuxt/schedule-BbASwFfR.js")
+    component: () => import("./_nuxt/schedule-QKMqV2qI.js")
   },
   {
     name: "students",
     path: "/students",
     meta: __nuxt_page_meta$b || {},
-    component: () => import("./_nuxt/students-DbOhiX26.js")
+    component: () => import("./_nuxt/students-DBPsr1ZY.js")
   },
   {
     name: "attendance",
     path: "/attendance",
     meta: __nuxt_page_meta$a || {},
-    component: () => import("./_nuxt/attendance-DFKqNxbt.js")
+    component: () => import("./_nuxt/attendance-DlV_jNzJ.js")
   },
   {
     name: "permission",
@@ -855,19 +855,19 @@ const _routes = [
     name: "assessments",
     path: "/assessments",
     meta: __nuxt_page_meta$8 || {},
-    component: () => import("./_nuxt/assessments-CLoZFpCH.js")
+    component: () => import("./_nuxt/assessments-Bez0YIyz.js")
   },
   {
     name: "design-system",
     path: "/design-system",
     meta: __nuxt_page_meta$7 || {},
-    component: () => import("./_nuxt/design-system-DaPuTd_1.js")
+    component: () => import("./_nuxt/design-system-B_-dtbCj.js")
   },
   {
     name: "my-attendance",
     path: "/my-attendance",
     meta: __nuxt_page_meta$6 || {},
-    component: () => import("./_nuxt/my-attendance-DvSS4VL-.js")
+    component: () => import("./_nuxt/my-attendance-D5BBhCSd.js")
   },
   {
     name: "student-detail",
@@ -879,31 +879,31 @@ const _routes = [
     name: "user-variant-2",
     path: "/user-variant-2",
     meta: __nuxt_page_meta$4 || {},
-    component: () => import("./_nuxt/user-variant-2-CO0izBFG.js")
+    component: () => import("./_nuxt/user-variant-2-B150fDp5.js")
   },
   {
     name: "account-settings",
     path: "/account-settings",
     meta: { ...__nuxt_page_meta$3 || {}, ...{ "middleware": ["auth"] } },
-    component: () => import("./_nuxt/account-settings-naSogN9a.js")
+    component: () => import("./_nuxt/account-settings-C6raqi2z.js")
   },
   {
     name: "attendance-detail",
     path: "/attendance-detail",
     meta: __nuxt_page_meta$2 || {},
-    component: () => import("./_nuxt/attendance-detail-CG3_DAZk.js")
+    component: () => import("./_nuxt/attendance-detail-BViSPU8A.js")
   },
   {
     name: "dashboard-teacher",
     path: "/dashboard-teacher",
     meta: __nuxt_page_meta$1 || {},
-    component: () => import("./_nuxt/dashboard-teacher-BkWA9Su_.js")
+    component: () => import("./_nuxt/dashboard-teacher-D4wue5PN.js")
   },
   {
     name: "meeting-journal-create",
     path: "/meeting-journal/create",
     meta: __nuxt_page_meta || {},
-    component: () => import("./_nuxt/create-O_ljXsUH.js")
+    component: () => import("./_nuxt/create-6mRKpt2H.js")
   }
 ];
 const _wrapInTransition = (props, children) => {
@@ -11639,7 +11639,8 @@ const defaults = {
   },
   VBtn: {
     // set v-btn default color to primary
-    color: "primary"
+    color: "primary",
+    rounded: "pill"
   },
   VChip: {
     elevation: 0
@@ -13561,7 +13562,7 @@ const layouts = {
   "components-default-layout-with-vertical-nav": defineAsyncComponent(() => import("./_nuxt/DefaultLayoutWithVerticalNav-C61k4Aa5.js").then((m) => m.default || m)),
   "components-footer": defineAsyncComponent(() => import("./_nuxt/Footer-CgBf2AWj.js").then((m) => m.default || m)),
   "components-nav-bar-notifications": defineAsyncComponent(() => import("./_nuxt/NavBarNotifications-CBiSFxoh.js").then((m) => m.default || m)),
-  "components-nav-search-bar": defineAsyncComponent(() => import("./_nuxt/NavSearchBar-DcV4dzpg.js").then((m) => m.default || m)),
+  "components-nav-search-bar": defineAsyncComponent(() => import("./_nuxt/NavSearchBar-CY66e_Yy.js").then((m) => m.default || m)),
   "components-navbar-shortcuts": defineAsyncComponent(() => import("./_nuxt/NavbarShortcuts-Di0wExRN.js").then((m) => m.default || m)),
   "components-navbar-theme-switcher": defineAsyncComponent(() => import("./_nuxt/NavbarThemeSwitcher-C6RXK2Po.js").then((m) => m.default || m)),
   "components-user-profile": defineAsyncComponent(() => import("./_nuxt/UserProfile-MTJs3d-E.js").then((m) => m.default || m)),

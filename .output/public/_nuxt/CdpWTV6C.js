@@ -1,0 +1,1 @@
+import{V as o}from"./DcjL2pPF.js";import{V as r}from"./CQJVCqvw.js";import{d as n,c as s,a as t,b as a,h as l,o as m}from"./C7dYkZcF.js";import"./BbAjm1cz.js";const _=n({__name:"event",setup(p){return(d,e)=>(m(),s("div",null,[t(o,{title:"Event"},{default:a(()=>[t(r,null,{default:a(()=>e[0]||(e[0]=[l(" Event page content. ")])),_:1})]),_:1})]))}});export{_ as default};
