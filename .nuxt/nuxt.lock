@@ -1,0 +1,9 @@
+{
+  "pid": 34236,
+  "startedAt": 1787811325953,
+  "command": "dev",
+  "cwd": "/Users/user/Documents/Code Project/microdemy-DS",
+  "port": 3001,
+  "hostname": "0.0.0.0",
+  "url": "http://0.0.0.0:3001"
+}

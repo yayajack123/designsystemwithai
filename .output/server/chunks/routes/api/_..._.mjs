@@ -1,4 +1,4 @@
-import { d as defineEventHandler, u as useRuntimeConfig, j as joinURL, p as proxyRequest } from '../../nitro/nitro.mjs';
+import { d as defineEventHandler, j as joinURL, p as proxyRequest, u as useRuntimeConfig } from '../../nitro/nitro.mjs';
 import 'node:http';
 import 'node:https';
 import 'node:events';

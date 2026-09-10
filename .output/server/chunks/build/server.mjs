@@ -1,9 +1,8 @@
-import { h, computed, ref, createVNode, toRaw, inject as inject$1, provide, shallowRef, nextTick, unref, toRefs, defineComponent as defineComponent$1, withDirectives, resolveDynamicComponent, toRef, Fragment, Text, reactive, watch, warn as warn$1, watchEffect, mergeProps, isRef, getCurrentInstance as getCurrentInstance$1, readonly, isVNode as isVNode$1, Comment, Transition, isReactive, hasInjectionContext, onScopeDispose, capitalize as capitalize$1, getCurrentScope, customRef, effectScope, markRaw, createElementBlock, defineAsyncComponent, Suspense, useSSRContext, createApp, shallowReactive, withCtx, createTextVNode, createBlock, createCommentVNode, openBlock, onErrorCaptured, onServerPrefetch, isReadonly, isShallow, toValue as toValue$1, createElementVNode } from 'vue';
+import process from 'node:process';globalThis._importMeta_=globalThis._importMeta_||{url:"file:///_entry.js",env:process.env};import { resolveDynamicComponent, computed, toRef, isRef, ref, toRaw, inject as inject$1, provide, shallowRef, nextTick, unref, toRefs, withDirectives, createVNode, Text, Fragment, reactive, watch, warn as warn$1, watchEffect, h, mergeProps, getCurrentInstance as getCurrentInstance$1, readonly, isVNode as isVNode$1, Comment, Transition, isReactive, hasInjectionContext, onScopeDispose, defineComponent as defineComponent$1, capitalize as capitalize$1, getCurrentScope, onMounted, customRef, effectScope, markRaw, createElementBlock, cloneVNode, defineAsyncComponent, shallowReactive, Suspense, useSSRContext, createApp, createCommentVNode, withCtx, createTextVNode, openBlock, createBlock, onErrorCaptured, onServerPrefetch, isReadonly, isShallow, toValue as toValue$1, createElementVNode } from 'vue';
 import http from 'node:http';
 import https from 'node:https';
-import { w as withBase, l as withQuery$1, m as destr, n as i, s, o as l, q as klona, r as getRequestHeader, t as isEqual$2, v as sanitizeStatusCode, x as setCookie, y as getCookie, z as deleteCookie, A as getContext, B as baseURL, C as createHooks, D as executeAsync, h as createError$1, E as toRouteMatcher, F as createRouter$1, G as defu, H as getRequestHeaders, I as getRequestProtocol } from '../nitro/nitro.mjs';
+import { w as withBase, m as withQuery$1, n as destr, o as i, s, q as l, r as klona, t as getRequestHeader, v as isEqual$2, x as sanitizeStatusCode, y as setCookie, z as getCookie, A as deleteCookie, B as getContext, C as baseURL, D as defu, E as createHooks, f as createError$1, F as executeAsync, G as getRequestHeaders, H as getRequestProtocol } from '../nitro/nitro.mjs';
 import { useRoute as useRoute$2, RouterView, createMemoryHistory, createRouter, START_LOCATION, isNavigationFailure } from 'vue-router';
-import { setupDevtoolsPlugin } from 'vue-devtools-stub';
 import { deepMerge } from '@antfu/utils';
 import { ssrRenderComponent, ssrRenderAttrs, ssrInterpolate, ssrRenderStyle, ssrRenderAttr, ssrRenderSuspense, ssrRenderVNode } from 'vue/server-renderer';
 import 'node:events';
@@ -315,11 +314,17 @@ const AbortController = globalThis.AbortController || i;
 const ofetch = createFetch({ fetch, Headers, AbortController });
 const $fetch$1 = ofetch;
 
+const NullObject = /* @__PURE__ */ (() => {
+  const C = function() {
+  };
+  C.prototype = /* @__PURE__ */ Object.create(null);
+  return C;
+})();
 function parse$1(str, options) {
   if (typeof str !== "string") {
     throw new TypeError("argument str must be a string");
   }
-  const obj = {};
+  const obj = new NullObject();
   const opt = options || {};
   const dec = opt.decode || decode$1;
   let index = 0;
@@ -367,6 +372,9 @@ if (!globalThis.$fetch) {
     baseURL: baseURL()
   });
 }
+if (!("global" in globalThis)) {
+  globalThis.global = globalThis;
+}
 const appLayoutTransition = false;
 const nuxtLinkDefaults = { "componentName": "NuxtLink" };
 const nuxtDefaultErrorValue = null;
@@ -378,7 +386,6 @@ function getNuxtAppCtx(id = appId) {
 }
 const NuxtPluginIndicator = "__nuxt_plugin";
 function createNuxtApp(options) {
-  var _a;
   let hydratingCount = 0;
   const nuxtApp = {
     _id: options.id || appId || "nuxt-app",
@@ -387,14 +394,14 @@ function createNuxtApp(options) {
     globalName: "nuxt",
     versions: {
       get nuxt() {
-        return "3.17.2";
+        return "3.21.9";
       },
       get vue() {
         return nuxtApp.vueApp.version;
       }
     },
     payload: shallowReactive({
-      ...((_a = options.ssrContext) == null ? void 0 : _a.payload) || {},
+      ...options.ssrContext?.payload || {},
       data: shallowReactive({}),
       state: reactive({}),
       once: /* @__PURE__ */ new Set(),
@@ -484,21 +491,19 @@ async function applyPlugin(nuxtApp, plugin2) {
   }
 }
 async function applyPlugins(nuxtApp, plugins2) {
-  var _a, _b, _c, _d;
-  const resolvedPlugins = [];
+  const resolvedPlugins = /* @__PURE__ */ new Set();
   const unresolvedPlugins = [];
   const parallels = [];
-  const errors = [];
+  let error = void 0;
   let promiseDepth = 0;
   async function executePlugin(plugin2) {
-    var _a2;
-    const unresolvedPluginsForThisPlugin = ((_a2 = plugin2.dependsOn) == null ? void 0 : _a2.filter((name) => plugins2.some((p) => p._name === name) && !resolvedPlugins.includes(name))) ?? [];
+    const unresolvedPluginsForThisPlugin = plugin2.dependsOn?.filter((name) => plugins2.some((p) => p._name === name) && !resolvedPlugins.has(name)) ?? [];
     if (unresolvedPluginsForThisPlugin.length > 0) {
       unresolvedPlugins.push([new Set(unresolvedPluginsForThisPlugin), plugin2]);
     } else {
       const promise = applyPlugin(nuxtApp, plugin2).then(async () => {
         if (plugin2._name) {
-          resolvedPlugins.push(plugin2._name);
+          resolvedPlugins.add(plugin2._name);
           await Promise.all(unresolvedPlugins.map(async ([dependsOn, unexecutedPlugin]) => {
             if (dependsOn.has(plugin2._name)) {
               dependsOn.delete(plugin2._name);
@@ -509,22 +514,27 @@ async function applyPlugins(nuxtApp, plugins2) {
             }
           }));
         }
+      }).catch((e) => {
+        if (!plugin2.parallel && !nuxtApp.payload.error) {
+          throw e;
+        }
+        error ||= e;
       });
       if (plugin2.parallel) {
-        parallels.push(promise.catch((e) => errors.push(e)));
+        parallels.push(promise);
       } else {
         await promise;
       }
     }
   }
   for (const plugin2 of plugins2) {
-    if (((_a = nuxtApp.ssrContext) == null ? void 0 : _a.islandContext) && ((_b = plugin2.env) == null ? void 0 : _b.islands) === false) {
+    if (nuxtApp.ssrContext?.islandContext && plugin2.env?.islands === false) {
       continue;
     }
     registerPluginHooks(nuxtApp, plugin2);
   }
   for (const plugin2 of plugins2) {
-    if (((_c = nuxtApp.ssrContext) == null ? void 0 : _c.islandContext) && ((_d = plugin2.env) == null ? void 0 : _d.islands) === false) {
+    if (nuxtApp.ssrContext?.islandContext && plugin2.env?.islands === false) {
       continue;
     }
     await executePlugin(plugin2);
@@ -535,8 +545,8 @@ async function applyPlugins(nuxtApp, plugins2) {
       await Promise.all(parallels);
     }
   }
-  if (errors.length) {
-    throw errors[0];
+  if (error) {
+    throw nuxtApp.payload.error || error;
   }
 }
 // @__NO_SIDE_EFFECTS__
@@ -557,12 +567,11 @@ function callWithNuxt(nuxt, setup, args) {
   }
 }
 function tryUseNuxtApp(id) {
-  var _a;
   let nuxtAppInstance;
   if (hasInjectionContext()) {
-    nuxtAppInstance = (_a = getCurrentInstance$1()) == null ? void 0 : _a.appContext.app.$nuxt;
+    nuxtAppInstance = getCurrentInstance$1()?.appContext.app.$nuxt;
   }
-  nuxtAppInstance || (nuxtAppInstance = getNuxtAppCtx(id).tryUse());
+  nuxtAppInstance ||= getNuxtAppCtx(id).tryUse();
   return nuxtAppInstance || null;
 }
 function useNuxtApp(id) {
@@ -585,11 +594,14 @@ const HASH_RE = /#/g;
 const AMPERSAND_RE = /&/g;
 const SLASH_RE = /\//g;
 const EQUAL_RE = /=/g;
+const IM_RE = /\?/g;
 const PLUS_RE = /\+/g;
 const ENC_CARET_RE = /%5e/gi;
 const ENC_BACKTICK_RE = /%60/gi;
 const ENC_PIPE_RE = /%7c/gi;
 const ENC_SPACE_RE = /%20/gi;
+const ENC_SLASH_RE = /%2f/gi;
+const ENC_ENC_SLASH_RE = /%252f/gi;
 function encode(text) {
   return encodeURI("" + text).replace(ENC_PIPE_RE, "|");
 }
@@ -599,12 +611,18 @@ function encodeQueryValue(input) {
 function encodeQueryKey(text) {
   return encodeQueryValue(text).replace(EQUAL_RE, "%3D");
 }
+function encodePath(text) {
+  return encode(text).replace(HASH_RE, "%23").replace(IM_RE, "%3F").replace(ENC_ENC_SLASH_RE, "%2F").replace(AMPERSAND_RE, "%26").replace(PLUS_RE, "%2B");
+}
 function decode(text = "") {
   try {
     return decodeURIComponent("" + text);
   } catch {
     return "" + text;
   }
+}
+function decodePath(text) {
+  return decode(text.replace(ENC_SLASH_RE, "%252F"));
 }
 function decodeQueryKey(text) {
   return decode(text.replace(PLUS_RE, " "));
@@ -756,7 +774,7 @@ function isEqual$1(a, b, options = {}) {
   }
   return a === b;
 }
-const protocolRelative = Symbol.for("ufo:protocolRelative");
+const protocolRelative = /* @__PURE__ */ Symbol.for("ufo:protocolRelative");
 function parseURL(input = "", defaultProto) {
   const _specialProtoMatch = input.match(
     /^[\s\0]*(blob:|data:|javascript:|vbscript:)(.*)/i
@@ -809,11 +827,11 @@ function stringifyParsedURL(parsed) {
   const proto = parsed.protocol || parsed[protocolRelative] ? (parsed.protocol || "") + "//" : "";
   return proto + auth + host + pathname + search + hash;
 }
-const LayoutMetaSymbol = Symbol("layout-meta");
-const PageRouteSymbol = Symbol("route");
+const LayoutMetaSymbol = /* @__PURE__ */ Symbol("layout-meta");
+const PageRouteSymbol = /* @__PURE__ */ Symbol("route");
+globalThis._importMeta_.url.replace(/\/app\/.*$/, "/");
 const useRouter$1 = () => {
-  var _a;
-  return (_a = useNuxtApp()) == null ? void 0 : _a.$router;
+  return useNuxtApp()?.$router;
 };
 const useRoute$1 = () => {
   if (hasInjectionContext()) {
@@ -827,7 +845,7 @@ function defineNuxtRouteMiddleware(middleware) {
 }
 const addRouteMiddleware = (name, middleware, options = {}) => {
   const nuxtApp = useNuxtApp();
-  const global2 = options.global || false;
+  const global2 = options.global || typeof name !== "string";
   const mw = middleware;
   if (!mw) {
     console.warn("[nuxt] No route middleware passed to `addRouteMiddleware`.", name);
@@ -849,14 +867,24 @@ const isProcessingMiddleware = () => {
   }
   return false;
 };
-const URL_QUOTE_RE = /"/g;
+const HTML_ATTR_UNSAFE_RE = /[&"'<>]/g;
+const HTML_ATTR_ENCODE_MAP = {
+  "&": "%26",
+  '"': "%22",
+  "'": "%27",
+  "<": "%3C",
+  ">": "%3E"
+};
+function encodeForHtmlAttr(value) {
+  return value.replace(HTML_ATTR_UNSAFE_RE, (c) => HTML_ATTR_ENCODE_MAP[c]);
+}
 const navigateTo = (to, options) => {
-  to || (to = "/");
+  to ||= "/";
   const toPath = typeof to === "string" ? to : "path" in to ? resolveRouteObject$1(to) : useRouter$1().resolve(to).href;
   const isExternalHost = hasProtocol(toPath, { acceptRelative: true });
-  const isExternal = (options == null ? void 0 : options.external) || isExternalHost;
+  const isExternal = options?.external || isExternalHost;
   if (isExternal) {
-    if (!(options == null ? void 0 : options.external)) {
+    if (!options?.external) {
       throw new Error("Navigating to an external URL is not allowed by default. Use `navigateTo(url, { external: true })`.");
     }
     const { protocol } = new URL(toPath, "http://localhost");
@@ -873,10 +901,10 @@ const navigateTo = (to, options) => {
       const location2 = isExternal ? toPath : joinURL((/* @__PURE__ */ useRuntimeConfig()).app.baseURL, fullPath);
       const redirect = async function(response) {
         await nuxtApp.callHook("app:redirected");
-        const encodedLoc = location2.replace(URL_QUOTE_RE, "%22");
         const encodedHeader = encodeURL(location2, isExternalHost);
-        nuxtApp.ssrContext._renderResponse = {
-          statusCode: sanitizeStatusCode((options == null ? void 0 : options.redirectCode) || 302, 302),
+        const encodedLoc = encodeForHtmlAttr(encodedHeader);
+        nuxtApp.ssrContext["~renderResponse"] = {
+          statusCode: sanitizeStatusCode(options?.redirectCode || 302, 302),
           body: `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=${encodedLoc}"></head></html>`,
           headers: { location: encodedHeader }
         };
@@ -894,7 +922,7 @@ const navigateTo = (to, options) => {
   }
   if (isExternal) {
     nuxtApp._scope.stop();
-    if (options == null ? void 0 : options.replace) {
+    if (options?.replace) {
       (void 0).replace(toPath);
     } else {
       (void 0).href = toPath;
@@ -908,7 +936,8 @@ const navigateTo = (to, options) => {
     }
     return Promise.resolve();
   }
-  return (options == null ? void 0 : options.replace) ? router.replace(to) : router.push(to);
+  const encodedTo = typeof to === "string" ? encodeRoutePath(to) : to;
+  return options?.replace ? router.replace(encodedTo) : router.push(encodedTo);
 };
 function resolveRouteObject$1(to) {
   return withQuery(to.path || "", to.query || {}) + (to.hash || "");
@@ -916,22 +945,26 @@ function resolveRouteObject$1(to) {
 function encodeURL(location2, isExternalHost = false) {
   const url = new URL(location2, "http://localhost");
   if (!isExternalHost) {
-    return url.pathname + url.search + url.hash;
+    const pathname = url.pathname.replace(/^\/{2,}/, "/");
+    return pathname + url.search + url.hash;
   }
   if (location2.startsWith("//")) {
     return url.toString().replace(url.protocol, "");
   }
   return url.toString();
 }
+function encodeRoutePath(url) {
+  const parsed = parseURL(url);
+  return encodePath(decodePath(parsed.pathname)) + parsed.search + parsed.hash;
+}
 const NUXT_ERROR_SIGNATURE = "__nuxt_error";
-const useError = () => toRef(useNuxtApp().payload, "error");
+const useError = /* @__NO_SIDE_EFFECTS__ */ () => toRef(useNuxtApp().payload, "error");
 const showError = (error) => {
   const nuxtError = createError(error);
   try {
-    const nuxtApp = useNuxtApp();
-    const error2 = useError();
+    const error2 = /* @__PURE__ */ useError();
     if (false) ;
-    error2.value || (error2.value = nuxtError);
+    error2.value ||= nuxtError;
   } catch {
     throw nuxtError;
   }
@@ -939,7 +972,7 @@ const showError = (error) => {
 };
 const clearError = async (options = {}) => {
   const nuxtApp = useNuxtApp();
-  const error = useError();
+  const error = /* @__PURE__ */ useError();
   nuxtApp.callHook("app:error:cleared", options);
   if (options.redirect) {
     await useRouter$1().replace(options.redirect);
@@ -948,52 +981,97 @@ const clearError = async (options = {}) => {
 };
 const isNuxtError = (error) => !!error && typeof error === "object" && NUXT_ERROR_SIGNATURE in error;
 const createError = (error) => {
+  if (typeof error !== "string" && error.statusText) {
+    error.message ??= error.statusText;
+  }
   const nuxtError = createError$1(error);
   Object.defineProperty(nuxtError, NUXT_ERROR_SIGNATURE, {
     value: true,
     configurable: false,
     writable: false
   });
+  Object.defineProperty(nuxtError, "status", {
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    get: () => nuxtError.statusCode,
+    configurable: true
+  });
+  Object.defineProperty(nuxtError, "statusText", {
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    get: () => nuxtError.statusMessage,
+    configurable: true
+  });
   return nuxtError;
 };
+function freezeHead(head) {
+  const realPush = head.push;
+  head.push = () => ({ dispose: () => {
+  }, patch: () => {
+  }, _poll: () => {
+  } });
+  return () => {
+    head.push = realPush;
+  };
+}
 const unhead_k2P3m_ZDyjlr2mMYnoDPwavjsDN8hBlk9cFai0bbopU = /* @__PURE__ */ defineNuxtPlugin({
   name: "nuxt:head",
   enforce: "pre",
   setup(nuxtApp) {
     const head = nuxtApp.ssrContext.head;
+    if (nuxtApp.ssrContext.islandContext) {
+      const unfreeze = freezeHead(head);
+      nuxtApp.hooks.hookOnce("app:created", unfreeze);
+    }
     nuxtApp.vueApp.use(head);
   }
 });
-function toArray$1(value) {
+const ROUTE_KEY_PARENTHESES_RE$1 = /(:\w+)\([^)]+\)/g;
+const ROUTE_KEY_SYMBOLS_RE$1 = /(:\w+)[?+*]/g;
+const ROUTE_KEY_NORMAL_RE$1 = /:\w+/g;
+const interpolatePath = (route2, match) => {
+  return match.path.replace(ROUTE_KEY_PARENTHESES_RE$1, "$1").replace(ROUTE_KEY_SYMBOLS_RE$1, "$1").replace(ROUTE_KEY_NORMAL_RE$1, (r) => route2.params[r.slice(1)]?.toString() || "");
+};
+const generateRouteKey$1 = (routeProps, override) => {
+  const matchedRoute = routeProps.route.matched.find((m) => m.components?.default === routeProps.Component.type);
+  const source = matchedRoute?.meta.key ?? (matchedRoute && interpolatePath(routeProps.route, matchedRoute));
+  return typeof source === "function" ? source(routeProps.route) : source;
+};
+function toArray$2(value) {
   return Array.isArray(value) ? value : [value];
 }
-async function getRouteRules(arg) {
+const matcher = (m, p) => {
+  return [];
+};
+const _routeRulesMatcher = (path) => defu({}, ...matcher("", typeof path === "string" ? path.toLowerCase() : path).map((r) => r.data).reverse());
+const routeRulesMatcher$1 = _routeRulesMatcher;
+function getRouteRules(arg) {
   const path = typeof arg === "string" ? arg : arg.path;
-  {
-    useNuxtApp().ssrContext._preloadManifest = true;
-    const _routeRulesMatcher = toRouteMatcher(
-      createRouter$1({ routes: (/* @__PURE__ */ useRuntimeConfig()).nitro.routeRules })
-    );
-    return defu({}, ..._routeRulesMatcher.matchAll(path).reverse());
+  try {
+    return routeRulesMatcher$1(path.toLowerCase());
+  } catch (e) {
+    console.error("[nuxt] Error matching route rules.", e);
+    return {};
   }
 }
-const __nuxt_page_meta$l = {
+const __nuxt_page_meta$m = {
   sidebarRoute: "role"
 };
-const __nuxt_page_meta$k = {
+const __nuxt_page_meta$l = {
   sidebarRoute: "user"
 };
-const __nuxt_page_meta$j = {
+const __nuxt_page_meta$k = {
   sidebarRoute: "event"
 };
-const __nuxt_page_meta$i = {
+const __nuxt_page_meta$j = {
   sidebarRoute: "index"
 };
-const __nuxt_page_meta$h = {
+const __nuxt_page_meta$i = {
   layout: "blank"
 };
-const __nuxt_page_meta$g = {
+const __nuxt_page_meta$h = {
   sidebarRoute: "course"
+};
+const __nuxt_page_meta$g = {
+  sidebarRoute: "themes"
 };
 const __nuxt_page_meta$f = {
   sidebarRoute: "account"
@@ -1047,74 +1125,80 @@ const _routes = [
   {
     name: "role",
     path: "/role",
-    meta: __nuxt_page_meta$l || {},
+    meta: __nuxt_page_meta$m || {},
     component: () => import('./role-T4F3dgE1.mjs')
   },
   {
     name: "user",
     path: "/user",
-    meta: __nuxt_page_meta$k || {},
-    component: () => import('./user-QKZT-pH-.mjs')
+    meta: __nuxt_page_meta$l || {},
+    component: () => import('./user-DP8rHCBa.mjs')
   },
   {
     name: "event",
     path: "/event",
-    meta: __nuxt_page_meta$j || {},
-    component: () => import('./event-int8uuL0.mjs')
+    meta: __nuxt_page_meta$k || {},
+    component: () => import('./event-DohQUpjv.mjs')
   },
   {
     name: "index",
     path: "/",
-    meta: { ...__nuxt_page_meta$i || {}, ...{ "middleware": ["auth"] } },
-    component: () => import('./index-CPIGyP7f.mjs')
+    meta: { ...__nuxt_page_meta$j || {}, ...{ "middleware": ["auth"] } },
+    component: () => import('./index-BNdw8GP5.mjs')
   },
   {
     name: "login",
     path: "/login",
-    meta: { ...__nuxt_page_meta$h || {}, ...{ "middleware": ["guest"] } },
-    component: () => import('./login-DIcFBh0v.mjs')
+    meta: { ...__nuxt_page_meta$i || {}, ...{ "middleware": ["guest"] } },
+    component: () => import('./login-BQpi8qQd.mjs')
   },
   {
     name: "course",
     path: "/course",
+    meta: __nuxt_page_meta$h || {},
+    component: () => import('./course-Ti09raRc.mjs')
+  },
+  {
+    name: "themes",
+    path: "/themes",
     meta: __nuxt_page_meta$g || {},
-    component: () => import('./course-zLl_gY-U.mjs')
+    component: () => import('./themes-oq4z-T0G.mjs')
   },
   {
     name: "account",
     path: "/account",
     meta: __nuxt_page_meta$f || {},
-    component: () => import('./account-HJ7v4eoA.mjs')
+    component: () => import('./account-OqqTiYsb.mjs')
   },
   {
     name: "classes",
     path: "/classes",
     meta: __nuxt_page_meta$e || {},
-    component: () => import('./classes-CAGpYkLP.mjs')
+    component: () => import('./classes-RKPC5w9-.mjs')
   },
   {
     name: "reports",
     path: "/reports",
     meta: __nuxt_page_meta$d || {},
-    component: () => import('./reports-9oSnK90k.mjs')
+    component: () => import('./reports-BBb6hOMK.mjs')
   },
   {
     name: "schedule",
     path: "/schedule",
     meta: __nuxt_page_meta$c || {},
-    component: () => import('./schedule-CVDqwA6V.mjs')
+    component: () => import('./schedule-BbASwFfR.mjs')
   },
   {
     name: "students",
     path: "/students",
     meta: __nuxt_page_meta$b || {},
-    component: () => import('./students-BZQNIOds.mjs')
+    component: () => import('./students-DbOhiX26.mjs')
   },
   {
     name: "attendance",
     path: "/attendance",
     meta: __nuxt_page_meta$a || {},
-    component: () => import('./attendance-DMbf_0AM.mjs')
+    component: () => import('./attendance-DFKqNxbt.mjs')
   },
   {
     name: "permission",
@@ -1126,71 +1210,65 @@ const _routes = [
     name: "assessments",
     path: "/assessments",
     meta: __nuxt_page_meta$8 || {},
-    component: () => import('./assessments-CR2CYF92.mjs')
+    component: () => import('./assessments-CLoZFpCH.mjs')
   },
   {
     name: "design-system",
     path: "/design-system",
     meta: __nuxt_page_meta$7 || {},
-    component: () => import('./design-system-DH-kFW19.mjs')
+    component: () => import('./design-system-DaPuTd_1.mjs')
   },
   {
     name: "my-attendance",
     path: "/my-attendance",
     meta: __nuxt_page_meta$6 || {},
-    component: () => import('./my-attendance-DTBit0xB.mjs')
+    component: () => import('./my-attendance-DvSS4VL-.mjs')
   },
   {
     name: "student-detail",
     path: "/student-detail",
     meta: __nuxt_page_meta$5 || {},
-    component: () => import('./student-detail-BvIp1_bY.mjs')
+    component: () => import('./student-detail-DP2jl_y7.mjs')
   },
   {
     name: "user-variant-2",
     path: "/user-variant-2",
     meta: __nuxt_page_meta$4 || {},
-    component: () => import('./user-variant-2-DuYMSL_G.mjs')
+    component: () => import('./user-variant-2-CO0izBFG.mjs')
   },
   {
     name: "account-settings",
     path: "/account-settings",
     meta: { ...__nuxt_page_meta$3 || {}, ...{ "middleware": ["auth"] } },
-    component: () => import('./account-settings-CGn2N8-C.mjs')
+    component: () => import('./account-settings-naSogN9a.mjs')
   },
   {
     name: "attendance-detail",
     path: "/attendance-detail",
     meta: __nuxt_page_meta$2 || {},
-    component: () => import('./attendance-detail-DYrYWFnS.mjs')
+    component: () => import('./attendance-detail-CG3_DAZk.mjs')
   },
   {
     name: "dashboard-teacher",
     path: "/dashboard-teacher",
     meta: __nuxt_page_meta$1 || {},
-    component: () => import('./dashboard-teacher-D8pssogx.mjs')
+    component: () => import('./dashboard-teacher-BkWA9Su_.mjs')
   },
   {
     name: "meeting-journal-create",
     path: "/meeting-journal/create",
     meta: __nuxt_page_meta || {},
-    component: () => import('./create-CXsc3WoG.mjs')
+    component: () => import('./create-O_ljXsUH.mjs')
   }
 ];
 const _wrapInTransition = (props, children) => {
-  return { default: () => {
-    var _a;
-    return (_a = children.default) == null ? void 0 : _a.call(children);
-  } };
+  return { default: () => children.default?.() };
 };
 const ROUTE_KEY_PARENTHESES_RE = /(:\w+)\([^)]+\)/g;
 const ROUTE_KEY_SYMBOLS_RE = /(:\w+)[?+*]/g;
 const ROUTE_KEY_NORMAL_RE = /:\w+/g;
 function generateRouteKey(route2) {
-  const source = (route2 == null ? void 0 : route2.meta.key) ?? route2.path.replace(ROUTE_KEY_PARENTHESES_RE, "$1").replace(ROUTE_KEY_SYMBOLS_RE, "$1").replace(ROUTE_KEY_NORMAL_RE, (r) => {
-    var _a;
-    return ((_a = route2.params[r.slice(1)]) == null ? void 0 : _a.toString()) || "";
-  });
+  const source = route2?.meta.key ?? route2.path.replace(ROUTE_KEY_PARENTHESES_RE, "$1").replace(ROUTE_KEY_SYMBOLS_RE, "$1").replace(ROUTE_KEY_NORMAL_RE, (r) => route2.params[r.slice(1)]?.toString() || "");
   return typeof source === "function" ? source(route2) : source;
 }
 function isChangingPage(to, from) {
@@ -1201,27 +1279,44 @@ function isChangingPage(to, from) {
     return true;
   }
   const areComponentsSame = to.matched.every(
-    (comp, index) => {
-      var _a, _b;
-      return comp.components && comp.components.default === ((_b = (_a = from.matched[index]) == null ? void 0 : _a.components) == null ? void 0 : _b.default);
-    }
+    (comp, index) => comp.components && comp.components.default === from.matched[index]?.components?.default
   );
   if (areComponentsSame) {
     return false;
   }
   return true;
 }
+const VALID_TAG_RE = /^[a-z][a-z0-9-]*$/i;
+function sanitizeTag(tag, fallback) {
+  return tag && VALID_TAG_RE.test(tag) ? tag : fallback;
+}
+function toArray$1(value) {
+  return Array.isArray(value) ? value : [value];
+}
+function _mergeTransitionProps(routeProps) {
+  const _props = [];
+  for (const prop of routeProps) {
+    if (!prop) {
+      continue;
+    }
+    _props.push({
+      ...prop,
+      onAfterLeave: prop.onAfterLeave ? toArray$1(prop.onAfterLeave) : void 0,
+      onBeforeLeave: prop.onBeforeLeave ? toArray$1(prop.onBeforeLeave) : void 0
+    });
+  }
+  return defu(..._props);
+}
 const routerOptions0 = {
   scrollBehavior(to, from, savedPosition) {
-    var _a;
     const nuxtApp = useNuxtApp();
-    const behavior = ((_a = useRouter$1().options) == null ? void 0 : _a.scrollBehaviorType) ?? "auto";
-    if (to.path === from.path) {
+    const hashScrollBehaviour = useRouter$1().options?.scrollBehaviorType ?? "auto";
+    if (to.path.replace(/\/$/, "") === from.path.replace(/\/$/, "")) {
       if (from.hash && !to.hash) {
         return { left: 0, top: 0 };
       }
       if (to.hash) {
-        return { el: to.hash, top: _getHashElementScrollMarginTop(to.hash), behavior };
+        return { el: to.hash, top: _getHashElementScrollMarginTop(to.hash), behavior: hashScrollBehaviour };
       }
       return false;
     }
@@ -1229,18 +1324,20 @@ const routerOptions0 = {
     if (routeAllowsScrollToTop === false) {
       return false;
     }
-    let position = savedPosition || void 0;
-    if (!position && isChangingPage(to, from)) {
-      position = { left: 0, top: 0 };
+    if (from === START_LOCATION) {
+      return _calculatePosition(to, from, savedPosition, hashScrollBehaviour);
     }
-    const hookToWait = nuxtApp._runningTransition ? "page:transition:finish" : "page:loading:end";
     return new Promise((resolve2) => {
-      if (from === START_LOCATION) {
-        resolve2(_calculatePosition(to, "instant", position));
-        return;
-      }
-      nuxtApp.hooks.hookOnce(hookToWait, () => {
-        requestAnimationFrame(() => resolve2(_calculatePosition(to, "instant", position)));
+      const doScroll = () => {
+        requestAnimationFrame(() => resolve2(_calculatePosition(to, from, savedPosition, hashScrollBehaviour)));
+      };
+      nuxtApp.hooks.hookOnce("page:loading:end", () => {
+        const transitionPromise = nuxtApp["~transitionPromise"];
+        if (transitionPromise) {
+          transitionPromise.then(doScroll);
+        } else {
+          doScroll();
+        }
       });
     });
   }
@@ -1255,18 +1352,21 @@ function _getHashElementScrollMarginTop(selector) {
   }
   return 0;
 }
-function _calculatePosition(to, scrollBehaviorType, position) {
-  if (position) {
-    return position;
+function _calculatePosition(to, from, savedPosition, defaultHashScrollBehaviour) {
+  if (savedPosition) {
+    return savedPosition;
   }
   if (to.hash) {
     return {
       el: to.hash,
       top: _getHashElementScrollMarginTop(to.hash),
-      behavior: scrollBehaviorType
+      behavior: isChangingPage(to, from) ? defaultHashScrollBehaviour : "instant"
     };
   }
-  return { left: 0, top: 0, behavior: scrollBehaviorType };
+  return {
+    left: 0,
+    top: 0
+  };
 }
 const configRouterOptions = {
   hashMode: false,
@@ -1277,9 +1377,8 @@ const routerOptions = {
   ...routerOptions0
 };
 const validate = /* @__PURE__ */ defineNuxtRouteMiddleware(async (to, from) => {
-  var _a;
   let __temp, __restore;
-  if (!((_a = to.meta) == null ? void 0 : _a.validate)) {
+  if (!to.meta?.validate) {
     return;
   }
   const result = ([__temp, __restore] = executeAsync(() => Promise.resolve(to.meta.validate(to))), __temp = await __temp, __restore(), __temp);
@@ -1288,36 +1387,21 @@ const validate = /* @__PURE__ */ defineNuxtRouteMiddleware(async (to, from) => {
   }
   const error = createError({
     fatal: false,
-    statusCode: result && result.statusCode || 404,
-    statusMessage: result && result.statusMessage || `Page Not Found: ${to.fullPath}`,
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    status: result && (result.status || result.statusCode) || 404,
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    statusText: result && (result.statusText || result.statusMessage) || `Page Not Found: ${to.fullPath}`,
     data: {
       path: to.fullPath
     }
   });
   return error;
 });
-function set(target, key, val) {
-  if (Array.isArray(target)) {
-    target.length = Math.max(target.length, key);
-    target.splice(key, 1, val);
-    return val;
-  }
-  target[key] = val;
-  return val;
-}
-function del(target, key) {
-  if (Array.isArray(target)) {
-    target.splice(key, 1);
-    return;
-  }
-  delete target[key];
-}
-var define_process_env_default$3 = {};
 let activePinia;
 const setActivePinia = (pinia) => activePinia = pinia;
-const piniaSymbol = define_process_env_default$3.NODE_ENV !== "production" ? Symbol("pinia") : (
+const piniaSymbol = (
   /* istanbul ignore next */
-  Symbol()
+  /* @__PURE__ */ Symbol()
 );
 function isPlainObject$1(o) {
   return o && typeof o === "object" && Object.prototype.toString.call(o) === "[object Object]" && typeof o.toJSON !== "function";
@@ -1328,8 +1412,6 @@ var MutationType;
   MutationType2["patchObject"] = "patch object";
   MutationType2["patchFunction"] = "patch function";
 })(MutationType || (MutationType = {}));
-const IS_CLIENT = false;
-const USE_DEVTOOLS = (define_process_env_default$3.NODE_ENV !== "production" || false) && !(define_process_env_default$3.NODE_ENV === "test") && IS_CLIENT;
 function createPinia() {
   const scope = effectScope(true);
   const state = scope.run(() => ref({}));
@@ -1363,23 +1445,6 @@ function createPinia() {
     state
   });
   return pinia;
-}
-function patchObject(newState, oldState) {
-  for (const key in oldState) {
-    const subPatch = oldState[key];
-    if (!(key in newState)) {
-      continue;
-    }
-    const targetValue = newState[key];
-    if (isPlainObject$1(targetValue) && isPlainObject$1(subPatch) && !isRef(subPatch) && !isReactive(subPatch)) {
-      newState[key] = patchObject(targetValue, subPatch);
-    } else {
-      {
-        newState[key] = subPatch;
-      }
-    }
-  }
-  return newState;
 }
 const noop$2 = () => {
 };
@@ -1423,9 +1488,9 @@ function mergeReactiveObjects(target, patchToApply) {
   }
   return target;
 }
-const skipHydrateSymbol = define_process_env_default$3.NODE_ENV !== "production" ? Symbol("pinia:skipHydration") : (
+const skipHydrateSymbol = (
   /* istanbul ignore next */
-  Symbol()
+  /* @__PURE__ */ Symbol()
 );
 function shouldHydrate(obj) {
   return !isPlainObject$1(obj) || !obj.hasOwnProperty(skipHydrateSymbol);
@@ -1439,19 +1504,13 @@ function createOptionsStore(id, options, pinia, hot) {
   const initialState = pinia.state.value[id];
   let store;
   function setup() {
-    if (!initialState && (!(define_process_env_default$3.NODE_ENV !== "production") || !hot)) {
+    if (!initialState && true) {
       {
         pinia.state.value[id] = state ? state() : {};
       }
     }
-    const localState = define_process_env_default$3.NODE_ENV !== "production" && hot ? (
-      // use ref() to unwrap refs inside state TODO: check if this is still necessary
-      toRefs(ref(state ? state() : {}).value)
-    ) : toRefs(pinia.state.value[id]);
+    const localState = toRefs(pinia.state.value[id]);
     return assign$1(localState, actions, Object.keys(getters || {}).reduce((computedGetters, name) => {
-      if (define_process_env_default$3.NODE_ENV !== "production" && name in localState) {
-        console.warn(`[🍍]: A getter cannot have the same name as another state property. Rename one of them. Found with "${name}" in store "${id}".`);
-      }
       computedGetters[name] = markRaw(computed(() => {
         setActivePinia(pinia);
         const store2 = pinia._s.get(id);
@@ -1466,45 +1525,26 @@ function createOptionsStore(id, options, pinia, hot) {
 function createSetupStore($id, setup, options = {}, pinia, hot, isOptionsStore) {
   let scope;
   const optionsForPlugin = assign$1({ actions: {} }, options);
-  if (define_process_env_default$3.NODE_ENV !== "production" && !pinia._e.active) {
-    throw new Error("Pinia destroyed");
-  }
   const $subscribeOptions = {
     deep: true
     // flush: 'post',
   };
-  if (define_process_env_default$3.NODE_ENV !== "production" && true) {
-    $subscribeOptions.onTrigger = (event) => {
-      if (isListening) {
-        debuggerEvents = event;
-      } else if (isListening == false && !store._hotUpdating) {
-        if (Array.isArray(debuggerEvents)) {
-          debuggerEvents.push(event);
-        } else {
-          console.error("🍍 debuggerEvents should be an array. This is most likely an internal Pinia bug.");
-        }
-      }
-    };
-  }
   let isListening;
   let isSyncListening;
   let subscriptions = [];
   let actionSubscriptions = [];
   let debuggerEvents;
   const initialState = pinia.state.value[$id];
-  if (!isOptionsStore && !initialState && (!(define_process_env_default$3.NODE_ENV !== "production") || !hot)) {
+  if (!isOptionsStore && !initialState && true) {
     {
       pinia.state.value[$id] = {};
     }
   }
-  const hotState = ref({});
+  ref({});
   let activeListener;
   function $patch(partialStateOrMutator) {
     let subscriptionMutation;
     isListening = isSyncListening = false;
-    if (define_process_env_default$3.NODE_ENV !== "production") {
-      debuggerEvents = [];
-    }
     if (typeof partialStateOrMutator === "function") {
       partialStateOrMutator(pinia.state.value[$id]);
       subscriptionMutation = {
@@ -1521,7 +1561,7 @@ function createSetupStore($id, setup, options = {}, pinia, hot, isOptionsStore) 
         events: debuggerEvents
       };
     }
-    const myListenerId = activeListener = Symbol();
+    const myListenerId = activeListener = /* @__PURE__ */ Symbol();
     nextTick().then(() => {
       if (activeListener === myListenerId) {
         isListening = true;
@@ -1538,9 +1578,7 @@ function createSetupStore($id, setup, options = {}, pinia, hot, isOptionsStore) 
     });
   } : (
     /* istanbul ignore next */
-    define_process_env_default$3.NODE_ENV !== "production" ? () => {
-      throw new Error(`🍍: Store "${$id}" is built using the setup syntax and does not implement $reset().`);
-    } : noop$2
+    noop$2
   );
   function $dispose() {
     scope.stop();
@@ -1587,12 +1625,6 @@ function createSetupStore($id, setup, options = {}, pinia, hot, isOptionsStore) 
       return ret;
     };
   }
-  const _hmrPayload = /* @__PURE__ */ markRaw({
-    actions: {},
-    getters: {},
-    state: [],
-    hotState
-  });
   const partialStore = {
     _p: pinia,
     // _s: scope,
@@ -1615,25 +1647,14 @@ function createSetupStore($id, setup, options = {}, pinia, hot, isOptionsStore) 
     },
     $dispose
   };
-  const store = reactive(define_process_env_default$3.NODE_ENV !== "production" || USE_DEVTOOLS ? assign$1(
-    {
-      _hmrPayload,
-      _customProperties: markRaw(/* @__PURE__ */ new Set())
-      // devtools custom properties
-    },
-    partialStore
-    // must be added later
-    // setupStore
-  ) : partialStore);
+  const store = reactive(partialStore);
   pinia._s.set($id, store);
   const runWithContext = pinia._a && pinia._a.runWithContext || fallbackRunWithContext;
   const setupStore = runWithContext(() => pinia._e.run(() => (scope = effectScope()).run(setup)));
   for (const key in setupStore) {
     const prop = setupStore[key];
     if (isRef(prop) && !isComputed(prop) || isReactive(prop)) {
-      if (define_process_env_default$3.NODE_ENV !== "production" && hot) {
-        set(hotState.value, key, toRef(setupStore, key));
-      } else if (!isOptionsStore) {
+      if (!isOptionsStore) {
         if (initialState && shouldHydrate(prop)) {
           if (isRef(prop)) {
             prop.value = initialState[key];
@@ -1645,99 +1666,26 @@ function createSetupStore($id, setup, options = {}, pinia, hot, isOptionsStore) 
           pinia.state.value[$id][key] = prop;
         }
       }
-      if (define_process_env_default$3.NODE_ENV !== "production") {
-        _hmrPayload.state.push(key);
-      }
     } else if (typeof prop === "function") {
-      const actionValue = define_process_env_default$3.NODE_ENV !== "production" && hot ? prop : wrapAction(key, prop);
+      const actionValue = wrapAction(key, prop);
       {
         setupStore[key] = actionValue;
       }
-      if (define_process_env_default$3.NODE_ENV !== "production") {
-        _hmrPayload.actions[key] = prop;
-      }
       optionsForPlugin.actions[key] = prop;
-    } else if (define_process_env_default$3.NODE_ENV !== "production") {
-      if (isComputed(prop)) {
-        _hmrPayload.getters[key] = isOptionsStore ? (
-          // @ts-expect-error
-          options.getters[key]
-        ) : prop;
-      }
-    }
+    } else ;
   }
   {
     assign$1(store, setupStore);
     assign$1(toRaw(store), setupStore);
   }
   Object.defineProperty(store, "$state", {
-    get: () => define_process_env_default$3.NODE_ENV !== "production" && hot ? hotState.value : pinia.state.value[$id],
+    get: () => pinia.state.value[$id],
     set: (state) => {
-      if (define_process_env_default$3.NODE_ENV !== "production" && hot) {
-        throw new Error("cannot set hotState");
-      }
       $patch(($state) => {
         assign$1($state, state);
       });
     }
   });
-  if (define_process_env_default$3.NODE_ENV !== "production") {
-    store._hotUpdate = markRaw((newStore) => {
-      store._hotUpdating = true;
-      newStore._hmrPayload.state.forEach((stateKey) => {
-        if (stateKey in store.$state) {
-          const newStateTarget = newStore.$state[stateKey];
-          const oldStateSource = store.$state[stateKey];
-          if (typeof newStateTarget === "object" && isPlainObject$1(newStateTarget) && isPlainObject$1(oldStateSource)) {
-            patchObject(newStateTarget, oldStateSource);
-          } else {
-            newStore.$state[stateKey] = oldStateSource;
-          }
-        }
-        set(store, stateKey, toRef(newStore.$state, stateKey));
-      });
-      Object.keys(store.$state).forEach((stateKey) => {
-        if (!(stateKey in newStore.$state)) {
-          del(store, stateKey);
-        }
-      });
-      isListening = false;
-      isSyncListening = false;
-      pinia.state.value[$id] = toRef(newStore._hmrPayload, "hotState");
-      isSyncListening = true;
-      nextTick().then(() => {
-        isListening = true;
-      });
-      for (const actionName in newStore._hmrPayload.actions) {
-        const action = newStore[actionName];
-        set(store, actionName, wrapAction(actionName, action));
-      }
-      for (const getterName in newStore._hmrPayload.getters) {
-        const getter = newStore._hmrPayload.getters[getterName];
-        const getterValue = isOptionsStore ? (
-          // special handling of options api
-          computed(() => {
-            setActivePinia(pinia);
-            return getter.call(store, store);
-          })
-        ) : getter;
-        set(store, getterName, getterValue);
-      }
-      Object.keys(store._hmrPayload.getters).forEach((key) => {
-        if (!(key in newStore._hmrPayload.getters)) {
-          del(store, key);
-        }
-      });
-      Object.keys(store._hmrPayload.actions).forEach((key) => {
-        if (!(key in newStore._hmrPayload.actions)) {
-          del(store, key);
-        }
-      });
-      store._hmrPayload = newStore._hmrPayload;
-      store._getters = newStore._getters;
-      store._hotUpdating = false;
-    });
-  }
   pinia._p.forEach((extender) => {
     {
       assign$1(store, scope.run(() => extender({
@@ -1748,11 +1696,6 @@ function createSetupStore($id, setup, options = {}, pinia, hot, isOptionsStore) 
       })));
     }
   });
-  if (define_process_env_default$3.NODE_ENV !== "production" && store.$state && typeof store.$state === "object" && typeof store.$state.constructor === "function" && !store.$state.constructor.toString().includes("[native code]")) {
-    console.warn(`[🍍]: The "state" must be a plain object. It cannot be
-	state: () => new MyClass()
-Found in store "${store.$id}".`);
-  }
   if (initialState && isOptionsStore && options.hydrate) {
     options.hydrate(store.$state, initialState);
   }
@@ -1770,22 +1713,14 @@ function defineStore(idOrOptions, setup, setupOptions) {
   } else {
     options = idOrOptions;
     id = idOrOptions.id;
-    if (define_process_env_default$3.NODE_ENV !== "production" && typeof id !== "string") {
-      throw new Error(`[🍍]: "defineStore()" must be passed a store id as its first argument.`);
-    }
   }
   function useStore(pinia, hot) {
     const hasContext = hasInjectionContext();
     pinia = // in test mode, ignore the argument provided as we can always retrieve a
     // pinia instance with getActivePinia()
-    (define_process_env_default$3.NODE_ENV === "test" && activePinia && activePinia._testing ? null : pinia) || (hasContext ? inject$1(piniaSymbol, null) : null);
+    pinia || (hasContext ? inject$1(piniaSymbol, null) : null);
     if (pinia)
       setActivePinia(pinia);
-    if (define_process_env_default$3.NODE_ENV !== "production" && !activePinia) {
-      throw new Error(`[🍍]: "getActivePinia()" was called but there was no active Pinia. Are you trying to use a store before calling "app.use(pinia)"?
-See https://pinia.vuejs.org/core-concepts/outside-component-usage.html for help.
-This will fail in production.`);
-    }
     pinia = activePinia;
     if (!pinia._s.has(id)) {
       if (isSetupStore) {
@@ -1793,18 +1728,8 @@ This will fail in production.`);
       } else {
         createOptionsStore(id, options, pinia);
       }
-      if (define_process_env_default$3.NODE_ENV !== "production") {
-        useStore._pinia = pinia;
-      }
     }
     const store = pinia._s.get(id);
-    if (define_process_env_default$3.NODE_ENV !== "production" && hot) {
-      const hotId = "__hot:" + id;
-      const newStore = isSetupStore ? createSetupStore(hotId, setup, options, pinia, true) : createOptionsStore(hotId, assign$1({}, options), pinia, true);
-      hot._hotUpdate(newStore);
-      delete pinia.state.value[hotId];
-      pinia._s.delete(hotId);
-    }
     return store;
   }
   useStore.$id = id;
@@ -1855,7 +1780,7 @@ const permission_45global = /* @__PURE__ */ defineNuxtRouteMiddleware((to) => {
     return navigateTo("/");
   }
 });
-const manifest_45route_45rule = /* @__PURE__ */ defineNuxtRouteMiddleware(async (to) => {
+const manifest_45route_45rule = /* @__PURE__ */ defineNuxtRouteMiddleware((to) => {
   {
     return;
   }
@@ -1866,17 +1791,18 @@ const globalMiddleware = [
   manifest_45route_45rule
 ];
 const namedMiddleware = {
-  auth: () => import('./auth-CxZJFcmP.mjs'),
-  guest: () => import('./guest-Bv0bJaov.mjs')
+  auth: () => import('./auth-qM9ndgWB.mjs'),
+  guest: () => import('./guest-ACq8lI4l.mjs')
 };
+Object.assign(/* @__PURE__ */ Object.create(null), {});
+const pageIslandRoutes = Object.assign(/* @__PURE__ */ Object.create(null), {});
 const plugin$1 = /* @__PURE__ */ defineNuxtPlugin({
   name: "nuxt:router",
   enforce: "pre",
   async setup(nuxtApp) {
-    var _a, _b, _c;
     let __temp, __restore;
     let routerBase = (/* @__PURE__ */ useRuntimeConfig()).app.baseURL;
-    const history = ((_a = routerOptions.history) == null ? void 0 : _a.call(routerOptions, routerBase)) ?? createMemoryHistory(routerBase);
+    const history = routerOptions.history?.(routerBase) ?? createMemoryHistory(routerBase);
     const routes = routerOptions.routes ? ([__temp, __restore] = executeAsync(() => routerOptions.routes(_routes)), __temp = await __temp, __restore(), __temp) ?? _routes : _routes;
     let startPosition;
     const router = createRouter({
@@ -1913,14 +1839,22 @@ const plugin$1 = /* @__PURE__ */ defineNuxtPlugin({
     const syncCurrentRoute = () => {
       _route.value = router.currentRoute.value;
     };
-    nuxtApp.hook("page:finish", syncCurrentRoute);
     router.afterEach((to, from) => {
-      var _a2, _b2, _c2, _d;
-      if (((_b2 = (_a2 = to.matched[0]) == null ? void 0 : _a2.components) == null ? void 0 : _b2.default) === ((_d = (_c2 = from.matched[0]) == null ? void 0 : _c2.components) == null ? void 0 : _d.default)) {
+      const lastTo = to.matched.at(-1)?.components?.default;
+      const lastFrom = from.matched.at(-1)?.components?.default;
+      if (lastTo === lastFrom) {
+        const toKey = generateRouteKey$1({ route: to, Component: { type: lastTo } });
+        const fromKey = generateRouteKey$1({ route: from, Component: { type: lastFrom } });
+        if (toKey === fromKey) {
+          syncCurrentRoute();
+        }
+        return;
+      }
+      if (to.matched.length < from.matched.length && to.matched.every((m, i) => m.components?.default === from.matched[i]?.components?.default)) {
         syncCurrentRoute();
       }
     });
-    const route2 = {};
+    const route2 = { sync: syncCurrentRoute };
     for (const key in _route.value) {
       Object.defineProperty(route2, key, {
         get: () => _route.value[key],
@@ -1928,18 +1862,19 @@ const plugin$1 = /* @__PURE__ */ defineNuxtPlugin({
       });
     }
     nuxtApp._route = shallowReactive(route2);
-    nuxtApp._middleware || (nuxtApp._middleware = {
+    nuxtApp._middleware ||= {
       global: [],
       named: {}
-    });
-    useError();
-    if (!((_b = nuxtApp.ssrContext) == null ? void 0 : _b.islandContext)) {
+    };
+    const error = /* @__PURE__ */ useError();
+    const isServerPage = nuxtApp.ssrContext?.islandContext?.name?.startsWith("page_");
+    if (!nuxtApp.ssrContext?.islandContext || isServerPage) {
       router.afterEach(async (to, _from, failure) => {
         delete nuxtApp._processingMiddleware;
         if (failure) {
           await nuxtApp.callHook("page:loading:end");
         }
-        if ((failure == null ? void 0 : failure.type) === 4) {
+        if (failure?.type === 4) {
           return;
         }
         if (to.redirectedFrom && to.fullPath !== initialURL) {
@@ -1960,54 +1895,53 @@ const plugin$1 = /* @__PURE__ */ defineNuxtPlugin({
       [__temp, __restore] = executeAsync(() => nuxtApp.runWithContext(() => showError(error2))), await __temp, __restore();
     }
     const resolvedInitialRoute = router.currentRoute.value;
+    const hasDeferredRoute = false;
     syncCurrentRoute();
-    if ((_c = nuxtApp.ssrContext) == null ? void 0 : _c.islandContext) {
+    if (nuxtApp.ssrContext?.islandContext && !isServerPage) {
       return { provide: { router } };
     }
     const initialLayout = nuxtApp.payload.state._layout;
     router.beforeEach(async (to, from) => {
-      var _a2, _b2;
       await nuxtApp.callHook("page:loading:start");
       to.meta = reactive(to.meta);
       if (nuxtApp.isHydrating && initialLayout && !isReadonly(to.meta.layout)) {
         to.meta.layout = initialLayout;
       }
       nuxtApp._processingMiddleware = true;
-      if (!((_a2 = nuxtApp.ssrContext) == null ? void 0 : _a2.islandContext)) {
+      if (!nuxtApp.ssrContext?.islandContext || isServerPage) {
         const middlewareEntries = /* @__PURE__ */ new Set([...globalMiddleware, ...nuxtApp._middleware.global]);
         for (const component of to.matched) {
           const componentMiddleware = component.meta.middleware;
           if (!componentMiddleware) {
             continue;
           }
-          for (const entry2 of toArray$1(componentMiddleware)) {
+          for (const entry2 of toArray$2(componentMiddleware)) {
             middlewareEntries.add(entry2);
           }
         }
-        {
-          const routeRules = await nuxtApp.runWithContext(() => getRouteRules({ path: to.path }));
-          if (routeRules.appMiddleware) {
-            for (const key in routeRules.appMiddleware) {
-              if (routeRules.appMiddleware[key]) {
-                middlewareEntries.add(key);
-              } else {
-                middlewareEntries.delete(key);
-              }
+        const routeRules = getRouteRules({ path: to.path });
+        if (routeRules.appMiddleware) {
+          for (const key in routeRules.appMiddleware) {
+            if (routeRules.appMiddleware[key]) {
+              middlewareEntries.add(key);
+            } else {
+              middlewareEntries.delete(key);
             }
           }
         }
         for (const entry2 of middlewareEntries) {
-          const middleware = typeof entry2 === "string" ? nuxtApp._middleware.named[entry2] || await ((_b2 = namedMiddleware[entry2]) == null ? void 0 : _b2.call(namedMiddleware).then((r) => r.default || r)) : entry2;
+          const middleware = typeof entry2 === "string" ? nuxtApp._middleware.named[entry2] || await namedMiddleware[entry2]?.().then((r) => r.default || r) : entry2;
           if (!middleware) {
             throw new Error(`Unknown route middleware: '${entry2}'.`);
           }
           try {
+            if (false) ;
             const result = await nuxtApp.runWithContext(() => middleware(to, from));
             if (true) {
               if (result === false || result instanceof Error) {
                 const error2 = result || createError({
-                  statusCode: 404,
-                  statusMessage: `Page Not Found: ${initialURL}`
+                  status: 404,
+                  statusText: `Page Not Found: ${initialURL}`
                 });
                 await nuxtApp.runWithContext(() => showError(error2));
                 return false;
@@ -2035,16 +1969,29 @@ const plugin$1 = /* @__PURE__ */ defineNuxtPlugin({
         }
       }
     });
+    if (isServerPage) {
+      router.beforeResolve((to) => {
+        const expected = pageIslandRoutes[nuxtApp.ssrContext.islandContext.name];
+        const actual = to.matched.find((m) => m.components?.default?.__nuxt_island)?.components?.default;
+        if (!expected || expected !== actual?.__nuxt_island) {
+          nuxtApp.ssrContext["~renderResponse"] = {
+            statusCode: 400,
+            statusMessage: "Invalid island request path"
+          };
+          return false;
+        }
+      });
+    }
     router.onError(async () => {
       delete nuxtApp._processingMiddleware;
       await nuxtApp.callHook("page:loading:end");
     });
-    router.afterEach(async (to, _from) => {
-      if (to.matched.length === 0) {
-        await nuxtApp.runWithContext(() => showError(createError({
-          statusCode: 404,
+    router.afterEach((to) => {
+      if (to.matched.length === 0 && !error.value) {
+        return nuxtApp.runWithContext(() => showError(createError({
+          status: 404,
           fatal: false,
-          statusMessage: `Page not found: ${to.fullPath}`,
+          statusText: `Page not found: ${to.fullPath}`,
           data: {
             path: to.fullPath
           }
@@ -2056,10 +2003,15 @@ const plugin$1 = /* @__PURE__ */ defineNuxtPlugin({
         if ("name" in resolvedInitialRoute) {
           resolvedInitialRoute.name = void 0;
         }
-        await router.replace({
-          ...resolvedInitialRoute,
-          force: true
-        });
+        const pluginNavigatedAway = false;
+        if (pluginNavigatedAway) ;
+        else if (hasDeferredRoute) ;
+        else {
+          await router.replace({
+            ...resolvedInitialRoute,
+            force: true
+          });
+        }
         router.options.scrollBehavior = routerOptions.scrollBehavior;
       } catch (error2) {
         await nuxtApp.runWithContext(() => showError(error2));
@@ -2070,7 +2022,7 @@ const plugin$1 = /* @__PURE__ */ defineNuxtPlugin({
 });
 function definePayloadReducer(name, reduce) {
   {
-    useNuxtApp().ssrContext._payloadReducers[name] = reduce;
+    useNuxtApp().ssrContext["~payloadReducers"][name] = reduce;
   }
 }
 const reducers = [
@@ -2096,29 +2048,33 @@ defineComponent$1({
     return createElementBlock("div");
   }
 });
-const clientOnlySymbol = Symbol.for("nuxt:client-only");
+const clientOnlySymbol = /* @__PURE__ */ Symbol.for("nuxt:client-only");
 defineComponent$1({
   name: "ClientOnly",
   inheritAttrs: false,
   props: ["fallback", "placeholder", "placeholderTag", "fallbackTag"],
-  setup(_, { slots, attrs }) {
-    const mounted2 = ref(false);
+  ...false,
+  setup(props, { slots, attrs }) {
+    const mounted2 = shallowRef(false);
     const vm = getCurrentInstance$1();
     if (vm) {
       vm._nuxtClientOnly = true;
     }
     provide(clientOnlySymbol, true);
-    return (props) => {
-      var _a;
+    return () => {
       if (mounted2.value) {
-        return (_a = slots.default) == null ? void 0 : _a.call(slots);
+        const vnodes = slots.default?.();
+        if (vnodes && vnodes.length === 1) {
+          return [cloneVNode(vnodes[0], attrs)];
+        }
+        return vnodes;
       }
       const slot = slots.fallback || slots.placeholder;
       if (slot) {
-        return slot();
+        return h(slot);
       }
       const fallbackStr = props.fallback || props.placeholder || "";
-      const fallbackTag = props.fallbackTag || props.placeholderTag || "span";
+      const fallbackTag = sanitizeTag(props.fallbackTag || props.placeholderTag, "span");
       return createElementBlock(fallbackTag, attrs, fallbackStr);
     };
   }
@@ -2150,9 +2106,8 @@ function useState(...args) {
   return state;
 }
 function useRequestEvent(nuxtApp) {
-  var _a;
-  nuxtApp || (nuxtApp = useNuxtApp());
-  return (_a = nuxtApp.ssrContext) == null ? void 0 : _a.event;
+  nuxtApp ||= useNuxtApp();
+  return nuxtApp.ssrContext?.event;
 }
 function useRequestHeaders(include) {
   const event = useRequestEvent();
@@ -2177,13 +2132,19 @@ function useRequestHeader(header) {
 const CookieDefaults = {
   path: "/",
   watch: true,
-  decode: (val) => destr(decodeURIComponent(val)),
+  decode: (val) => {
+    const decoded = decodeURIComponent(val);
+    const parsed = destr(decoded);
+    if (typeof parsed === "number" && (!Number.isFinite(parsed) || String(parsed) !== decoded)) {
+      return decoded;
+    }
+    return parsed;
+  },
   encode: (val) => encodeURIComponent(typeof val === "string" ? val : JSON.stringify(val))
 };
 function useCookie(name, _opts) {
-  var _a;
   const opts = { ...CookieDefaults, ..._opts };
-  opts.filter ?? (opts.filter = (key) => key === name);
+  opts.filter ??= (key) => key === name;
   const cookies = readRawCookies(opts) || {};
   let delay;
   if (opts.maxAge !== void 0) {
@@ -2192,7 +2153,7 @@ function useCookie(name, _opts) {
     delay = opts.expires.getTime() - Date.now();
   }
   const hasExpired = delay !== void 0 && delay <= 0;
-  const cookieValue = klona(hasExpired ? void 0 : cookies[name] ?? ((_a = opts.default) == null ? void 0 : _a.call(opts)));
+  const cookieValue = klona(hasExpired ? void 0 : cookies[name] ?? opts.default?.());
   const cookie = ref(cookieValue);
   {
     const nuxtApp = useNuxtApp();
@@ -2200,7 +2161,7 @@ function useCookie(name, _opts) {
       if (opts.readonly || isEqual$2(cookie.value, cookies[name])) {
         return;
       }
-      nuxtApp._cookies || (nuxtApp._cookies = {});
+      nuxtApp._cookies ||= {};
       if (name in nuxtApp._cookies) {
         if (isEqual$2(cookie.value, nuxtApp._cookies[name])) {
           return;
@@ -2245,18 +2206,6 @@ const plugin = /* @__PURE__ */ defineNuxtPlugin((nuxtApp) => {
     }
   };
 });
-const RE_ARGS = /\{([0-9a-zA-Z]+)\}/g;
-function format$2(message, ...args) {
-  if (args.length === 1 && isObject$2(args[0])) {
-    args = args[0];
-  }
-  if (!args || !args.hasOwnProperty) {
-    args = {};
-  }
-  return message.replace(RE_ARGS, (match, identifier) => {
-    return args.hasOwnProperty(identifier) ? args[identifier] : "";
-  });
-}
 const makeSymbol = (name, shareable = false) => !shareable ? Symbol(name) : Symbol.for(name);
 const generateFormatCacheKey = (locale, key, source) => friendlyJSONstringify({ l: locale, k: key, s: source });
 const friendlyJSONstringify = (json) => JSON.stringify(json).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029").replace(/\u0027/g, "\\u0027");
@@ -2267,10 +2216,6 @@ const isEmptyObject = (val) => isPlainObject(val) && Object.keys(val).length ===
 const assign = Object.assign;
 const _create = Object.create;
 const create = (obj = null) => _create(obj);
-let _globalThis;
-const getGlobalThis = () => {
-  return _globalThis || (_globalThis = typeof globalThis !== "undefined" ? globalThis : typeof self !== "undefined" ? self : typeof global !== "undefined" ? global : create());
-};
 function escapeHtml(rawText) {
   return rawText.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
 }
@@ -2295,37 +2240,6 @@ const toDisplayString = (val) => {
 function join(items, separator = "") {
   return items.reduce((str, item, index) => index === 0 ? str + item : str + separator + item, "");
 }
-const RANGE = 2;
-function generateCodeFrame(source, start = 0, end = source.length) {
-  const lines = source.split(/\r?\n/);
-  let count = 0;
-  const res = [];
-  for (let i = 0; i < lines.length; i++) {
-    count += lines[i].length + 1;
-    if (count >= start) {
-      for (let j = i - RANGE; j <= i + RANGE || end > count; j++) {
-        if (j < 0 || j >= lines.length)
-          continue;
-        const line = j + 1;
-        res.push(`${line}${" ".repeat(3 - String(line).length)}|  ${lines[j]}`);
-        const lineLength = lines[j].length;
-        if (j === i) {
-          const pad = start - (count - lineLength) + 1;
-          const length = Math.max(1, end > count ? lineLength - pad : end - start);
-          res.push(`   |  ` + " ".repeat(pad) + "^".repeat(length));
-        } else if (j > i) {
-          if (end > count) {
-            const length = Math.max(Math.min(end - count, lineLength), 1);
-            res.push(`   |  ` + "^".repeat(length));
-          }
-          count += lineLength + 1;
-        }
-      }
-      break;
-    }
-  }
-  return res.join("\n");
-}
 function warn(msg, err) {
   if (typeof console !== "undefined") {
     console.warn(`[intlify] ` + msg);
@@ -2333,37 +2247,6 @@ function warn(msg, err) {
       console.warn(err.stack);
     }
   }
-}
-const hasWarned = {};
-function warnOnce(msg) {
-  if (!hasWarned[msg]) {
-    hasWarned[msg] = true;
-    warn(msg);
-  }
-}
-function createEmitter() {
-  const events = /* @__PURE__ */ new Map();
-  const emitter = {
-    events,
-    on(event, handler) {
-      const handlers2 = events.get(event);
-      const added = handlers2 && handlers2.push(handler);
-      if (!added) {
-        events.set(event, [handler]);
-      }
-    },
-    off(event, handler) {
-      const handlers2 = events.get(event);
-      if (handlers2) {
-        handlers2.splice(handlers2.indexOf(handler) >>> 0, 1);
-      }
-    },
-    emit(event, payload) {
-      (events.get(event) || []).slice().map((handler) => handler(payload));
-      (events.get("*") || []).slice().map((handler) => handler(event, payload));
-    }
-  };
-  return emitter;
 }
 const isNotObjectOrIsArray = (val) => !isObject$2(val) || isArray(val);
 function deepCopy(src, des) {
@@ -2414,10 +2297,7 @@ function getLocaleRouteName(routeName, locale, opts) {
 function matchBrowserLocale(locales, browserLocales) {
   const matchedLocales = [];
   for (const [index, browserCode] of browserLocales.entries()) {
-    const matchedLocale = locales.find((l) => {
-      var _a;
-      return ((_a = l.language) == null ? void 0 : _a.toLowerCase()) === browserCode.toLowerCase();
-    });
+    const matchedLocale = locales.find((l) => l.language?.toLowerCase() === browserCode.toLowerCase());
     if (matchedLocale) {
       matchedLocales.push({ code: matchedLocale.code, score: 1 - index / browserLocales.length });
       break;
@@ -2425,10 +2305,7 @@ function matchBrowserLocale(locales, browserLocales) {
   }
   for (const [index, browserCode] of browserLocales.entries()) {
     const languageCode = browserCode.split("-")[0].toLowerCase();
-    const matchedLocale = locales.find((l) => {
-      var _a;
-      return ((_a = l.language) == null ? void 0 : _a.split("-")[0].toLowerCase()) === languageCode;
-    });
+    const matchedLocale = locales.find((l) => l.language?.split("-")[0].toLowerCase() === languageCode);
     if (matchedLocale) {
       matchedLocales.push({ code: matchedLocale.code, score: 0.999 - index / browserLocales.length });
       break;
@@ -2463,15 +2340,14 @@ function createLocaleFromRouteGetter() {
   const defaultSuffixPattern = `(?:${routesNameSeparator}${defaultLocaleRouteNameSuffix})?`;
   const regexpName = new RegExp(`${routesNameSeparator}${localesPattern}${defaultSuffixPattern}$`, "i");
   return (route2) => {
-    var _a, _b, _c;
     if (isString(route2)) {
-      return ((_a = route2.match(regexpPath)) == null ? void 0 : _a[1]) ?? "";
+      return route2.match(regexpPath)?.[1] ?? "";
     }
     if (route2.name) {
-      return ((_b = getRouteName(route2.name).match(regexpName)) == null ? void 0 : _b[1]) ?? "";
+      return getRouteName(route2.name).match(regexpName)?.[1] ?? "";
     }
     if (route2.path) {
-      return ((_c = route2.path.match(regexpPath)) == null ? void 0 : _c[1]) ?? "";
+      return route2.path.match(regexpPath)?.[1] ?? "";
     }
     return "";
   };
@@ -2488,7 +2364,7 @@ function isVueI18n(target) {
 function getI18nTarget(i18n) {
   return isI18nInstance(i18n) ? i18n.global : i18n;
 }
-function getComposer$3(i18n) {
+function getComposer$2(i18n) {
   const target = getI18nTarget(i18n);
   if (isComposer(target)) return target;
   if (isVueI18n(target)) return target.__composer;
@@ -2499,7 +2375,6 @@ function getHost() {
   return header["x-forwarded-host"] || header["host"] || "";
 }
 function getLocaleDomain(locales, strategy, route2) {
-  var _a, _b, _c;
   const host = getHost();
   if (!host) {
     return host;
@@ -2509,13 +2384,13 @@ function getLocaleDomain(locales, strategy, route2) {
     if (locale.domain) {
       return (hasProtocol(locale.domain) ? locale.domain.replace(/(http|https):\/\//, "") : locale.domain) === host;
     }
-    return isArray(locale == null ? void 0 : locale.domains) ? locale.domains.includes(host) : false;
+    return isArray(locale?.domains) ? locale.domains.includes(host) : false;
   });
   if (matchingLocales.length === 0) {
     return "";
   }
   if (matchingLocales.length === 1) {
-    return ((_a = matchingLocales[0]) == null ? void 0 : _a.code) ?? "";
+    return matchingLocales[0]?.code ?? "";
   }
   if (strategy === "no_prefix") {
     console.warn(
@@ -2523,28 +2398,24 @@ function getLocaleDomain(locales, strategy, route2) {
         "Multiple matching domains found! This is not supported for no_prefix strategy in combination with differentDomains!"
       )
     );
-    return ((_b = matchingLocales[0]) == null ? void 0 : _b.code) ?? "";
+    return matchingLocales[0]?.code ?? "";
   }
   if (route2 && routePath) {
-    const matched = (_c = routePath.match(getLocalesRegex(matchingLocales.map((l) => l.code)))) == null ? void 0 : _c.at(1);
+    const matched = routePath.match(getLocalesRegex(matchingLocales.map((l) => l.code)))?.at(1);
     if (matched) {
       const matchingLocale2 = matchingLocales.find((l) => l.code === matched);
-      return (matchingLocale2 == null ? void 0 : matchingLocale2.code) ?? "";
+      return matchingLocale2?.code ?? "";
     }
   }
-  const matchingLocale = matchingLocales.find((l) => {
-    var _a2;
-    return ((_a2 = l.defaultForDomains) == null ? void 0 : _a2.includes(host)) ?? l.domainDefault;
-  });
-  return (matchingLocale == null ? void 0 : matchingLocale.code) ?? "";
+  const matchingLocale = matchingLocales.find((l) => l.defaultForDomains?.includes(host) ?? l.domainDefault);
+  return matchingLocale?.code ?? "";
 }
 function getDomainFromLocale(localeCode) {
-  var _a, _b;
   const nuxt = useNuxtApp();
   const host = getHost();
   const { domainLocales } = (/* @__PURE__ */ useRuntimeConfig()).public.i18n;
   const lang = normalizedLocales.find((locale) => locale.code === localeCode);
-  const domain = ((_a = domainLocales == null ? void 0 : domainLocales[localeCode]) == null ? void 0 : _a.domain) || (lang == null ? void 0 : lang.domain) || ((_b = lang == null ? void 0 : lang.domains) == null ? void 0 : _b.find((v) => v === host));
+  const domain = domainLocales?.[localeCode]?.domain || lang?.domain || lang?.domains?.find((v) => v === host);
   if (!domain) {
     console.warn(formatMessage("Could not find domain name for locale " + localeCode));
     return;
@@ -2584,12 +2455,9 @@ function getDefaultLocaleForDomain(runtimeI18n) {
   const host = getHost();
   if (locales.some((l) => !isString(l) && l.defaultForDomains != null)) {
     const findDefaultLocale = locales.find(
-      (l) => {
-        var _a;
-        return !isString(l) && !!((_a = l.defaultForDomains) == null ? void 0 : _a.includes(host));
-      }
+      (l) => !isString(l) && !!l.defaultForDomains?.includes(host)
     );
-    return (findDefaultLocale == null ? void 0 : findDefaultLocale.code) ?? "";
+    return findDefaultLocale?.code ?? "";
   }
   return defaultLocale || "";
 }
@@ -2659,19 +2527,18 @@ async function loadLocale(locale, localeLoaders2, setter, nuxt) {
 }
 function getRouteBaseName(common, route2) {
   const _route = unref(route2);
-  const routeName = isObject$2(_route) ? _route == null ? void 0 : _route.name : _route;
+  const routeName = isObject$2(_route) ? _route?.name : _route;
   if (_route == null || !routeName) {
     return;
   }
   return getRouteName(routeName).split(common.runtimeConfig.public.i18n.routesNameSeparator)[0];
 }
 function localePath(common, route2, locale) {
-  var _a;
   if (isString(route2) && hasProtocol(route2, { acceptRelative: true })) {
     return route2;
   }
   const localizedRoute = resolveRoute(common, route2, locale);
-  return localizedRoute == null ? "" : ((_a = localizedRoute.redirectedFrom) == null ? void 0 : _a.fullPath) || localizedRoute.fullPath;
+  return localizedRoute == null ? "" : localizedRoute.redirectedFrom?.fullPath || localizedRoute.fullPath;
 }
 function localeRoute(common, route2, locale) {
   return resolveRoute(common, route2, locale) ?? void 0;
@@ -2702,7 +2569,7 @@ function resolveRouteObject(common, route2, locale) {
     route2.path = (runtimeI18n.trailingSlash ? withTrailingSlash : withoutTrailingSlash)(route2.path, true);
     return route2;
   }
-  route2.name || (route2.name = getRouteBaseName(common, common.router.currentRoute.value));
+  route2.name ||= getRouteBaseName(common, common.router.currentRoute.value);
   const localizedName = getLocaleRouteName(route2.name, locale, runtimeI18n);
   if (common.router.hasRoute(localizedName)) {
     route2.name = localizedName;
@@ -2729,12 +2596,11 @@ function resolveRoute(common, route2, locale) {
   }
 }
 function getLocalizableMetaFromDynamicParams(common, route2) {
-  var _a;
   if (common.runtimeConfig.public.i18n.experimental.switchLocalePathLinkSSR) {
     return unref(common.metaState.value);
   }
   const meta = route2.meta || {};
-  return ((_a = unref(meta)) == null ? void 0 : _a[DEFAULT_DYNAMIC_PARAMS_KEY]) || {};
+  return unref(meta)?.[DEFAULT_DYNAMIC_PARAMS_KEY] || {};
 }
 function switchLocalePath(common, locale, _route) {
   const route2 = _route ?? common.router.currentRoute.value;
@@ -2843,12 +2709,12 @@ function detectLocale(route2, routeLocale, currentLocale, localeCookie) {
   }
   let detected = "";
   if (differentDomains || multiDomainLocales) {
-    detected || (detected = getLocaleDomain(normalizedLocales, strategy, route2));
+    detected ||= getLocaleDomain(normalizedLocales, strategy, route2);
   } else if (strategy !== "no_prefix") {
-    detected || (detected = routeLocale);
+    detected ||= routeLocale;
   }
   const cookieLocale = (localeCodes.includes(detectedBrowser.locale) || localeCookie && localeCodes.includes(localeCookie)) && _detectBrowserLanguage && _detectBrowserLanguage.useCookie && localeCookie;
-  detected || (detected = cookieLocale || currentLocale || defaultLocale || "");
+  detected ||= cookieLocale || currentLocale || defaultLocale || "";
   return detected;
 }
 function detectRedirect({ to, from, locale, routeLocale }, inMiddleware = false) {
@@ -2882,11 +2748,10 @@ async function navigate({ nuxt, locale, route: route2, redirectPath }, enableNav
   if (multiDomainLocales && strategy === "prefix_except_default") {
     const host = getHost();
     const currentDomain = locales.find((locale2) => {
-      var _a;
       if (isString(locale2)) return;
-      return (_a = locale2.defaultForDomains) == null ? void 0 : _a.find((domain) => domain === host);
+      return locale2.defaultForDomains?.find((domain) => domain === host);
     });
-    const defaultLocaleForDomain = !isString(currentDomain) ? currentDomain == null ? void 0 : currentDomain.code : void 0;
+    const defaultLocaleForDomain = !isString(currentDomain) ? currentDomain?.code : void 0;
     if (route2.path.startsWith(`/${defaultLocaleForDomain}`)) {
       return navigateTo(route2.path.replace(`/${defaultLocaleForDomain}`, ""));
     }
@@ -3014,15 +2879,15 @@ function detectBrowserLanguage(route2, localeCookie, locale = "") {
   return { locale: _detect.fallbackLocale || "", from: "fallback" };
 }
 function runtimeDetectBrowserLanguage(opts = (/* @__PURE__ */ useRuntimeConfig()).public.i18n) {
-  if ((opts == null ? void 0 : opts.detectBrowserLanguage) === false) return false;
-  return opts == null ? void 0 : opts.detectBrowserLanguage;
+  if (opts?.detectBrowserLanguage === false) return false;
+  return opts?.detectBrowserLanguage;
 }
 function createHeadContext(options) {
   const nuxtApp = useNuxtApp();
   const locale = unref(nuxtApp.$i18n.locale);
   const locales = unref(nuxtApp.$i18n.locales).map((x) => isString(x) ? { code: x } : x);
   const currentLocale = locales.find((l) => l.code === locale) || { code: locale };
-  const baseUrl = joinURL(unref(getComposer$3(nuxtApp.$i18n).baseUrl), nuxtApp.$config.app.baseURL);
+  const baseUrl = joinURL(unref(getComposer$2(nuxtApp.$i18n).baseUrl), nuxtApp.$config.app.baseURL);
   const runtimeI18n = nuxtApp.$config.public.i18n;
   if (!baseUrl) {
     console.warn("I18n `baseUrl` is required to generate valid SEO tag links.");
@@ -3121,17 +2986,16 @@ function getCanonicalLink(common, ctx) {
   return [{ [ctx.key]: "i18n-can", rel: "canonical", href }];
 }
 function getCanonicalQueryParams(common, ctx) {
-  var _a;
   const route2 = common.router.currentRoute.value;
   const currentRoute = localeRoute(
     common,
     assign({}, route2, { path: void 0, name: getRouteBaseName(common, route2) })
   );
-  const canonicalQueries = isObject$2(ctx.seo) && ((_a = ctx.seo) == null ? void 0 : _a.canonicalQueries) || [];
-  const currentRouteQuery = (currentRoute == null ? void 0 : currentRoute.query) || {};
+  const canonicalQueries = isObject$2(ctx.seo) && ctx.seo?.canonicalQueries || [];
+  const currentRouteQuery = currentRoute?.query || {};
   const params = {};
   for (const param of canonicalQueries.filter((x) => x in currentRouteQuery)) {
-    params[param] ?? (params[param] = []);
+    params[param] ??= [];
     for (const val of toArray(currentRouteQuery[param])) {
       params[param].push(val || "");
     }
@@ -3158,7 +3022,6 @@ function getAlternateOgLocales(ctx) {
 function hyphenToUnderscore(val = "") {
   return val.replace(/-/g, "_");
 }
-var define_process_env_default$2 = {};
 function createPosition(line, column, offset) {
   return { line, column, offset };
 }
@@ -3182,38 +3045,12 @@ const CompileErrorCodes = {
   MUST_HAVE_MESSAGES_IN_PLURAL: 11,
   UNEXPECTED_EMPTY_LINKED_MODIFIER: 12,
   UNEXPECTED_EMPTY_LINKED_KEY: 13,
-  UNEXPECTED_LEXICAL_ANALYSIS: 14,
-  // generator error codes
-  UNHANDLED_CODEGEN_NODE_TYPE: 15,
-  // minifier error codes
-  UNHANDLED_MINIFIER_NODE_TYPE: 16
+  UNEXPECTED_LEXICAL_ANALYSIS: 14
 };
 const COMPILE_ERROR_CODES_EXTEND_POINT = 17;
-const errorMessages$2 = {
-  // tokenizer error messages
-  [CompileErrorCodes.EXPECTED_TOKEN]: `Expected token: '{0}'`,
-  [CompileErrorCodes.INVALID_TOKEN_IN_PLACEHOLDER]: `Invalid token in placeholder: '{0}'`,
-  [CompileErrorCodes.UNTERMINATED_SINGLE_QUOTE_IN_PLACEHOLDER]: `Unterminated single quote in placeholder`,
-  [CompileErrorCodes.UNKNOWN_ESCAPE_SEQUENCE]: `Unknown escape sequence: \\{0}`,
-  [CompileErrorCodes.INVALID_UNICODE_ESCAPE_SEQUENCE]: `Invalid unicode escape sequence: {0}`,
-  [CompileErrorCodes.UNBALANCED_CLOSING_BRACE]: `Unbalanced closing brace`,
-  [CompileErrorCodes.UNTERMINATED_CLOSING_BRACE]: `Unterminated closing brace`,
-  [CompileErrorCodes.EMPTY_PLACEHOLDER]: `Empty placeholder`,
-  [CompileErrorCodes.NOT_ALLOW_NEST_PLACEHOLDER]: `Not allowed nest placeholder`,
-  [CompileErrorCodes.INVALID_LINKED_FORMAT]: `Invalid linked format`,
-  // parser error messages
-  [CompileErrorCodes.MUST_HAVE_MESSAGES_IN_PLURAL]: `Plural must have messages`,
-  [CompileErrorCodes.UNEXPECTED_EMPTY_LINKED_MODIFIER]: `Unexpected empty linked modifier`,
-  [CompileErrorCodes.UNEXPECTED_EMPTY_LINKED_KEY]: `Unexpected empty linked key`,
-  [CompileErrorCodes.UNEXPECTED_LEXICAL_ANALYSIS]: `Unexpected lexical analysis in token: '{0}'`,
-  // generator error messages
-  [CompileErrorCodes.UNHANDLED_CODEGEN_NODE_TYPE]: `unhandled codegen node type: '{0}'`,
-  // minimizer error messages
-  [CompileErrorCodes.UNHANDLED_MINIFIER_NODE_TYPE]: `unhandled mimifier node type: '{0}'`
-};
 function createCompileError(code, loc, options = {}) {
   const { domain, messages, args } = options;
-  const msg = define_process_env_default$2.NODE_ENV !== "production" ? format$2((messages || errorMessages$2)[code] || "", ...args || []) : code;
+  const msg = code;
   const error = new SyntaxError(String(msg));
   error.code = code;
   if (loc) {
@@ -3225,8 +3062,6 @@ function createCompileError(code, loc, options = {}) {
 function defaultOnError(error) {
   throw error;
 }
-const RE_HTML_TAG = /<\/?[\w\s="/.':;#-\/]+>/;
-const detectHtmlTag = (source) => RE_HTML_TAG.test(source);
 const CHAR_SP = " ";
 const CHAR_CR = "\r";
 const CHAR_LF = "\n";
@@ -4328,7 +4163,6 @@ function optimizeMessageNode(message) {
     }
   }
 }
-const ERROR_DOMAIN$1 = "minifier";
 function minify(node) {
   node.t = node.type;
   switch (node.type) {
@@ -4398,17 +4232,9 @@ function minify(node) {
       delete named.key;
       break;
     }
-    default:
-      if (define_process_env_default$2.NODE_ENV !== "production") {
-        throw createCompileError(CompileErrorCodes.UNHANDLED_MINIFIER_NODE_TYPE, null, {
-          domain: ERROR_DOMAIN$1,
-          args: [node.type]
-        });
-      }
   }
   delete node.type;
 }
-const ERROR_DOMAIN = "parser";
 function createCodeGenerator(ast, options) {
   const { filename, breakLineCode, needIndent: _needIndent } = options;
   const location = options.location !== false;
@@ -4563,13 +4389,6 @@ function generateNode(generator, node) {
     case 3:
       generator.push(JSON.stringify(node.value), node);
       break;
-    default:
-      if (define_process_env_default$2.NODE_ENV !== "production") {
-        throw createCompileError(CompileErrorCodes.UNHANDLED_CODEGEN_NODE_TYPE, null, {
-          domain: ERROR_DOMAIN,
-          args: [node.type]
-        });
-      }
   }
 }
 const generate = (ast, options = {}) => {
@@ -4619,7 +4438,6 @@ function baseCompile$1(source, options = {}) {
     return { ast, code: "" };
   }
 }
-var define_process_env_default$1 = {};
 function isMessageAST(val) {
   return isObject$2(val) && resolveType(val) === 0 && (hasOwn(val, "b") || hasOwn(val, "body"));
 }
@@ -4768,12 +4586,6 @@ function formatMessagePart(ctx, node) {
       throw new Error(`unhandled node on format message part: ${type}`);
   }
 }
-const WARN_MESSAGE = `Detected HTML in '{source}' message. Recommend not using HTML messages to avoid XSS.`;
-function checkHtmlMessage(source, warnHtmlMessage) {
-  if (warnHtmlMessage && detectHtmlTag(source)) {
-    warn(format$2(WARN_MESSAGE, { source }));
-  }
-}
 const defaultOnCacheKey = (message) => message;
 let compileCache = create();
 function baseCompile(message, options = {}) {
@@ -4788,8 +4600,7 @@ function baseCompile(message, options = {}) {
 // @__NO_SIDE_EFFECTS__
 function compile(message, context) {
   if (isString(message)) {
-    const warnHtmlMessage = isBoolean(context.warnHtmlMessage) ? context.warnHtmlMessage : true;
-    define_process_env_default$1.NODE_ENV !== "production" && checkHtmlMessage(message, warnHtmlMessage);
+    isBoolean(context.warnHtmlMessage) ? context.warnHtmlMessage : true;
     const onCacheKey = context.onCacheKey || defaultOnCacheKey;
     const cacheKey = onCacheKey(message);
     const cached = compileCache[cacheKey];
@@ -4798,16 +4609,12 @@ function compile(message, context) {
     }
     const { ast, detectError } = baseCompile(message, {
       ...context,
-      location: define_process_env_default$1.NODE_ENV !== "production",
+      location: false,
       jit: true
     });
     const msg = format$1(ast);
     return !detectError ? compileCache[cacheKey] = msg : msg;
   } else {
-    if (define_process_env_default$1.NODE_ENV !== "production" && !isMessageAST(message)) {
-      warn(`the message that is resolve with key '${context.key}' is not supported for jit compilation`);
-      return () => message;
-    }
     const cacheKey = message.cacheKey;
     if (cacheKey) {
       const cached = compileCache[cacheKey];
@@ -4820,45 +4627,19 @@ function compile(message, context) {
     }
   }
 }
-let devtools = null;
-function setDevToolsHook(hook) {
-  devtools = hook;
-}
-function initI18nDevTools(i18n, version2, meta) {
-  devtools && devtools.emit("i18n:init", {
-    timestamp: Date.now(),
-    i18n,
-    version: version2,
-    meta
-  });
-}
-const translateDevTools = /* @__PURE__ */ createDevToolsHook("function:translate");
-function createDevToolsHook(hook) {
-  return (payloads) => devtools && devtools.emit(hook, payloads);
-}
 const CoreErrorCodes = {
   INVALID_ARGUMENT: COMPILE_ERROR_CODES_EXTEND_POINT,
   // 17
   INVALID_DATE_ARGUMENT: 18,
   INVALID_ISO_DATE_ARGUMENT: 19,
-  NOT_SUPPORT_NON_STRING_MESSAGE: 20,
   NOT_SUPPORT_LOCALE_PROMISE_VALUE: 21,
   NOT_SUPPORT_LOCALE_ASYNC_FUNCTION: 22,
   NOT_SUPPORT_LOCALE_TYPE: 23
 };
 const CORE_ERROR_CODES_EXTEND_POINT = 24;
 function createCoreError(code) {
-  return createCompileError(code, null, define_process_env_default$1.NODE_ENV !== "production" ? { messages: errorMessages$1 } : void 0);
+  return createCompileError(code, null, void 0);
 }
-const errorMessages$1 = {
-  [CoreErrorCodes.INVALID_ARGUMENT]: "Invalid arguments",
-  [CoreErrorCodes.INVALID_DATE_ARGUMENT]: "The date provided is an invalid Date object.Make sure your Date represents a valid date.",
-  [CoreErrorCodes.INVALID_ISO_DATE_ARGUMENT]: "The argument provided is not a valid ISO date string",
-  [CoreErrorCodes.NOT_SUPPORT_NON_STRING_MESSAGE]: "Not support non-string message",
-  [CoreErrorCodes.NOT_SUPPORT_LOCALE_PROMISE_VALUE]: "cannot support promise value",
-  [CoreErrorCodes.NOT_SUPPORT_LOCALE_ASYNC_FUNCTION]: "cannot support async function",
-  [CoreErrorCodes.NOT_SUPPORT_LOCALE_TYPE]: "cannot support locale type"
-};
 function getLocale(context, options) {
   return options.locale != null ? resolveLocale(options.locale) : resolveLocale(context.locale);
 }
@@ -5399,28 +5180,6 @@ function resolveValue(obj, path) {
   }
   return last;
 }
-const CoreWarnCodes = {
-  NOT_FOUND_KEY: 1,
-  FALLBACK_TO_TRANSLATE: 2,
-  CANNOT_FORMAT_NUMBER: 3,
-  FALLBACK_TO_NUMBER_FORMAT: 4,
-  CANNOT_FORMAT_DATE: 5,
-  FALLBACK_TO_DATE_FORMAT: 6,
-  EXPERIMENTAL_CUSTOM_MESSAGE_COMPILER: 7
-};
-const CORE_WARN_CODES_EXTEND_POINT = 8;
-const warnMessages$1 = {
-  [CoreWarnCodes.NOT_FOUND_KEY]: `Not found '{key}' key in '{locale}' locale messages.`,
-  [CoreWarnCodes.FALLBACK_TO_TRANSLATE]: `Fall back to translate '{key}' key with '{target}' locale.`,
-  [CoreWarnCodes.CANNOT_FORMAT_NUMBER]: `Cannot format a number value due to not supported Intl.NumberFormat.`,
-  [CoreWarnCodes.FALLBACK_TO_NUMBER_FORMAT]: `Fall back to number format '{key}' key with '{target}' locale.`,
-  [CoreWarnCodes.CANNOT_FORMAT_DATE]: `Cannot format a date value due to not supported Intl.DateTimeFormat.`,
-  [CoreWarnCodes.FALLBACK_TO_DATE_FORMAT]: `Fall back to datetime format '{key}' key with '{target}' locale.`,
-  [CoreWarnCodes.EXPERIMENTAL_CUSTOM_MESSAGE_COMPILER]: `This project is using Custom Message Compiler, which is an experimental feature. It may receive breaking changes or be removed in the future.`
-};
-function getWarnMessage$1(code, ...args) {
-  return format$2(warnMessages$1[code], ...args);
-}
 const VERSION$1 = "10.0.7";
 const NOT_REOSLVED = -1;
 const DEFAULT_LOCALE = "en-US";
@@ -5451,11 +5210,8 @@ let _fallbacker;
 function registerLocaleFallbacker(fallbacker) {
   _fallbacker = fallbacker;
 }
-let _additionalMeta = null;
 const setAdditionalMeta = /* @__NO_SIDE_EFFECTS__ */ (meta) => {
-  _additionalMeta = meta;
 };
-const getAdditionalMeta = /* @__NO_SIDE_EFFECTS__ */ () => _additionalMeta;
 let _fallbackContext = null;
 const setFallbackContext = (context) => {
   _fallbackContext = context;
@@ -5483,9 +5239,6 @@ function createCoreContext(options = {}) {
   const warnHtmlMessage = isBoolean(options.warnHtmlMessage) ? options.warnHtmlMessage : true;
   const escapeParameter = !!options.escapeParameter;
   const messageCompiler = isFunction(options.messageCompiler) ? options.messageCompiler : _compiler;
-  if (define_process_env_default$1.NODE_ENV !== "production" && true && true && isFunction(options.messageCompiler)) {
-    warnOnce(getWarnMessage$1(CoreWarnCodes.EXPERIMENTAL_CUSTOM_MESSAGE_COMPILER));
-  }
   const messageResolver = isFunction(options.messageResolver) ? options.messageResolver : _resolver || resolveWithKeyValue;
   const localeFallbacker = isFunction(options.localeFallbacker) ? options.localeFallbacker : _fallbacker || fallbackWithSimple;
   const fallbackContext = isObject$2(options.fallbackContext) ? options.fallbackContext : void 0;
@@ -5524,41 +5277,15 @@ function createCoreContext(options = {}) {
     context.__datetimeFormatters = __datetimeFormatters;
     context.__numberFormatters = __numberFormatters;
   }
-  if (define_process_env_default$1.NODE_ENV !== "production") {
-    context.__v_emitter = internalOptions.__v_emitter != null ? internalOptions.__v_emitter : void 0;
-  }
-  if (define_process_env_default$1.NODE_ENV !== "production" || false) {
-    initI18nDevTools(context, version2, __meta);
-  }
   return context;
 }
 const createResources = (locale) => ({ [locale]: create() });
-function isTranslateFallbackWarn(fallback, key) {
-  return fallback instanceof RegExp ? fallback.test(key) : fallback;
-}
-function isTranslateMissingWarn(missing, key) {
-  return missing instanceof RegExp ? missing.test(key) : missing;
-}
 function handleMissing(context, key, locale, missingWarn, type) {
   const { missing, onWarn } = context;
-  if (define_process_env_default$1.NODE_ENV !== "production") {
-    const emitter = context.__v_emitter;
-    if (emitter) {
-      emitter.emit("missing", {
-        locale,
-        key,
-        type,
-        groupId: `${type}:${key}`
-      });
-    }
-  }
   if (missing !== null) {
     const ret = missing(context, locale, key, type);
     return isString(ret) ? ret : key;
   } else {
-    if (define_process_env_default$1.NODE_ENV !== "production" && isTranslateMissingWarn(missingWarn, key)) {
-      onWarn(getWarnMessage$1(CoreWarnCodes.NOT_FOUND_KEY, { key, locale }));
-    }
     return key;
   }
 }
@@ -5584,21 +5311,12 @@ function isImplicitFallback(targetLocale, locales) {
   }
   return false;
 }
-const intlDefined = typeof Intl !== "undefined";
-const Availabilities = {
-  dateTimeFormat: intlDefined && typeof Intl.DateTimeFormat !== "undefined",
-  numberFormat: intlDefined && typeof Intl.NumberFormat !== "undefined"
-};
 function datetime(context, ...args) {
   const { datetimeFormats, unresolving, fallbackLocale, onWarn, localeFallbacker } = context;
   const { __datetimeFormatters } = context;
-  if (define_process_env_default$1.NODE_ENV !== "production" && !Availabilities.dateTimeFormat) {
-    onWarn(getWarnMessage$1(CoreWarnCodes.CANNOT_FORMAT_DATE));
-    return MISSING_RESOLVE_VALUE;
-  }
   const [key, value, options, overrides] = parseDateTimeArgs(...args);
   const missingWarn = isBoolean(options.missingWarn) ? options.missingWarn : context.missingWarn;
-  const fallbackWarn = isBoolean(options.fallbackWarn) ? options.fallbackWarn : context.fallbackWarn;
+  isBoolean(options.fallbackWarn) ? options.fallbackWarn : context.fallbackWarn;
   const part = !!options.part;
   const locale = getLocale(context, options);
   const locales = localeFallbacker(
@@ -5613,35 +5331,14 @@ function datetime(context, ...args) {
   let datetimeFormat = {};
   let targetLocale;
   let format2 = null;
-  let from = locale;
-  let to = null;
   const type = "datetime format";
   for (let i = 0; i < locales.length; i++) {
-    targetLocale = to = locales[i];
-    if (define_process_env_default$1.NODE_ENV !== "production" && locale !== targetLocale && isTranslateFallbackWarn(fallbackWarn, key)) {
-      onWarn(getWarnMessage$1(CoreWarnCodes.FALLBACK_TO_DATE_FORMAT, {
-        key,
-        target: targetLocale
-      }));
-    }
-    if (define_process_env_default$1.NODE_ENV !== "production" && locale !== targetLocale) {
-      const emitter = context.__v_emitter;
-      if (emitter) {
-        emitter.emit("fallback", {
-          type,
-          key,
-          from,
-          to,
-          groupId: `${type}:${key}`
-        });
-      }
-    }
+    targetLocale = locales[i];
     datetimeFormat = datetimeFormats[targetLocale] || {};
     format2 = datetimeFormat[key];
     if (isPlainObject(format2))
       break;
     handleMissing(context, key, targetLocale, missingWarn, type);
-    from = to;
   }
   if (!isPlainObject(format2) || !isString(targetLocale)) {
     return unresolving ? NOT_REOSLVED : key;
@@ -5740,13 +5437,9 @@ function clearDateTimeFormat(ctx, locale, format2) {
 function number(context, ...args) {
   const { numberFormats, unresolving, fallbackLocale, onWarn, localeFallbacker } = context;
   const { __numberFormatters } = context;
-  if (define_process_env_default$1.NODE_ENV !== "production" && !Availabilities.numberFormat) {
-    onWarn(getWarnMessage$1(CoreWarnCodes.CANNOT_FORMAT_NUMBER));
-    return MISSING_RESOLVE_VALUE;
-  }
   const [key, value, options, overrides] = parseNumberArgs(...args);
   const missingWarn = isBoolean(options.missingWarn) ? options.missingWarn : context.missingWarn;
-  const fallbackWarn = isBoolean(options.fallbackWarn) ? options.fallbackWarn : context.fallbackWarn;
+  isBoolean(options.fallbackWarn) ? options.fallbackWarn : context.fallbackWarn;
   const part = !!options.part;
   const locale = getLocale(context, options);
   const locales = localeFallbacker(
@@ -5761,35 +5454,14 @@ function number(context, ...args) {
   let numberFormat = {};
   let targetLocale;
   let format2 = null;
-  let from = locale;
-  let to = null;
   const type = "number format";
   for (let i = 0; i < locales.length; i++) {
-    targetLocale = to = locales[i];
-    if (define_process_env_default$1.NODE_ENV !== "production" && locale !== targetLocale && isTranslateFallbackWarn(fallbackWarn, key)) {
-      onWarn(getWarnMessage$1(CoreWarnCodes.FALLBACK_TO_NUMBER_FORMAT, {
-        key,
-        target: targetLocale
-      }));
-    }
-    if (define_process_env_default$1.NODE_ENV !== "production" && locale !== targetLocale) {
-      const emitter = context.__v_emitter;
-      if (emitter) {
-        emitter.emit("fallback", {
-          type,
-          key,
-          from,
-          to,
-          groupId: `${type}:${key}`
-        });
-      }
-    }
+    targetLocale = locales[i];
     numberFormat = numberFormats[targetLocale] || {};
     format2 = numberFormat[key];
     if (isPlainObject(format2))
       break;
     handleMissing(context, key, targetLocale, missingWarn, type);
-    from = to;
   }
   if (!isPlainObject(format2) || !isString(targetLocale)) {
     return unresolving ? NOT_REOSLVED : key;
@@ -6006,10 +5678,6 @@ function translate(context, ...args) {
   if (!resolvedMessage && (!(isString(format2) || isMessageAST(format2) || isMessageFunction(format2)) || !isString(targetLocale))) {
     return unresolving ? NOT_REOSLVED : key;
   }
-  if (define_process_env_default$1.NODE_ENV !== "production" && isString(format2) && context.messageCompiler == null) {
-    warn(`The message format compilation is not supported in this build. Because message compiler isn't included. You need to pre-compilation all message format. So translate function return '${key}'.`);
-    return key;
-  }
   let occurred = false;
   const onError = () => {
     occurred = true;
@@ -6022,17 +5690,6 @@ function translate(context, ...args) {
   const msgContext = createMessageContext(ctxOptions);
   const messaged = evaluateMessage(context, msg, msgContext);
   const ret = postTranslation ? postTranslation(messaged, key) : messaged;
-  if (define_process_env_default$1.NODE_ENV !== "production" || false) {
-    const payloads = {
-      timestamp: Date.now(),
-      key: isString(key) ? key : isMessageFunction(format2) ? format2.key : "",
-      locale: targetLocale || (isMessageFunction(format2) ? format2.locale : ""),
-      format: isString(format2) ? format2 : isMessageFunction(format2) ? format2.source : "",
-      message: ret
-    };
-    payloads.meta = assign({}, context.__meta, /* @__PURE__ */ getAdditionalMeta() || {});
-    translateDevTools(payloads);
-  }
   return ret;
 }
 function escapeParams(options) {
@@ -6052,29 +5709,9 @@ function resolveMessageFormat(context, key, locale, fallbackLocale, fallbackWarn
   let message = create();
   let targetLocale;
   let format2 = null;
-  let from = locale;
-  let to = null;
   const type = "translate";
   for (let i = 0; i < locales.length; i++) {
-    targetLocale = to = locales[i];
-    if (define_process_env_default$1.NODE_ENV !== "production" && locale !== targetLocale && !isAlmostSameLocale(locale, targetLocale) && isTranslateFallbackWarn(fallbackWarn, key)) {
-      onWarn(getWarnMessage$1(CoreWarnCodes.FALLBACK_TO_TRANSLATE, {
-        key,
-        target: targetLocale
-      }));
-    }
-    if (define_process_env_default$1.NODE_ENV !== "production" && locale !== targetLocale) {
-      const emitter = context.__v_emitter;
-      if (emitter) {
-        emitter.emit("fallback", {
-          type,
-          key,
-          from,
-          to,
-          groupId: `${type}:${key}`
-        });
-      }
-    }
+    targetLocale = locales[i];
     message = messages[targetLocale] || create();
     if ((format2 = resolveValue2(message, key)) === null) {
       format2 = message[key];
@@ -6095,7 +5732,6 @@ function resolveMessageFormat(context, key, locale, fallbackLocale, fallbackWarn
         format2 = missingRet;
       }
     }
-    from = to;
   }
   return [format2, targetLocale, message];
 }
@@ -6108,7 +5744,7 @@ function compileMessageFormat(context, key, targetLocale, format2, cacheBaseKey,
     return msg2;
   }
   if (messageCompiler == null) {
-    const msg2 = () => format2;
+    const msg2 = (() => format2);
     msg2.locale = targetLocale;
     msg2.key = key;
     return msg2;
@@ -6155,37 +5791,12 @@ function getCompileContext(context, locale, key, source, warnHtmlMessage, onErro
     warnHtmlMessage,
     onError: (err) => {
       onError && onError(err);
-      if (define_process_env_default$1.NODE_ENV !== "production") {
-        const _source = getSourceForCodeFrame(source);
-        const message = `Message compilation error: ${err.message}`;
-        const codeFrame = err.location && _source && generateCodeFrame(_source, err.location.start.offset, err.location.end.offset);
-        const emitter = context.__v_emitter;
-        if (emitter && _source) {
-          emitter.emit("compile-error", {
-            message: _source,
-            error: err.message,
-            start: err.location && err.location.start.offset,
-            end: err.location && err.location.end.offset,
-            groupId: `${"translate"}:${key}`
-          });
-        }
-        console.error(codeFrame ? `${message}
-${codeFrame}` : message);
-      } else {
+      {
         throw err;
       }
     },
     onCacheKey: (source2) => generateFormatCacheKey(locale, key, source2)
   };
-}
-function getSourceForCodeFrame(source) {
-  if (isString(source)) {
-    return source;
-  } else {
-    if (source.loc && source.loc.source) {
-      return source.loc.source;
-    }
-  }
 }
 function getMessageContextOptions(context, locale, message, options) {
   const { modifiers, pluralRules, messageResolver: resolveValue2, fallbackLocale, fallbackWarn, missingWarn, fallbackContext } = context;
@@ -6236,24 +5847,7 @@ function getMessageContextOptions(context, locale, message, options) {
   }
   return ctxOptions;
 }
-var define_process_env_default = {};
 const VERSION = "10.0.7";
-const I18nWarnCodes = {
-  FALLBACK_TO_ROOT: CORE_WARN_CODES_EXTEND_POINT,
-  // 8
-  NOT_FOUND_PARENT_SCOPE: 9,
-  IGNORE_OBJ_FLATTEN: 10,
-  DEPRECATE_TC: 11
-};
-const warnMessages = {
-  [I18nWarnCodes.FALLBACK_TO_ROOT]: `Fall back to {type} '{key}' with root locale.`,
-  [I18nWarnCodes.NOT_FOUND_PARENT_SCOPE]: `Not found parent scope. use the global scope.`,
-  [I18nWarnCodes.IGNORE_OBJ_FLATTEN]: `Ignore object flatten: '{key}' key has an string value`,
-  [I18nWarnCodes.DEPRECATE_TC]: `'tc' and '$tc' has been deprecated in v10. Use 't' or '$t' instead. 'tc' and '$tc’ are going to remove in v11.`
-};
-function getWarnMessage(code, ...args) {
-  return format$2(warnMessages[code], ...args);
-}
 const I18nErrorCodes = {
   // composer module errors
   UNEXPECTED_RETURN_TYPE: CORE_ERROR_CODES_EXTEND_POINT,
@@ -6266,37 +5860,16 @@ const I18nErrorCodes = {
   // directive module errors
   REQUIRED_VALUE: 28,
   INVALID_VALUE: 29,
-  // vue-devtools errors
-  CANNOT_SETUP_VUE_DEVTOOLS_PLUGIN: 30,
   NOT_INSTALLED_WITH_PROVIDE: 31,
   // unexpected error
-  UNEXPECTED_ERROR: 32,
-  // not compatible legacy vue-i18n constructor
-  NOT_COMPATIBLE_LEGACY_VUE_I18N: 33,
-  // Not available Compostion API in Legacy API mode. Please make sure that the legacy API mode is working properly
-  NOT_AVAILABLE_COMPOSITION_IN_LEGACY: 34
+  UNEXPECTED_ERROR: 32
 };
 function createI18nError(code, ...args) {
-  return createCompileError(code, null, define_process_env_default.NODE_ENV !== "production" ? { messages: errorMessages, args } : void 0);
+  return createCompileError(code, null, void 0);
 }
-const errorMessages = {
-  [I18nErrorCodes.UNEXPECTED_RETURN_TYPE]: "Unexpected return type in composer",
-  [I18nErrorCodes.INVALID_ARGUMENT]: "Invalid argument",
-  [I18nErrorCodes.MUST_BE_CALL_SETUP_TOP]: "Must be called at the top of a `setup` function",
-  [I18nErrorCodes.NOT_INSTALLED]: "Need to install with `app.use` function",
-  [I18nErrorCodes.UNEXPECTED_ERROR]: "Unexpected error",
-  [I18nErrorCodes.REQUIRED_VALUE]: `Required in value: {0}`,
-  [I18nErrorCodes.INVALID_VALUE]: `Invalid value`,
-  [I18nErrorCodes.CANNOT_SETUP_VUE_DEVTOOLS_PLUGIN]: `Cannot setup vue-devtools plugin`,
-  [I18nErrorCodes.NOT_INSTALLED_WITH_PROVIDE]: "Need to install with `provide` function",
-  [I18nErrorCodes.NOT_COMPATIBLE_LEGACY_VUE_I18N]: "Not compatible legacy VueI18n.",
-  [I18nErrorCodes.NOT_AVAILABLE_COMPOSITION_IN_LEGACY]: "Not available Compostion API in Legacy API mode. Please make sure that the legacy API mode is working properly"
-};
 const TranslateVNodeSymbol = /* @__PURE__ */ makeSymbol("__translateVNode");
 const DatetimePartsSymbol = /* @__PURE__ */ makeSymbol("__datetimeParts");
 const NumberPartsSymbol = /* @__PURE__ */ makeSymbol("__numberParts");
-const EnableEmitter = /* @__PURE__ */ makeSymbol("__enableEmitter");
-const DisableEmitter = /* @__PURE__ */ makeSymbol("__disableEmitter");
 const SetPluralRulesSymbol = makeSymbol("__setPluralRules");
 const InejctWithOptionSymbol = /* @__PURE__ */ makeSymbol("__injectWithOption");
 const DisposeSymbol = /* @__PURE__ */ makeSymbol("__dispose");
@@ -6328,9 +5901,6 @@ function handleFlatJson(obj) {
           currentObj[subKeys[i]] = create();
         }
         if (!isObject$2(currentObj[subKeys[i]])) {
-          define_process_env_default.NODE_ENV !== "production" && warn(getWarnMessage(I18nWarnCodes.IGNORE_OBJ_FLATTEN, {
-            key: subKeys[i]
-          }));
           hasStringValue = true;
           break;
         }
@@ -6427,9 +5997,9 @@ const NOOP_RETURN_ARRAY = () => [];
 const NOOP_RETURN_FALSE = () => false;
 let composerID = 0;
 function defineCoreMissingHandler(missing) {
-  return (ctx, locale, key, type) => {
+  return ((ctx, locale, key, type) => {
     return missing(locale, key, getCurrentInstance$1() || void 0, type);
-  };
+  });
 }
 const getMetaInfo = /* @__NO_SIDE_EFFECTS__ */ () => {
   const instance = getCurrentInstance$1();
@@ -6492,9 +6062,6 @@ function createComposer(options = {}) {
       ctxOptions.__datetimeFormatters = isPlainObject(_context) ? _context.__datetimeFormatters : void 0;
       ctxOptions.__numberFormatters = isPlainObject(_context) ? _context.__numberFormatters : void 0;
     }
-    if (define_process_env_default.NODE_ENV !== "production") {
-      ctxOptions.__v_emitter = isPlainObject(_context) ? _context.__v_emitter : void 0;
-    }
     const ctx = createCoreContext(ctxOptions);
     _isGlobal && setFallbackContext(ctx);
     return ctx;
@@ -6545,16 +6112,11 @@ function createComposer(options = {}) {
     _missing = handler;
     _context.missing = _runtimeMissing;
   }
-  function isResolvedTranslateMessage(type, arg) {
-    return type !== "translate" || !arg.resolvedMessage;
-  }
   const wrapWithDeps = (fn, argumentParser, warnType, fallbackSuccess, fallbackFail, successCondition) => {
     trackReactivityValues();
     let ret;
     try {
-      if (define_process_env_default.NODE_ENV !== "production" || false) {
-        /* @__PURE__ */ setAdditionalMeta(/* @__PURE__ */ getMetaInfo());
-      }
+      if (false) ;
       if (!_isGlobal) {
         _context.fallbackContext = __root ? getFallbackContext() : void 0;
       }
@@ -6567,25 +6129,6 @@ function createComposer(options = {}) {
     if (warnType !== "translate exists" && // for not `te` (e.g `t`)
     isNumber(ret) && ret === NOT_REOSLVED || warnType === "translate exists" && !ret) {
       const [key, arg2] = argumentParser();
-      if (define_process_env_default.NODE_ENV !== "production" && __root && isString(key) && isResolvedTranslateMessage(warnType, arg2)) {
-        if (_fallbackRoot && (isTranslateFallbackWarn(_fallbackWarn, key) || isTranslateMissingWarn(_missingWarn, key))) {
-          warn(getWarnMessage(I18nWarnCodes.FALLBACK_TO_ROOT, {
-            key,
-            type: warnType
-          }));
-        }
-        if (define_process_env_default.NODE_ENV !== "production") {
-          const { __v_emitter: emitter } = _context;
-          if (emitter && _fallbackRoot) {
-            emitter.emit("fallback", {
-              type: warnType,
-              key,
-              to: "global",
-              groupId: `${warnType}:${key}`
-            });
-          }
-        }
-      }
       return __root && _fallbackRoot ? fallbackSuccess(__root) : fallbackFail(key);
     } else if (successCondition(ret)) {
       return ret;
@@ -6826,347 +6369,7 @@ function createComposer(options = {}) {
     composer[DatetimePartsSymbol] = datetimeParts;
     composer[NumberPartsSymbol] = numberParts;
   }
-  if (define_process_env_default.NODE_ENV !== "production") {
-    composer[EnableEmitter] = (emitter) => {
-      _context.__v_emitter = emitter;
-    };
-    composer[DisableEmitter] = () => {
-      _context.__v_emitter = void 0;
-    };
-  }
   return composer;
-}
-const VUE_I18N_COMPONENT_TYPES = "vue-i18n: composer properties";
-const VueDevToolsLabels = {
-  "vue-devtools-plugin-vue-i18n": "Vue I18n DevTools",
-  "vue-i18n-resource-inspector": "Vue I18n DevTools",
-  "vue-i18n-timeline": "Vue I18n"
-};
-const VueDevToolsPlaceholders = {
-  "vue-i18n-resource-inspector": "Search for scopes ..."
-};
-const VueDevToolsTimelineColors = {
-  "vue-i18n-timeline": 16764185
-};
-let devtoolsApi;
-async function enableDevTools(app, i18n) {
-  return new Promise((resolve2, reject) => {
-    try {
-      setupDevtoolsPlugin({
-        id: "vue-devtools-plugin-vue-i18n",
-        label: VueDevToolsLabels["vue-devtools-plugin-vue-i18n"],
-        packageName: "vue-i18n",
-        homepage: "https://vue-i18n.intlify.dev",
-        logo: "https://vue-i18n.intlify.dev/vue-i18n-devtools-logo.png",
-        componentStateTypes: [VUE_I18N_COMPONENT_TYPES],
-        app
-        // eslint-disable-line @typescript-eslint/no-explicit-any
-      }, (api) => {
-        devtoolsApi = api;
-        api.on.visitComponentTree(({ componentInstance, treeNode }) => {
-          updateComponentTreeTags(componentInstance, treeNode, i18n);
-        });
-        api.on.inspectComponent(({ componentInstance, instanceData }) => {
-          if (componentInstance.vnode.el && componentInstance.vnode.el.__VUE_I18N__ && instanceData) {
-            if (i18n.mode === "legacy") {
-              if (componentInstance.vnode.el.__VUE_I18N__ !== i18n.global.__composer) {
-                inspectComposer(instanceData, componentInstance.vnode.el.__VUE_I18N__);
-              }
-            } else {
-              inspectComposer(instanceData, componentInstance.vnode.el.__VUE_I18N__);
-            }
-          }
-        });
-        api.addInspector({
-          id: "vue-i18n-resource-inspector",
-          label: VueDevToolsLabels["vue-i18n-resource-inspector"],
-          icon: "language",
-          treeFilterPlaceholder: VueDevToolsPlaceholders["vue-i18n-resource-inspector"]
-        });
-        api.on.getInspectorTree((payload) => {
-          if (payload.app === app && payload.inspectorId === "vue-i18n-resource-inspector") {
-            registerScope(payload, i18n);
-          }
-        });
-        const roots = /* @__PURE__ */ new Map();
-        api.on.getInspectorState(async (payload) => {
-          if (payload.app === app && payload.inspectorId === "vue-i18n-resource-inspector") {
-            api.unhighlightElement();
-            inspectScope(payload, i18n);
-            if (payload.nodeId === "global") {
-              if (!roots.has(payload.app)) {
-                const [root] = await api.getComponentInstances(payload.app);
-                roots.set(payload.app, root);
-              }
-              api.highlightElement(roots.get(payload.app));
-            } else {
-              const instance = getComponentInstance(payload.nodeId, i18n);
-              instance && api.highlightElement(instance);
-            }
-          }
-        });
-        api.on.editInspectorState((payload) => {
-          if (payload.app === app && payload.inspectorId === "vue-i18n-resource-inspector") {
-            editScope(payload, i18n);
-          }
-        });
-        api.addTimelineLayer({
-          id: "vue-i18n-timeline",
-          label: VueDevToolsLabels["vue-i18n-timeline"],
-          color: VueDevToolsTimelineColors["vue-i18n-timeline"]
-        });
-        resolve2(true);
-      });
-    } catch (e) {
-      console.error(e);
-      reject(false);
-    }
-  });
-}
-function getI18nScopeLable(instance) {
-  return instance.type.name || instance.type.displayName || instance.type.__file || "Anonymous";
-}
-function updateComponentTreeTags(instance, treeNode, i18n) {
-  const global2 = i18n.mode === "composition" ? i18n.global : i18n.global.__composer;
-  if (instance && instance.vnode.el && instance.vnode.el.__VUE_I18N__) {
-    if (instance.vnode.el.__VUE_I18N__ !== global2) {
-      const tag = {
-        label: `i18n (${getI18nScopeLable(instance)} Scope)`,
-        textColor: 0,
-        backgroundColor: 16764185
-      };
-      treeNode.tags.push(tag);
-    }
-  }
-}
-function inspectComposer(instanceData, composer) {
-  const type = VUE_I18N_COMPONENT_TYPES;
-  instanceData.state.push({
-    type,
-    key: "locale",
-    editable: true,
-    value: composer.locale.value
-  });
-  instanceData.state.push({
-    type,
-    key: "availableLocales",
-    editable: false,
-    value: composer.availableLocales
-  });
-  instanceData.state.push({
-    type,
-    key: "fallbackLocale",
-    editable: true,
-    value: composer.fallbackLocale.value
-  });
-  instanceData.state.push({
-    type,
-    key: "inheritLocale",
-    editable: true,
-    value: composer.inheritLocale
-  });
-  instanceData.state.push({
-    type,
-    key: "messages",
-    editable: false,
-    value: getLocaleMessageValue(composer.messages.value)
-  });
-  {
-    instanceData.state.push({
-      type,
-      key: "datetimeFormats",
-      editable: false,
-      value: composer.datetimeFormats.value
-    });
-    instanceData.state.push({
-      type,
-      key: "numberFormats",
-      editable: false,
-      value: composer.numberFormats.value
-    });
-  }
-}
-function getLocaleMessageValue(messages) {
-  const value = {};
-  Object.keys(messages).forEach((key) => {
-    const v = messages[key];
-    if (isFunction(v) && "source" in v) {
-      value[key] = getMessageFunctionDetails(v);
-    } else if (isMessageAST(v) && v.loc && v.loc.source) {
-      value[key] = v.loc.source;
-    } else if (isObject$2(v)) {
-      value[key] = getLocaleMessageValue(v);
-    } else {
-      value[key] = v;
-    }
-  });
-  return value;
-}
-const ESC = {
-  "<": "&lt;",
-  ">": "&gt;",
-  '"': "&quot;",
-  "&": "&amp;"
-};
-function escape(s) {
-  return s.replace(/[<>"&]/g, escapeChar);
-}
-function escapeChar(a) {
-  return ESC[a] || a;
-}
-function getMessageFunctionDetails(func) {
-  const argString = func.source ? `("${escape(func.source)}")` : `(?)`;
-  return {
-    _custom: {
-      type: "function",
-      display: `<span>ƒ</span> ${argString}`
-    }
-  };
-}
-function registerScope(payload, i18n) {
-  payload.rootNodes.push({
-    id: "global",
-    label: "Global Scope"
-  });
-  const global2 = i18n.mode === "composition" ? i18n.global : i18n.global.__composer;
-  for (const [keyInstance, instance] of i18n.__instances) {
-    const composer = i18n.mode === "composition" ? instance : instance.__composer;
-    if (global2 === composer) {
-      continue;
-    }
-    payload.rootNodes.push({
-      id: composer.id.toString(),
-      label: `${getI18nScopeLable(keyInstance)} Scope`
-    });
-  }
-}
-function getComponentInstance(nodeId, i18n) {
-  let instance = null;
-  if (nodeId !== "global") {
-    for (const [component, composer] of i18n.__instances.entries()) {
-      if (composer.id.toString() === nodeId) {
-        instance = component;
-        break;
-      }
-    }
-  }
-  return instance;
-}
-function getComposer$2(nodeId, i18n) {
-  if (nodeId === "global") {
-    return i18n.mode === "composition" ? i18n.global : i18n.global.__composer;
-  } else {
-    const instance = Array.from(i18n.__instances.values()).find((item) => item.id.toString() === nodeId);
-    if (instance) {
-      return i18n.mode === "composition" ? instance : instance.__composer;
-    } else {
-      return null;
-    }
-  }
-}
-function inspectScope(payload, i18n) {
-  const composer = getComposer$2(payload.nodeId, i18n);
-  if (composer) {
-    payload.state = makeScopeInspectState(composer);
-  }
-  return null;
-}
-function makeScopeInspectState(composer) {
-  const state = {};
-  const localeType = "Locale related info";
-  const localeStates = [
-    {
-      type: localeType,
-      key: "locale",
-      editable: true,
-      value: composer.locale.value
-    },
-    {
-      type: localeType,
-      key: "fallbackLocale",
-      editable: true,
-      value: composer.fallbackLocale.value
-    },
-    {
-      type: localeType,
-      key: "availableLocales",
-      editable: false,
-      value: composer.availableLocales
-    },
-    {
-      type: localeType,
-      key: "inheritLocale",
-      editable: true,
-      value: composer.inheritLocale
-    }
-  ];
-  state[localeType] = localeStates;
-  const localeMessagesType = "Locale messages info";
-  const localeMessagesStates = [
-    {
-      type: localeMessagesType,
-      key: "messages",
-      editable: false,
-      value: getLocaleMessageValue(composer.messages.value)
-    }
-  ];
-  state[localeMessagesType] = localeMessagesStates;
-  {
-    const datetimeFormatsType = "Datetime formats info";
-    const datetimeFormatsStates = [
-      {
-        type: datetimeFormatsType,
-        key: "datetimeFormats",
-        editable: false,
-        value: composer.datetimeFormats.value
-      }
-    ];
-    state[datetimeFormatsType] = datetimeFormatsStates;
-    const numberFormatsType = "Datetime formats info";
-    const numberFormatsStates = [
-      {
-        type: numberFormatsType,
-        key: "numberFormats",
-        editable: false,
-        value: composer.numberFormats.value
-      }
-    ];
-    state[numberFormatsType] = numberFormatsStates;
-  }
-  return state;
-}
-function addTimelineEvent(event, payload) {
-  if (devtoolsApi) {
-    let groupId;
-    if (payload && "groupId" in payload) {
-      groupId = payload.groupId;
-      delete payload.groupId;
-    }
-    devtoolsApi.addTimelineEvent({
-      layerId: "vue-i18n-timeline",
-      event: {
-        title: event,
-        groupId,
-        time: Date.now(),
-        meta: {},
-        data: payload || {},
-        logType: event === "compile-error" ? "error" : event === "fallback" || event === "missing" ? "warning" : "default"
-      }
-    });
-  }
-}
-function editScope(payload, i18n) {
-  const composer = getComposer$2(payload.nodeId, i18n);
-  if (composer) {
-    const [field] = payload.path;
-    if (field === "locale" && isString(payload.state.value)) {
-      composer.locale.value = payload.state.value;
-    } else if (field === "fallbackLocale" && (isString(payload.state.value) || isArray(payload.state.value) || isObject$2(payload.state.value))) {
-      composer.fallbackLocale.value = payload.state.value;
-    } else if (field === "inheritLocale" && isBoolean(payload.state.value)) {
-      composer.inheritLocale = payload.state.value;
-    }
-  }
 }
 const baseFormatProps = {
   tag: {
@@ -7437,7 +6640,7 @@ function createI18n(options = {}, VueI18nLegacy) {
   const __globalInjection = isBoolean(options.globalInjection) ? options.globalInjection : true;
   const __instances = /* @__PURE__ */ new Map();
   const [globalScope, __global] = createGlobal(options);
-  const symbol = /* @__PURE__ */ makeSymbol(define_process_env_default.NODE_ENV !== "production" ? "vue-i18n" : "");
+  const symbol = /* @__PURE__ */ makeSymbol("");
   function __getInstance(component) {
     return __instances.get(component) || null;
   }
@@ -7454,9 +6657,6 @@ function createI18n(options = {}, VueI18nLegacy) {
     },
     // install plugin
     async install(app, ...options2) {
-      if ((define_process_env_default.NODE_ENV !== "production" || false) && true) {
-        app.__VUE_I18N__ = i18n;
-      }
       app.__VUE_I18N_SYMBOL__ = symbol;
       app.provide(app.__VUE_I18N_SYMBOL__, i18n);
       if (isPlainObject(options2[0])) {
@@ -7477,18 +6677,6 @@ function createI18n(options = {}, VueI18nLegacy) {
         i18n.dispose();
         unmountApp();
       };
-      if ((define_process_env_default.NODE_ENV !== "production" || false) && true) {
-        const ret = await enableDevTools(app, i18n);
-        if (!ret) {
-          throw createI18nError(I18nErrorCodes.CANNOT_SETUP_VUE_DEVTOOLS_PLUGIN);
-        }
-        const emitter = createEmitter();
-        {
-          const _composer = __global;
-          _composer[EnableEmitter] && _composer[EnableEmitter](emitter);
-        }
-        emitter.on("*", addTimelineEvent);
-      }
     },
     // global accessor
     get global() {
@@ -7527,9 +6715,6 @@ function useI18n(options = {}) {
   if (scope === "parent") {
     let composer2 = getComposer(i18n, instance, options.__useComponent);
     if (composer2 == null) {
-      if (define_process_env_default.NODE_ENV !== "production") {
-        warn(getWarnMessage(I18nWarnCodes.NOT_FOUND_PARENT_SCOPE));
-      }
       composer2 = gl;
     }
     return composer2;
@@ -7645,11 +6830,6 @@ function injectGlobalFields(app, composer) {
 registerMessageCompiler(compile);
 registerMessageResolver(resolveValue);
 registerLocaleFallbacker(fallbackWithLocaleChain);
-if (define_process_env_default.NODE_ENV !== "production" || false) {
-  const target = getGlobalThis();
-  target.__INTLIFY__ = true;
-  setDevToolsHook(target.__INTLIFY_DEVTOOLS_GLOBAL_HOOK__);
-}
 function useRouteBaseName() {
   return wrapComposable(getRouteBaseName);
 }
@@ -7681,8 +6861,7 @@ const switch_locale_path_ssr_NflG9_QeVcJ1jVig0vCfxB_cZhpEMQ9U2ujRUiYbbVw = /* @_
       "g"
     );
     nuxt.hook("app:rendered", (ctx) => {
-      var _a;
-      if (((_a = ctx.renderResult) == null ? void 0 : _a.html) == null) return;
+      if (ctx.renderResult?.html == null) return;
       ctx.renderResult.html = ctx.renderResult.html.replaceAll(
         switchLocalePathLinkWrapperExpr,
         (match, p1) => match.replace(/href="([^"]+)"/, `href="${encodeURI(switchLocalePath2(p1 ?? ""))}"`)
@@ -7735,23 +6914,23 @@ function extendI18n(i18n, { extendComposer, extendComposerInstance }) {
   i18n.install = (app, ...options) => {
     const pluginOptions = assign({}, options[0]);
     pluginOptions.__composerExtend = (c) => {
-      extendComposerInstance(c, getComposer$3(i18n));
+      extendComposerInstance(c, getComposer$2(i18n));
       return () => {
       };
     };
     if (i18n.mode === "legacy") {
       pluginOptions.__vueI18nExtend = (vueI18n) => {
-        extendComposerInstance(vueI18n, getComposer$3(vueI18n));
+        extendComposerInstance(vueI18n, getComposer$2(vueI18n));
         return () => {
         };
       };
     }
     Reflect.apply(installI18n, i18n, [app, pluginOptions]);
-    const globalComposer = getComposer$3(i18n);
+    const globalComposer = getComposer$2(i18n);
     scope.run(() => {
       extendComposer(globalComposer);
       if (i18n.mode === "legacy" && isVueI18n(i18n.global)) {
-        extendComposerInstance(i18n.global, getComposer$3(i18n.global));
+        extendComposerInstance(i18n.global, getComposer$2(i18n.global));
       }
     });
     if (i18n.mode === "composition" && app.config.globalProperties.$i18n != null) {
@@ -7770,7 +6949,6 @@ const i18n_EI7LsD1KYQADczz5hrChviGQCdVM8yUkvFEZLJpmnvM = /* @__PURE__ */ defineN
   name: "i18n:plugin",
   parallel: parallelPlugin,
   async setup(_nuxt) {
-    var _a;
     let __temp, __restore;
     Object.defineProperty(_nuxt.versions, "nuxtI18n", { get: () => "9.5.4" });
     const nuxt = useNuxtApp();
@@ -7784,13 +6962,13 @@ const i18n_EI7LsD1KYQADczz5hrChviGQCdVM8yUkvFEZLJpmnvM = /* @__PURE__ */ defineN
       baseUrl: extendBaseUrl(nuxt)
     };
     const vueI18nOptions = ([__temp, __restore] = executeAsync(() => loadVueI18nOptions(vueI18nConfigs, useNuxtApp())), __temp = await __temp, __restore(), __temp);
-    vueI18nOptions.messages || (vueI18nOptions.messages = {});
-    vueI18nOptions.fallbackLocale ?? (vueI18nOptions.fallbackLocale = false);
+    vueI18nOptions.messages ||= {};
+    vueI18nOptions.fallbackLocale ??= false;
     if (defaultLocaleDomain) {
       vueI18nOptions.locale = defaultLocaleDomain;
     }
     for (const l of localeCodes) {
-      (_a = vueI18nOptions.messages)[l] ?? (_a[l] = {});
+      vueI18nOptions.messages[l] ??= {};
     }
     const i18n = createI18n(vueI18nOptions);
     nuxt._vueI18n = i18n;
@@ -7848,10 +7026,9 @@ const i18n_EI7LsD1KYQADczz5hrChviGQCdVM8yUkvFEZLJpmnvM = /* @__PURE__ */ defineN
         });
         composer.onLanguageSwitched = (oldLocale, newLocale) => nuxt.callHook("i18n:localeSwitched", { oldLocale, newLocale });
         composer.finalizePendingLocaleChange = async () => {
-          var _a2;
           if (!i18n.__pendingLocale) return;
           i18n.__setLocale(i18n.__pendingLocale);
-          (_a2 = i18n.__resolvePendingLocalePromise) == null ? void 0 : _a2.call(i18n);
+          i18n.__resolvePendingLocalePromise?.();
           i18n.__pendingLocale = void 0;
         };
         composer.waitForPendingLocaleChange = async () => {
@@ -8063,7 +7240,7 @@ function useToggleScope(source, fn) {
   function start() {
     scope = effectScope();
     scope.run(() => fn.length ? fn(() => {
-      scope == null ? void 0 : scope.stop();
+      scope?.stop();
       start();
     }) : fn());
   }
@@ -8071,14 +7248,14 @@ function useToggleScope(source, fn) {
     if (active && !scope) {
       start();
     } else if (!active) {
-      scope == null ? void 0 : scope.stop();
+      scope?.stop();
       scope = void 0;
     }
   }, {
     immediate: true
   });
   onScopeDispose(() => {
-    scope == null ? void 0 : scope.stop();
+    scope?.stop();
   });
 }
 const IN_BROWSER = false;
@@ -8154,7 +7331,7 @@ function isObject$1(obj) {
 function refElement(obj) {
   if (obj && "$el" in obj) {
     const el = obj.$el;
-    if ((el == null ? void 0 : el.nodeType) === Node.TEXT_NODE) {
+    if (el?.nodeType === Node.TEXT_NODE) {
       return el.nextElementSibling;
     }
     return el;
@@ -8392,22 +7569,21 @@ function getNextElement(elements, location, condition) {
   do {
     idx += inc;
     _el = elements[idx];
-  } while ((!_el || _el.offsetParent == null || !((condition == null ? void 0 : condition(_el)) ?? true)) && idx < elements.length && idx >= 0);
+  } while ((!_el || _el.offsetParent == null || !(condition?.(_el) ?? true)) && idx < elements.length && idx >= 0);
   return _el;
 }
 function focusChild(el, location) {
-  var _a, _b, _c, _d;
   const focusable = focusableChildren(el);
   if (!location) {
     if (el === (void 0).activeElement || !el.contains((void 0).activeElement)) {
-      (_a = focusable[0]) == null ? void 0 : _a.focus();
+      focusable[0]?.focus();
     }
   } else if (location === "first") {
-    (_b = focusable[0]) == null ? void 0 : _b.focus();
+    focusable[0]?.focus();
   } else if (location === "last") {
-    (_c = focusable.at(-1)) == null ? void 0 : _c.focus();
+    focusable.at(-1)?.focus();
   } else if (typeof location === "number") {
-    (_d = focusable[location]) == null ? void 0 : _d.focus();
+    focusable[location]?.focus();
   } else {
     const _el = getNextElement(focusable, location);
     if (_el) _el.focus();
@@ -8557,7 +7733,7 @@ function APCAcontrast(text, background) {
     outputContrast = SAPC < loClip ? 0 : SAPC < loConThresh ? SAPC - SAPC * loConFactor * loConOffset : SAPC - loConOffset;
   } else {
     const SAPC = (Ybg ** revBG - Ytxt ** revTXT) * scaleWoB;
-    outputContrast = SAPC > -1e-3 ? 0 : SAPC > -0.078 ? SAPC - SAPC * loConFactor * loConOffset : SAPC + loConOffset;
+    outputContrast = SAPC > -loClip ? 0 : SAPC > -loConThresh ? SAPC - SAPC * loConFactor * loConOffset : SAPC + loConOffset;
   }
   return outputContrast * 100;
 }
@@ -8846,7 +8022,7 @@ function getCurrentInstance(name, message) {
 function getCurrentInstanceName() {
   let name = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : "composables";
   const vm = getCurrentInstance(name).type;
-  return toKebabCase((vm == null ? void 0 : vm.aliasName) || (vm == null ? void 0 : vm.name));
+  return toKebabCase(vm?.aliasName || vm?.name);
 }
 let _uid = 0;
 let _map = /* @__PURE__ */ new WeakMap();
@@ -8873,7 +8049,7 @@ function injectSelf(key) {
   }
   return void 0;
 }
-const DefaultsSymbol = Symbol.for("vuetify:defaults");
+const DefaultsSymbol = /* @__PURE__ */ Symbol.for("vuetify:defaults");
 function createDefaults(options) {
   return ref(options);
 }
@@ -8886,11 +8062,11 @@ function provideDefaults(defaults2, options) {
   const injectedDefaults = injectDefaults();
   const providedDefaults = ref(defaults2);
   const newDefaults = computed(() => {
-    const disabled = unref(options == null ? void 0 : options.disabled);
+    const disabled = unref(options?.disabled);
     if (disabled) return injectedDefaults.value;
-    const scoped = unref(options == null ? void 0 : options.scoped);
-    const reset = unref(options == null ? void 0 : options.reset);
-    const root = unref(options == null ? void 0 : options.root);
+    const scoped = unref(options?.scoped);
+    const reset = unref(options?.reset);
+    const root = unref(options?.root);
     if (providedDefaults.value == null && !(scoped || reset || root)) return injectedDefaults.value;
     let properties = mergeDeep(providedDefaults.value, {
       prev: injectedDefaults.value
@@ -8917,8 +8093,7 @@ function provideDefaults(defaults2, options) {
   return newDefaults;
 }
 function propIsDefined(vnode, prop) {
-  var _a, _b;
-  return typeof ((_a = vnode.props) == null ? void 0 : _a[prop]) !== "undefined" || typeof ((_b = vnode.props) == null ? void 0 : _b[toKebabCase(prop)]) !== "undefined";
+  return typeof vnode.props?.[prop] !== "undefined" || typeof vnode.props?.[toKebabCase(prop)] !== "undefined";
 }
 function internalUseDefaults() {
   let props = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
@@ -8929,18 +8104,14 @@ function internalUseDefaults() {
   if (!name) {
     throw new Error("[Vuetify] Could not determine component name");
   }
-  const componentDefaults = computed(() => {
-    var _a;
-    return (_a = defaults2.value) == null ? void 0 : _a[props._as ?? name];
-  });
+  const componentDefaults = computed(() => defaults2.value?.[props._as ?? name]);
   const _props = new Proxy(props, {
     get(target, prop) {
-      var _a, _b, _c, _d, _e, _f, _g;
       const propValue = Reflect.get(target, prop);
       if (prop === "class" || prop === "style") {
-        return [(_a = componentDefaults.value) == null ? void 0 : _a[prop], propValue].filter((v) => v != null);
+        return [componentDefaults.value?.[prop], propValue].filter((v) => v != null);
       } else if (typeof prop === "string" && !propIsDefined(vm.vnode, prop)) {
-        return ((_b = componentDefaults.value) == null ? void 0 : _b[prop]) !== void 0 ? (_c = componentDefaults.value) == null ? void 0 : _c[prop] : ((_e = (_d = defaults2.value) == null ? void 0 : _d.global) == null ? void 0 : _e[prop]) !== void 0 ? (_g = (_f = defaults2.value) == null ? void 0 : _f.global) == null ? void 0 : _g[prop] : propValue;
+        return componentDefaults.value?.[prop] !== void 0 ? componentDefaults.value?.[prop] : defaults2.value?.global?.[prop] !== void 0 ? defaults2.value?.global?.[prop] : propValue;
       }
       return propValue;
     }
@@ -8960,7 +8131,7 @@ function internalUseDefaults() {
   function provideSubDefaults() {
     const injected = injectSelf(DefaultsSymbol, vm);
     provide(DefaultsSymbol, computed(() => {
-      return _subcomponentDefaults.value ? mergeDeep((injected == null ? void 0 : injected.value) ?? {}, _subcomponentDefaults.value) : injected == null ? void 0 : injected.value;
+      return _subcomponentDefaults.value ? mergeDeep(injected?.value ?? {}, _subcomponentDefaults.value) : injected?.value;
     }));
   }
   return {
@@ -9015,13 +8186,11 @@ function useProxiedModel(props, prop, defaultValue) {
   const kebabProp = toKebabCase(prop);
   const checkKebab = kebabProp !== prop;
   const isControlled = checkKebab ? computed(() => {
-    var _a, _b, _c, _d;
     void props[prop];
-    return !!((((_a = vm.vnode.props) == null ? void 0 : _a.hasOwnProperty(prop)) || ((_b = vm.vnode.props) == null ? void 0 : _b.hasOwnProperty(kebabProp))) && (((_c = vm.vnode.props) == null ? void 0 : _c.hasOwnProperty(`onUpdate:${prop}`)) || ((_d = vm.vnode.props) == null ? void 0 : _d.hasOwnProperty(`onUpdate:${kebabProp}`))));
+    return !!((vm.vnode.props?.hasOwnProperty(prop) || vm.vnode.props?.hasOwnProperty(kebabProp)) && (vm.vnode.props?.hasOwnProperty(`onUpdate:${prop}`) || vm.vnode.props?.hasOwnProperty(`onUpdate:${kebabProp}`)));
   }) : computed(() => {
-    var _a, _b;
     void props[prop];
-    return !!(((_a = vm.vnode.props) == null ? void 0 : _a.hasOwnProperty(prop)) && ((_b = vm.vnode.props) == null ? void 0 : _b.hasOwnProperty(`onUpdate:${prop}`)));
+    return !!(vm.vnode.props?.hasOwnProperty(prop) && vm.vnode.props?.hasOwnProperty(`onUpdate:${prop}`));
   });
   useToggleScope(() => !isControlled.value, () => {
     watch(() => props[prop], (val) => {
@@ -9040,7 +8209,7 @@ function useProxiedModel(props, prop, defaultValue) {
         return;
       }
       internal.value = newValue;
-      vm == null ? void 0 : vm.emit(`update:${prop}`, newValue);
+      vm?.emit(`update:${prop}`, newValue);
     }
   });
   Object.defineProperty(model, "externalValue", {
@@ -9220,11 +8389,11 @@ function createProvideFunction(state) {
   };
 }
 function createVuetifyAdapter(options) {
-  const current = shallowRef((options == null ? void 0 : options.locale) ?? "en");
-  const fallback = shallowRef((options == null ? void 0 : options.fallback) ?? "en");
+  const current = shallowRef(options?.locale ?? "en");
+  const fallback = shallowRef(options?.fallback ?? "en");
   const messages = ref({
     en,
-    ...options == null ? void 0 : options.messages
+    ...options?.messages
   });
   return {
     name: "vuetify",
@@ -9240,12 +8409,12 @@ function createVuetifyAdapter(options) {
     })
   };
 }
-const LocaleSymbol = Symbol.for("vuetify:locale");
+const LocaleSymbol = /* @__PURE__ */ Symbol.for("vuetify:locale");
 function isLocaleInstance(obj) {
   return obj.name != null;
 }
 function createLocale(options) {
-  const i18n = (options == null ? void 0 : options.adapter) && isLocaleInstance(options == null ? void 0 : options.adapter) ? options == null ? void 0 : options.adapter : createVuetifyAdapter(options);
+  const i18n = options?.adapter && isLocaleInstance(options?.adapter) ? options?.adapter : createVuetifyAdapter(options);
   const rtl = createRtl(i18n, options);
   return {
     ...i18n,
@@ -9316,7 +8485,7 @@ function genDefaults$3() {
   };
 }
 function createRtl(i18n, options) {
-  const rtl = ref((options == null ? void 0 : options.rtl) ?? genDefaults$3());
+  const rtl = ref(options?.rtl ?? genDefaults$3());
   const isRtl = computed(() => rtl.value[i18n.current.value] ?? false);
   return {
     isRtl,
@@ -9578,7 +8747,7 @@ function getWeekdays(locale, firstDayOfWeek) {
 }
 function format(value, formatString, locale, formats) {
   const newDate = date(value) ?? /* @__PURE__ */ new Date();
-  const customFormat = formats == null ? void 0 : formats[formatString];
+  const customFormat = formats?.[formatString];
   if (typeof customFormat === "function") {
     return customFormat(newDate, formatString, locale);
   }
@@ -10064,8 +9233,8 @@ class VuetifyDateAdapter {
     return endOfYear(date2);
   }
 }
-const DateOptionsSymbol = Symbol.for("vuetify:date-options");
-const DateAdapterSymbol = Symbol.for("vuetify:date-adapter");
+const DateOptionsSymbol = /* @__PURE__ */ Symbol.for("vuetify:date-options");
+const DateAdapterSymbol = /* @__PURE__ */ Symbol.for("vuetify:date-adapter");
 function createDate(options, locale) {
   const _options = mergeDeep({
     adapter: VuetifyDateAdapter,
@@ -10129,7 +9298,7 @@ function createInstance(options, locale) {
   return instance;
 }
 const breakpoints = ["sm", "md", "lg", "xl", "xxl"];
-const DisplaySymbol = Symbol.for("vuetify:display");
+const DisplaySymbol = /* @__PURE__ */ Symbol.for("vuetify:display");
 const defaultDisplayOptions = {
   mobileBreakpoint: "lg",
   thresholds: {
@@ -10268,7 +9437,7 @@ function useDisplay() {
     mobile
   };
 }
-const GoToSymbol = Symbol.for("vuetify:goto");
+const GoToSymbol = /* @__PURE__ */ Symbol.for("vuetify:goto");
 function genDefaults$2() {
   return {
     container: void 0,
@@ -10317,8 +9486,8 @@ function createGoTo(options, locale) {
 }
 async function scrollTo$1(_target, _options, horizontal, goTo) {
   const property = horizontal ? "scrollLeft" : "scrollTop";
-  const options = mergeDeep((goTo == null ? void 0 : goTo.options) ?? genDefaults$2(), _options);
-  const rtl = goTo == null ? void 0 : goTo.rtl.value;
+  const options = mergeDeep(goTo?.options ?? genDefaults$2(), _options);
+  const rtl = goTo?.rtl.value;
   const target = (typeof _target === "number" ? _target : getTarget(_target)) ?? 0;
   const container = options.container === "parent" && target instanceof HTMLElement ? target.parentElement : getContainer(options.container);
   const ease = typeof options.easing === "function" ? options.easing : options.patterns[options.easing];
@@ -10446,7 +9615,7 @@ const mdi = {
   })
 };
 const IconValue = [String, Function, Object, Array];
-const IconSymbol = Symbol.for("vuetify:icons");
+const IconSymbol = /* @__PURE__ */ Symbol.for("vuetify:icons");
 const makeIconProps = propsFactory({
   icon: {
     type: IconValue
@@ -10467,10 +9636,7 @@ const VComponentIcon = genericComponent()({
     return () => {
       const Icon = props.icon;
       return createVNode(props.tag, null, {
-        default: () => {
-          var _a;
-          return [props.icon ? createVNode(Icon, null, null) : (_a = slots.default) == null ? void 0 : _a.call(slots)];
-        }
+        default: () => [props.icon ? createVNode(Icon, null, null) : slots.default?.()]
       });
     };
   }
@@ -10539,7 +9705,7 @@ function genDefaults$1() {
 }
 function createIcons(options) {
   const sets = genDefaults$1();
-  const defaultSet = (options == null ? void 0 : options.defaultSet) ?? "mdi";
+  const defaultSet = options?.defaultSet ?? "mdi";
   if (defaultSet === "mdi" && !sets.mdi) {
     sets.mdi = mdi;
   }
@@ -10560,7 +9726,6 @@ const useIcon = (props) => {
   const icons2 = inject$1(IconSymbol);
   if (!icons2) throw new Error("Missing Vuetify Icons provide!");
   const iconData = computed(() => {
-    var _a;
     const iconAlias = unref(props);
     if (!iconAlias) return {
       component: VComponentIcon
@@ -10569,7 +9734,7 @@ const useIcon = (props) => {
     if (typeof icon === "string") {
       icon = icon.trim();
       if (icon.startsWith("$")) {
-        icon = (_a = icons2.aliases) == null ? void 0 : _a[icon.slice(1)];
+        icon = icons2.aliases?.[icon.slice(1)];
       }
     }
     if (!icon) consoleWarn(`Could not find aliased icon "${iconAlias}"`);
@@ -10596,7 +9761,7 @@ const useIcon = (props) => {
     iconData
   };
 };
-const ThemeSymbol = Symbol.for("vuetify:theme");
+const ThemeSymbol = /* @__PURE__ */ Symbol.for("vuetify:theme");
 const makeThemeProps = propsFactory({
   theme: String
 }, "theme");
@@ -10687,7 +9852,6 @@ function genDefaults() {
   };
 }
 function parseThemeOptions() {
-  var _a, _b;
   let options = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : genDefaults();
   const defaults2 = genDefaults();
   if (!options) return {
@@ -10696,7 +9860,7 @@ function parseThemeOptions() {
   };
   const themes2 = {};
   for (const [key, theme] of Object.entries(options.themes ?? {})) {
-    const defaultTheme = theme.dark || key === "dark" ? (_a = defaults2.themes) == null ? void 0 : _a.dark : (_b = defaults2.themes) == null ? void 0 : _b.light;
+    const defaultTheme = theme.dark || key === "dark" ? defaults2.themes?.dark : defaults2.themes?.light;
     themes2[key] = mergeDeep(defaultTheme, theme);
   }
   return mergeDeep(defaults2, {
@@ -10740,9 +9904,8 @@ function createTheme(options) {
   });
   const current = computed(() => computedThemes.value[name.value]);
   const styles = computed(() => {
-    var _a;
     const lines = [];
-    if ((_a = current.value) == null ? void 0 : _a.dark) {
+    if (current.value?.dark) {
       createCssClass(lines, ":root", ["color-scheme: dark"]);
     }
     createCssClass(lines, ":root", genCssVariables(current.value));
@@ -10857,8 +10020,8 @@ function useResizeObserver(callback) {
     contentRect: readonly(contentRect)
   };
 }
-const VuetifyLayoutKey = Symbol.for("vuetify:layout");
-const VuetifyLayoutItemKey = Symbol.for("vuetify:layout-item");
+const VuetifyLayoutKey = /* @__PURE__ */ Symbol.for("vuetify:layout");
+const VuetifyLayoutItemKey = /* @__PURE__ */ Symbol.for("vuetify:layout-item");
 const ROOT_ZINDEX = 1e3;
 const makeLayoutProps = propsFactory({
   overlaps: {
@@ -10960,10 +10123,7 @@ function createLayout(props) {
     const uniquePriorities = [...new Set([...priorities.values()].map((p) => p.value))].sort((a, b) => a - b);
     const layout = [];
     for (const p of uniquePriorities) {
-      const items2 = registered.value.filter((id) => {
-        var _a;
-        return ((_a = priorities.get(id)) == null ? void 0 : _a.value) === p;
-      });
+      const items2 = registered.value.filter((id) => priorities.get(id)?.value === p);
       layout.push(...items2);
     }
     return generateLayers(layout, positions, layoutSizes, activeItems);
@@ -11025,7 +10185,7 @@ function createLayout(props) {
       layoutSizes.set(id, layoutSize);
       activeItems.set(id, active);
       disableTransitions && disabledTransitions.set(id, disableTransitions);
-      const instances = findChildrenWithProvide(VuetifyLayoutItemKey, rootVm == null ? void 0 : rootVm.vnode);
+      const instances = findChildrenWithProvide(VuetifyLayoutItemKey, rootVm?.vnode);
       const instanceIndex = instances.indexOf(vm);
       if (instanceIndex > -1) registered.value.splice(instanceIndex, 0, id);
       else registered.value.push(id);
@@ -11176,9 +10336,8 @@ function createVuetify() {
 const version = "3.6.13";
 createVuetify.version = version;
 function inject(key) {
-  var _a, _b;
   const vm = this.$;
-  const provides = ((_a = vm.parent) == null ? void 0 : _a.provides) ?? ((_b = vm.vnode.appContext) == null ? void 0 : _b.provides);
+  const provides = vm.parent?.provides ?? vm.vnode.appContext?.provides;
   if (provides && key in provides) {
     return provides[key];
   }
@@ -11458,7 +10617,7 @@ function useGroupItem(props, injectKey) {
     throw new Error("[Vuetify] useGroupItem composable must be used inside a component setup function");
   }
   const id = getUid();
-  provide(Symbol.for(`${injectKey.description}:id`), id);
+  provide(/* @__PURE__ */ Symbol.for(`${injectKey.description}:id`), id);
   const group = inject$1(injectKey, null);
   if (!group) {
     if (!required) return group;
@@ -11513,8 +10672,8 @@ function useGroup(props, injectKey) {
   const groupVm = getCurrentInstance("useGroup");
   function register(item, vm) {
     const unwrapped = item;
-    const key = Symbol.for(`${injectKey.description}:id`);
-    const children = findChildrenWithProvide(key, groupVm == null ? void 0 : groupVm.vnode);
+    const key = /* @__PURE__ */ Symbol.for(`${injectKey.description}:id`);
+    const children = findChildrenWithProvide(key, groupVm?.vnode);
     const index = children.indexOf(vm);
     if (unref(unwrapped.value) == null) {
       unwrapped.value = index;
@@ -11539,7 +10698,7 @@ function useGroup(props, injectKey) {
   }
   function select(id, value) {
     const item = items.find((item2) => item2.id === id);
-    if (value && (item == null ? void 0 : item.disabled)) return;
+    if (value && item?.disabled) return;
     if (props.multiple) {
       const internalValue = selected.value.slice();
       const index = internalValue.findIndex((v) => v === id);
@@ -11600,7 +10759,7 @@ function getIds(items, modelValue) {
   modelValue.forEach((value) => {
     const item = items.find((item2) => deepEqual(value, item2.value));
     const itemByIndex = items[value];
-    if ((item == null ? void 0 : item.value) != null) {
+    if (item?.value != null) {
       ids.push(item.id);
     } else if (itemByIndex != null) {
       ids.push(itemByIndex.id);
@@ -11619,7 +10778,7 @@ function getValues(items, ids) {
   });
   return values;
 }
-const VBtnToggleSymbol = Symbol.for("vuetify:v-btn-toggle");
+const VBtnToggleSymbol = /* @__PURE__ */ Symbol.for("vuetify:v-btn-toggle");
 const makeVBtnToggleProps = propsFactory({
   ...makeVBtnGroupProps(),
   ...makeGroupProps()
@@ -11648,16 +10807,13 @@ const VBtnToggle = genericComponent()({
       }, btnGroupProps, {
         "style": props.style
       }), {
-        default: () => {
-          var _a;
-          return [(_a = slots.default) == null ? void 0 : _a.call(slots, {
-            isSelected,
-            next,
-            prev,
-            select,
-            selected
-          })];
-        }
+        default: () => [slots.default?.({
+          isSelected,
+          next,
+          prev,
+          select,
+          selected
+        })]
       });
     });
     return {
@@ -11694,10 +10850,7 @@ const VDefaultsProvider = genericComponent(false)({
       scoped,
       disabled
     });
-    return () => {
-      var _a;
-      return (_a = slots.default) == null ? void 0 : _a.call(slots);
-    };
+    return () => slots.default?.();
   }
 });
 const predefinedSizes = ["x-small", "small", "default", "large", "x-large"];
@@ -11762,10 +10915,9 @@ const VIcon = genericComponent()({
       textColorStyles
     } = useTextColor(toRef(props, "color"));
     useRender(() => {
-      var _a, _b;
-      const slotValue = (_a = slots.default) == null ? void 0 : _a.call(slots);
+      const slotValue = slots.default?.();
       if (slotValue) {
-        slotIcon.value = (_b = flattenFragments(slotValue).filter((node) => node.type === Text && node.children && typeof node.children === "string")[0]) == null ? void 0 : _b.children;
+        slotIcon.value = flattenFragments(slotValue).filter((node) => node.type === Text && node.children && typeof node.children === "string")[0]?.children;
       }
       const hasClick = !!(attrs.onClick || attrs.onClickOnce);
       return createVNode(iconData.value.component, {
@@ -12189,16 +11341,15 @@ function useLoader(props) {
   };
 }
 function LoaderSlot(props, _ref) {
-  var _a;
   let {
     slots
   } = _ref;
   return createVNode("div", {
     "class": `${props.name}__loader`
-  }, [((_a = slots.default) == null ? void 0 : _a.call(slots, {
+  }, [slots.default?.({
     color: props.color,
     isActive: props.active
-  })) || createVNode(VProgressLinear, {
+  }) || createVNode(VProgressLinear, {
     "absolute": props.absolute,
     "active": props.active,
     "color": props.color,
@@ -12227,21 +11378,16 @@ function usePosition(props) {
 }
 function useRoute() {
   const vm = getCurrentInstance("useRoute");
-  return computed(() => {
-    var _a;
-    return (_a = vm == null ? void 0 : vm.proxy) == null ? void 0 : _a.$route;
-  });
+  return computed(() => vm?.proxy?.$route);
 }
 function useRouter() {
-  var _a, _b;
-  return (_b = (_a = getCurrentInstance("useRouter")) == null ? void 0 : _a.proxy) == null ? void 0 : _b.$router;
+  return getCurrentInstance("useRouter")?.proxy?.$router;
 }
 function useLink(props, attrs) {
-  var _a, _b;
   const RouterLink = resolveDynamicComponent("RouterLink");
   const isLink = computed(() => !!(props.href || props.to));
   const isClickable = computed(() => {
-    return (isLink == null ? void 0 : isLink.value) || hasEvent(attrs, "click") || hasEvent(props, "click");
+    return isLink?.value || hasEvent(attrs, "click") || hasEvent(props, "click");
   });
   if (typeof RouterLink === "string" || !("useLink" in RouterLink)) {
     return {
@@ -12260,19 +11406,15 @@ function useLink(props, attrs) {
   return {
     isLink,
     isClickable,
-    route: (_a = link.value) == null ? void 0 : _a.route,
-    navigate: (_b = link.value) == null ? void 0 : _b.navigate,
+    route: link.value?.route,
+    navigate: link.value?.navigate,
     isActive: computed(() => {
-      var _a2, _b2, _c;
       if (!link.value) return false;
-      if (!props.exact) return ((_a2 = link.value.isActive) == null ? void 0 : _a2.value) ?? false;
-      if (!route2.value) return ((_b2 = link.value.isExactActive) == null ? void 0 : _b2.value) ?? false;
-      return ((_c = link.value.isExactActive) == null ? void 0 : _c.value) && deepEqual(link.value.route.value.query, route2.value.query);
+      if (!props.exact) return link.value.isActive?.value ?? false;
+      if (!route2.value) return link.value.isExactActive?.value ?? false;
+      return link.value.isExactActive?.value && deepEqual(link.value.route.value.query, route2.value.query);
     }),
-    href: computed(() => {
-      var _a2;
-      return props.to ? (_a2 = link.value) == null ? void 0 : _a2.route.value.href : props.href;
-    })
+    href: computed(() => props.to ? link.value?.route.value.href : props.href)
   };
 }
 const makeRouterProps = propsFactory({
@@ -12282,10 +11424,7 @@ const makeRouterProps = propsFactory({
   exact: Boolean
 }, "router");
 function useSelectLink(link, select) {
-  watch(() => {
-    var _a;
-    return (_a = link.isActive) == null ? void 0 : _a.value;
-  }, (isActive) => {
+  watch(() => link.isActive?.value, (isActive) => {
     if (link.isLink.value && isActive && select) {
       nextTick(() => {
         select(true);
@@ -12295,7 +11434,7 @@ function useSelectLink(link, select) {
     immediate: true
   });
 }
-const stopSymbol = Symbol("rippleStop");
+const stopSymbol = /* @__PURE__ */ Symbol("rippleStop");
 const DELAY_RIPPLE = 80;
 function transform(el, value) {
   el.style.transform = value;
@@ -12308,7 +11447,6 @@ function isKeyboardEvent(e) {
   return e.constructor.name === "KeyboardEvent";
 }
 const calculate = function(e, el) {
-  var _a;
   let value = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : {};
   let localX = 0;
   let localY = 0;
@@ -12320,7 +11458,7 @@ const calculate = function(e, el) {
   }
   let radius = 0;
   let scale = 0.3;
-  if ((_a = el._ripple) == null ? void 0 : _a.circle) {
+  if (el._ripple?.circle) {
     scale = 0.15;
     radius = el.clientWidth / 2;
     radius = value.center ? radius : radius + Math.sqrt((localX - radius) ** 2 + (localY - radius) ** 2) / 4;
@@ -12343,9 +11481,8 @@ const calculate = function(e, el) {
 const ripples = {
   /* eslint-disable max-statements */
   show(e, el) {
-    var _a;
     let value = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : {};
-    if (!((_a = el == null ? void 0 : el._ripple) == null ? void 0 : _a.enabled)) {
+    if (!el?._ripple?.enabled) {
       return;
     }
     const container = (void 0).createElement("span");
@@ -12384,8 +11521,7 @@ const ripples = {
     }, 0);
   },
   hide(el) {
-    var _a;
-    if (!((_a = el == null ? void 0 : el._ripple) == null ? void 0 : _a.enabled)) return;
+    if (!el?._ripple?.enabled) return;
     const ripples2 = el.getElementsByClassName("v-ripple__animation");
     if (ripples2.length === 0) return;
     const animation = ripples2[ripples2.length - 1];
@@ -12397,13 +11533,12 @@ const ripples = {
       animation.classList.remove("v-ripple__animation--in");
       animation.classList.add("v-ripple__animation--out");
       setTimeout(() => {
-        var _a2;
         const ripples3 = el.getElementsByClassName("v-ripple__animation");
         if (ripples3.length === 1 && el.dataset.previousPosition) {
           el.style.position = el.dataset.previousPosition;
           delete el.dataset.previousPosition;
         }
-        if (((_a2 = animation.parentNode) == null ? void 0 : _a2.parentNode) === el) el.removeChild(animation.parentNode);
+        if (animation.parentNode?.parentNode === el) el.removeChild(animation.parentNode);
       }, 300);
     }, delay);
   }
@@ -12414,7 +11549,7 @@ function isRippleEnabled(value) {
 function rippleShow(e) {
   const value = {};
   const element = e.currentTarget;
-  if (!(element == null ? void 0 : element._ripple) || element._ripple.touched || e[stopSymbol]) return;
+  if (!element?._ripple || element._ripple.touched || e[stopSymbol]) return;
   e[stopSymbol] = true;
   if (isTouchEvent(e)) {
     element._ripple.touched = true;
@@ -12432,8 +11567,7 @@ function rippleShow(e) {
       ripples.show(e, element, value);
     };
     element._ripple.showTimer = (void 0).setTimeout(() => {
-      var _a;
-      if ((_a = element == null ? void 0 : element._ripple) == null ? void 0 : _a.showTimerCommit) {
+      if (element?._ripple?.showTimerCommit) {
         element._ripple.showTimerCommit();
         element._ripple.showTimerCommit = null;
       }
@@ -12447,7 +11581,7 @@ function rippleStop(e) {
 }
 function rippleHide(e) {
   const element = e.currentTarget;
-  if (!(element == null ? void 0 : element._ripple)) return;
+  if (!element?._ripple) return;
   (void 0).clearTimeout(element._ripple.showTimer);
   if (e.type === "touchend" && element._ripple.showTimerCommit) {
     element._ripple.showTimerCommit();
@@ -12466,7 +11600,7 @@ function rippleHide(e) {
 }
 function rippleCancelShow(e) {
   const element = e.currentTarget;
-  if (!(element == null ? void 0 : element._ripple)) return;
+  if (!element?._ripple) return;
   if (element._ripple.showTimerCommit) {
     element._ripple.showTimerCommit = null;
   }
@@ -12656,18 +11790,16 @@ const VBtn = genericComponent()({
     const group = useGroupItem(props, props.symbol, false);
     const link = useLink(props, attrs);
     const isActive = computed(() => {
-      var _a;
       if (props.active !== void 0) {
         return props.active;
       }
       if (link.isLink.value) {
-        return (_a = link.isActive) == null ? void 0 : _a.value;
+        return link.isActive?.value;
       }
-      return group == null ? void 0 : group.isSelected.value;
+      return group?.isSelected.value;
     });
     const variantProps = computed(() => {
-      var _a, _b;
-      const showColor = (group == null ? void 0 : group.isSelected.value) && (!link.isLink.value || ((_a = link.isActive) == null ? void 0 : _a.value)) || !group || ((_b = link.isActive) == null ? void 0 : _b.value);
+      const showColor = group?.isSelected.value && (!link.isLink.value || link.isActive?.value) || !group || link.isActive?.value;
       return {
         color: showColor ? props.color ?? props.baseColor : props.baseColor,
         variant: props.variant
@@ -12678,7 +11810,7 @@ const VBtn = genericComponent()({
       colorStyles,
       variantClasses
     } = useVariant(variantProps);
-    const isDisabled = computed(() => (group == null ? void 0 : group.disabled.value) || props.disabled);
+    const isDisabled = computed(() => group?.disabled.value || props.disabled);
     const isElevated = computed(() => {
       return props.variant === "elevated" && !(props.disabled || props.flat || props.border);
     });
@@ -12687,12 +11819,11 @@ const VBtn = genericComponent()({
       return Object(props.value) === props.value ? JSON.stringify(props.value, null, 0) : props.value;
     });
     function onClick(e) {
-      var _a;
       if (isDisabled.value || link.isLink.value && (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0 || attrs.target === "_blank")) return;
-      (_a = link.navigate) == null ? void 0 : _a.call(link, e);
-      group == null ? void 0 : group.toggle();
+      link.navigate?.(e);
+      group?.toggle();
     }
-    useSelectLink(link, group == null ? void 0 : group.select);
+    useSelectLink(link, group?.select);
     useRender(() => {
       const Tag = link.isLink.value ? "a" : props.tag;
       const hasPrepend = !!(props.prependIcon || slots.prepend);
@@ -12700,7 +11831,7 @@ const VBtn = genericComponent()({
       const hasIcon = !!(props.icon && props.icon !== true);
       return withDirectives(createVNode(Tag, {
         "type": Tag === "a" ? void 0 : "button",
-        "class": ["v-btn", group == null ? void 0 : group.selectedClass.value, {
+        "class": ["v-btn", group?.selectedClass.value, {
           "v-btn--active": isActive.value,
           "v-btn--block": props.block,
           "v-btn--disabled": isDisabled.value,
@@ -12720,64 +11851,58 @@ const VBtn = genericComponent()({
         "onClick": onClick,
         "value": valueAttr.value
       }, {
-        default: () => {
-          var _a;
-          return [genOverlays(true, "v-btn"), !props.icon && hasPrepend && createVNode("span", {
-            "key": "prepend",
-            "class": "v-btn__prepend"
-          }, [!slots.prepend ? createVNode(VIcon, {
-            "key": "prepend-icon",
-            "icon": props.prependIcon
-          }, null) : createVNode(VDefaultsProvider, {
-            "key": "prepend-defaults",
-            "disabled": !props.prependIcon,
-            "defaults": {
-              VIcon: {
-                icon: props.prependIcon
-              }
+        default: () => [genOverlays(true, "v-btn"), !props.icon && hasPrepend && createVNode("span", {
+          "key": "prepend",
+          "class": "v-btn__prepend"
+        }, [!slots.prepend ? createVNode(VIcon, {
+          "key": "prepend-icon",
+          "icon": props.prependIcon
+        }, null) : createVNode(VDefaultsProvider, {
+          "key": "prepend-defaults",
+          "disabled": !props.prependIcon,
+          "defaults": {
+            VIcon: {
+              icon: props.prependIcon
             }
-          }, slots.prepend)]), createVNode("span", {
-            "class": "v-btn__content",
-            "data-no-activator": ""
-          }, [!slots.default && hasIcon ? createVNode(VIcon, {
-            "key": "content-icon",
-            "icon": props.icon
-          }, null) : createVNode(VDefaultsProvider, {
-            "key": "content-defaults",
-            "disabled": !hasIcon,
-            "defaults": {
-              VIcon: {
-                icon: props.icon
-              }
+          }
+        }, slots.prepend)]), createVNode("span", {
+          "class": "v-btn__content",
+          "data-no-activator": ""
+        }, [!slots.default && hasIcon ? createVNode(VIcon, {
+          "key": "content-icon",
+          "icon": props.icon
+        }, null) : createVNode(VDefaultsProvider, {
+          "key": "content-defaults",
+          "disabled": !hasIcon,
+          "defaults": {
+            VIcon: {
+              icon: props.icon
             }
-          }, {
-            default: () => {
-              var _a2;
-              return [((_a2 = slots.default) == null ? void 0 : _a2.call(slots)) ?? props.text];
+          }
+        }, {
+          default: () => [slots.default?.() ?? props.text]
+        })]), !props.icon && hasAppend && createVNode("span", {
+          "key": "append",
+          "class": "v-btn__append"
+        }, [!slots.append ? createVNode(VIcon, {
+          "key": "append-icon",
+          "icon": props.appendIcon
+        }, null) : createVNode(VDefaultsProvider, {
+          "key": "append-defaults",
+          "disabled": !props.appendIcon,
+          "defaults": {
+            VIcon: {
+              icon: props.appendIcon
             }
-          })]), !props.icon && hasAppend && createVNode("span", {
-            "key": "append",
-            "class": "v-btn__append"
-          }, [!slots.append ? createVNode(VIcon, {
-            "key": "append-icon",
-            "icon": props.appendIcon
-          }, null) : createVNode(VDefaultsProvider, {
-            "key": "append-defaults",
-            "disabled": !props.appendIcon,
-            "defaults": {
-              VIcon: {
-                icon: props.appendIcon
-              }
-            }
-          }, slots.append)]), !!props.loading && createVNode("span", {
-            "key": "loader",
-            "class": "v-btn__loader"
-          }, [((_a = slots.loader) == null ? void 0 : _a.call(slots)) ?? createVNode(VProgressCircular, {
-            "color": typeof props.loading === "boolean" ? void 0 : props.loading,
-            "indeterminate": true,
-            "width": "2"
-          }, null)])];
-        }
+          }
+        }, slots.append)]), !!props.loading && createVNode("span", {
+          "key": "loader",
+          "class": "v-btn__loader"
+        }, [slots.loader?.() ?? createVNode(VProgressCircular, {
+          "color": typeof props.loading === "boolean" ? void 0 : props.loading,
+          "indeterminate": true,
+          "width": "2"
+        }, null)])]
       }), [[Ripple, !isDisabled.value && !!props.ripple, "", {
         center: !!props.icon
       }]]);
@@ -13530,7 +12655,7 @@ function syncRef(left, right, ...[options]) {
 function tryOnMounted(fn, sync = true, target) {
   const instance = getLifeCycleTarget();
   if (instance)
-    ;
+    onMounted(fn, target);
   else if (sync)
     fn();
   else
@@ -13747,7 +12872,12 @@ function useEventListener(...args) {
 }
 function useMounted() {
   const isMounted = ref(false);
-  getCurrentInstance$1();
+  const instance = getCurrentInstance$1();
+  if (instance) {
+    onMounted(() => {
+      isMounted.value = true;
+    }, instance);
+  }
   return isMounted;
 }
 function useSupported(callback) {
@@ -14288,7 +13418,7 @@ const { themeConfig, layoutConfig: layoutConfig$1 } = defineThemeConfig({
     sectionTitlePlaceholder: { icon: "ri-subtract-line" }
   }
 });
-const injectionKeyIsVerticalNavHovered = Symbol("isVerticalNavHovered");
+const injectionKeyIsVerticalNavHovered = /* @__PURE__ */ Symbol("isVerticalNavHovered");
 const layoutConfig = {
   app: {
     title: "my-layout",
@@ -14339,11 +13469,10 @@ const getComputedNavLinkToProp = computed(() => (link) => {
   return props;
 });
 const isNavLinkActive = (link, _) => {
-  var _a;
   const route2 = useRoute$1();
   if (!route2.meta.sidebarRoute)
     return false;
-  return route2.meta.sidebarRoute === ((_a = link.to) == null ? void 0 : _a.name);
+  return route2.meta.sidebarRoute === link.to?.name;
 };
 const isNavGroupActive = (children, router) => children.some((child) => {
   if ("children" in child) {
@@ -14664,30 +13793,29 @@ const _export_sfc = (sfc, props) => {
 };
 const createLayouts = (userConfig) => {
   return () => {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t;
     const configStore = useLayoutConfigStore();
-    layoutConfig.app.title = ((_a = userConfig.app) == null ? void 0 : _a.title) ?? layoutConfig.app.title;
-    layoutConfig.app.logo = ((_b = userConfig.app) == null ? void 0 : _b.logo) ?? layoutConfig.app.logo;
-    layoutConfig.app.overlayNavFromBreakpoint = ((_c = userConfig.app) == null ? void 0 : _c.overlayNavFromBreakpoint) ?? layoutConfig.app.overlayNavFromBreakpoint;
-    layoutConfig.app.i18n.enable = ((_e = (_d = userConfig.app) == null ? void 0 : _d.i18n) == null ? void 0 : _e.enable) ?? layoutConfig.app.i18n.enable;
-    layoutConfig.app.iconRenderer = ((_f = userConfig.app) == null ? void 0 : _f.iconRenderer) ?? layoutConfig.app.iconRenderer;
-    layoutConfig.verticalNav.defaultNavItemIconProps = ((_g = userConfig.verticalNav) == null ? void 0 : _g.defaultNavItemIconProps) ?? layoutConfig.verticalNav.defaultNavItemIconProps;
-    layoutConfig.icons.chevronDown = ((_h = userConfig.icons) == null ? void 0 : _h.chevronDown) ?? layoutConfig.icons.chevronDown;
-    layoutConfig.icons.chevronRight = ((_i = userConfig.icons) == null ? void 0 : _i.chevronRight) ?? layoutConfig.icons.chevronRight;
-    layoutConfig.icons.close = ((_j = userConfig.icons) == null ? void 0 : _j.close) ?? layoutConfig.icons.close;
-    layoutConfig.icons.verticalNavPinned = ((_k = userConfig.icons) == null ? void 0 : _k.verticalNavPinned) ?? layoutConfig.icons.verticalNavPinned;
-    layoutConfig.icons.verticalNavUnPinned = ((_l = userConfig.icons) == null ? void 0 : _l.verticalNavUnPinned) ?? layoutConfig.icons.verticalNavUnPinned;
-    layoutConfig.icons.sectionTitlePlaceholder = ((_m = userConfig.icons) == null ? void 0 : _m.sectionTitlePlaceholder) ?? layoutConfig.icons.sectionTitlePlaceholder;
+    layoutConfig.app.title = userConfig.app?.title ?? layoutConfig.app.title;
+    layoutConfig.app.logo = userConfig.app?.logo ?? layoutConfig.app.logo;
+    layoutConfig.app.overlayNavFromBreakpoint = userConfig.app?.overlayNavFromBreakpoint ?? layoutConfig.app.overlayNavFromBreakpoint;
+    layoutConfig.app.i18n.enable = userConfig.app?.i18n?.enable ?? layoutConfig.app.i18n.enable;
+    layoutConfig.app.iconRenderer = userConfig.app?.iconRenderer ?? layoutConfig.app.iconRenderer;
+    layoutConfig.verticalNav.defaultNavItemIconProps = userConfig.verticalNav?.defaultNavItemIconProps ?? layoutConfig.verticalNav.defaultNavItemIconProps;
+    layoutConfig.icons.chevronDown = userConfig.icons?.chevronDown ?? layoutConfig.icons.chevronDown;
+    layoutConfig.icons.chevronRight = userConfig.icons?.chevronRight ?? layoutConfig.icons.chevronRight;
+    layoutConfig.icons.close = userConfig.icons?.close ?? layoutConfig.icons.close;
+    layoutConfig.icons.verticalNavPinned = userConfig.icons?.verticalNavPinned ?? layoutConfig.icons.verticalNavPinned;
+    layoutConfig.icons.verticalNavUnPinned = userConfig.icons?.verticalNavUnPinned ?? layoutConfig.icons.verticalNavUnPinned;
+    layoutConfig.icons.sectionTitlePlaceholder = userConfig.icons?.sectionTitlePlaceholder ?? layoutConfig.icons.sectionTitlePlaceholder;
     configStore.$patch({
-      appContentLayoutNav: cookieRef("appContentLayoutNav", ((_n = userConfig.app) == null ? void 0 : _n.contentLayoutNav) ?? layoutConfig.app.contentLayoutNav).value,
-      appContentWidth: cookieRef("appContentWidth", ((_o = userConfig.app) == null ? void 0 : _o.contentWidth) ?? layoutConfig.app.contentWidth).value,
-      footerType: cookieRef("footerType", ((_p = userConfig.footer) == null ? void 0 : _p.type) ?? layoutConfig.footer.type).value,
-      navbarType: cookieRef("navbarType", ((_q = userConfig.navbar) == null ? void 0 : _q.type) ?? layoutConfig.navbar.type).value,
-      isNavbarBlurEnabled: cookieRef("isNavbarBlurEnabled", ((_r = userConfig.navbar) == null ? void 0 : _r.navbarBlur) ?? layoutConfig.navbar.navbarBlur).value,
-      isVerticalNavCollapsed: cookieRef("isVerticalNavCollapsed", ((_s = userConfig.verticalNav) == null ? void 0 : _s.isVerticalNavCollapsed) ?? layoutConfig.verticalNav.isVerticalNavCollapsed).value,
+      appContentLayoutNav: cookieRef("appContentLayoutNav", userConfig.app?.contentLayoutNav ?? layoutConfig.app.contentLayoutNav).value,
+      appContentWidth: cookieRef("appContentWidth", userConfig.app?.contentWidth ?? layoutConfig.app.contentWidth).value,
+      footerType: cookieRef("footerType", userConfig.footer?.type ?? layoutConfig.footer.type).value,
+      navbarType: cookieRef("navbarType", userConfig.navbar?.type ?? layoutConfig.navbar.type).value,
+      isNavbarBlurEnabled: cookieRef("isNavbarBlurEnabled", userConfig.navbar?.navbarBlur ?? layoutConfig.navbar.navbarBlur).value,
+      isVerticalNavCollapsed: cookieRef("isVerticalNavCollapsed", userConfig.verticalNav?.isVerticalNavCollapsed ?? layoutConfig.verticalNav.isVerticalNavCollapsed).value,
       // isAppRTL: userConfig.app?.isRTL ?? config.app.isRTL,
       // isLessThanOverlayNavBreakpoint: false,
-      horizontalNavType: cookieRef("horizontalNavType", ((_t = userConfig.horizontalNav) == null ? void 0 : _t.type) ?? layoutConfig.horizontalNav.type).value
+      horizontalNavType: cookieRef("horizontalNavType", userConfig.horizontalNav?.type ?? layoutConfig.horizontalNav.type).value
     });
     _setDirAttr(configStore.isAppRTL ? "rtl" : "ltr");
   };
@@ -14722,17 +13850,18 @@ const plugins = [
   ssg_detect_IpHCGcQQ_IR5Rl99qyukWoMA9fJGfuTYyoksTzy81cs
 ];
 const layouts = {
-  blank: defineAsyncComponent(() => import('./blank-BKWtdeoJ.mjs').then((m) => m.default || m)),
-  "components-default-layout-with-horizontal-nav": defineAsyncComponent(() => import('./DefaultLayoutWithHorizontalNav-D0TWYI-W.mjs').then((m) => m.default || m)),
-  "components-default-layout-with-vertical-nav": defineAsyncComponent(() => import('./DefaultLayoutWithVerticalNav-Dvmi5P8o.mjs').then((m) => m.default || m)),
-  "components-footer": defineAsyncComponent(() => import('./Footer-Dv2MfIKt.mjs').then((m) => m.default || m)),
-  "components-nav-bar-notifications": defineAsyncComponent(() => import('./NavBarNotifications-BXspaVPS.mjs').then((m) => m.default || m)),
-  "components-nav-search-bar": defineAsyncComponent(() => import('./NavSearchBar-ezQjG6TE.mjs').then((m) => m.default || m)),
-  "components-navbar-shortcuts": defineAsyncComponent(() => import('./NavbarShortcuts-CcMePgDV.mjs').then((m) => m.default || m)),
-  "components-navbar-theme-switcher": defineAsyncComponent(() => import('./NavbarThemeSwitcher-CKJ46nQl.mjs').then((m) => m.default || m)),
-  "components-user-profile": defineAsyncComponent(() => import('./UserProfile-tYd746UM.mjs').then((m) => m.default || m)),
-  default: defineAsyncComponent(() => import('./default-DWC_aWV-.mjs').then((m) => m.default || m))
+  blank: defineAsyncComponent(() => import('./blank-COp4IHfV.mjs').then((m) => m.default || m)),
+  "components-default-layout-with-horizontal-nav": defineAsyncComponent(() => import('./DefaultLayoutWithHorizontalNav-DMdF8XAz.mjs').then((m) => m.default || m)),
+  "components-default-layout-with-vertical-nav": defineAsyncComponent(() => import('./DefaultLayoutWithVerticalNav-C61k4Aa5.mjs').then((m) => m.default || m)),
+  "components-footer": defineAsyncComponent(() => import('./Footer-CgBf2AWj.mjs').then((m) => m.default || m)),
+  "components-nav-bar-notifications": defineAsyncComponent(() => import('./NavBarNotifications-CBiSFxoh.mjs').then((m) => m.default || m)),
+  "components-nav-search-bar": defineAsyncComponent(() => import('./NavSearchBar-DcV4dzpg.mjs').then((m) => m.default || m)),
+  "components-navbar-shortcuts": defineAsyncComponent(() => import('./NavbarShortcuts-Di0wExRN.mjs').then((m) => m.default || m)),
+  "components-navbar-theme-switcher": defineAsyncComponent(() => import('./NavbarThemeSwitcher-C6RXK2Po.mjs').then((m) => m.default || m)),
+  "components-user-profile": defineAsyncComponent(() => import('./UserProfile-MTJs3d-E.mjs').then((m) => m.default || m)),
+  default: defineAsyncComponent(() => import('./default-DQLOVdID.mjs').then((m) => m.default || m))
 };
+const routeRulesMatcher = _routeRulesMatcher;
 const LayoutLoader = defineComponent$1({
   name: "LayoutLoader",
   inheritAttrs: false,
@@ -14761,9 +13890,10 @@ const __nuxt_component_0 = defineComponent$1({
   setup(props, context) {
     const nuxtApp = useNuxtApp();
     const injectedRoute = inject$1(PageRouteSymbol);
-    const route2 = injectedRoute === useRoute$1() ? useRoute$2() : injectedRoute;
+    const shouldUseEagerRoute = !injectedRoute || injectedRoute === useRoute$1();
+    const route2 = shouldUseEagerRoute ? useRoute$2() : injectedRoute;
     const layout = computed(() => {
-      let layout2 = unref(props.name) ?? route2.meta.layout ?? "default";
+      let layout2 = unref(props.name) ?? route2?.meta.layout ?? routeRulesMatcher(route2?.path).appLayout ?? "default";
       if (layout2 && !(layout2 in layouts)) {
         if (props.fallback) {
           layout2 = unref(props.fallback);
@@ -14771,28 +13901,57 @@ const __nuxt_component_0 = defineComponent$1({
       }
       return layout2;
     });
-    const layoutRef = ref();
+    const layoutRef = shallowRef();
     context.expose({ layoutRef });
     const done = nuxtApp.deferHydration();
+    let lastLayout;
     return () => {
-      const hasLayout = layout.value && layout.value in layouts;
-      const transitionProps = route2.meta.layoutTransition ?? appLayoutTransition;
-      return _wrapInTransition(hasLayout && transitionProps, {
-        default: () => h(Suspense, { suspensible: true, onResolve: () => {
-          nextTick(done);
-        } }, {
-          default: () => h(
-            LayoutProvider,
-            {
-              layoutProps: mergeProps(context.attrs, { ref: layoutRef }),
-              key: layout.value || void 0,
-              name: layout.value,
-              shouldProvide: !props.name,
-              hasTransition: !!transitionProps
-            },
-            context.slots
-          )
-        })
+      const hasLayout = !!layout.value && layout.value in layouts;
+      const hasTransition = hasLayout && !!(route2?.meta.layoutTransition ?? appLayoutTransition);
+      const transitionProps = hasTransition && _mergeTransitionProps([
+        route2?.meta.layoutTransition,
+        appLayoutTransition,
+        {
+          onBeforeLeave() {
+            nuxtApp["~transitionPromise"] = new Promise((resolve2) => {
+              nuxtApp["~transitionFinish"] = resolve2;
+            });
+          },
+          onAfterLeave() {
+            nuxtApp["~transitionFinish"]?.();
+            delete nuxtApp["~transitionFinish"];
+            delete nuxtApp["~transitionPromise"];
+          }
+        }
+      ]);
+      const previouslyRenderedLayout = lastLayout;
+      lastLayout = layout.value;
+      return _wrapInTransition(transitionProps, {
+        default: () => h(
+          Suspense,
+          {
+            suspensible: true,
+            onResolve: async () => {
+              await nextTick(done);
+            }
+          },
+          {
+            default: () => h(
+              LayoutProvider,
+              {
+                layoutProps: mergeProps(context.attrs, route2.meta.layoutProps ?? {}, { ref: layoutRef }),
+                key: layout.value || void 0,
+                name: layout.value,
+                shouldProvide: !props.name,
+                isRenderingNewLayout: (name) => {
+                  return name !== previouslyRenderedLayout && name === layout.value;
+                },
+                hasTransition
+              },
+              context.slots
+            )
+          }
+        )
       }).default();
     };
   }
@@ -14812,19 +13971,41 @@ const LayoutProvider = defineComponent$1({
     },
     shouldProvide: {
       type: Boolean
+    },
+    isRenderingNewLayout: {
+      type: Function,
+      required: true
     }
   },
   setup(props, context) {
     const name = props.name;
     if (props.shouldProvide) {
       provide(LayoutMetaSymbol, {
-        isCurrent: (route2) => name === (route2.meta.layout ?? "default")
+        // When name=false, always return true so NuxtPage doesn't skip rendering
+        isCurrent: (route2) => name === false || name === (route2.meta.layout ?? routeRulesMatcher(route2.path).appLayout ?? "default")
       });
     }
+    const injectedRoute = inject$1(PageRouteSymbol);
+    const isNotWithinNuxtPage = injectedRoute && injectedRoute === useRoute$1();
+    const enclosingLayout = inject$1(LayoutMetaSymbol, null);
+    if (isNotWithinNuxtPage) {
+      const vueRouterRoute = useRoute$2();
+      const reactiveChildRoute = {};
+      for (const _key in vueRouterRoute) {
+        const key = _key;
+        Object.defineProperty(reactiveChildRoute, key, {
+          enumerable: true,
+          get: () => {
+            const useEagerRoute = props.isRenderingNewLayout(props.name) && (!enclosingLayout || enclosingLayout.isCurrent(vueRouterRoute));
+            return useEagerRoute ? vueRouterRoute[key] : injectedRoute[key];
+          }
+        });
+      }
+      provide(PageRouteSymbol, shallowReactive(reactiveChildRoute));
+    }
     return () => {
-      var _a, _b;
       if (!name || typeof name === "string" && !(name in layouts)) {
-        return (_b = (_a = context.slots).default) == null ? void 0 : _b.call(_a);
+        return context.slots.default?.();
       }
       return h(
         LayoutLoader,
@@ -14837,14 +14018,11 @@ const LayoutProvider = defineComponent$1({
 const defineRouteProvider = (name = "RouteProvider") => defineComponent$1({
   name,
   props: {
-    vnode: {
-      type: Object,
-      required: true
-    },
     route: {
       type: Object,
       required: true
     },
+    vnode: Object,
     vnodeRef: Object,
     renderKey: String,
     trackRootNodes: Boolean
@@ -14861,6 +14039,9 @@ const defineRouteProvider = (name = "RouteProvider") => defineComponent$1({
     }
     provide(PageRouteSymbol, shallowReactive(route2));
     return () => {
+      if (!props.vnode) {
+        return props.vnode;
+      }
       return h(props.vnode, { ref: props.vnodeRef });
     };
   }
@@ -14898,7 +14079,7 @@ const __nuxt_component_1$1 = defineComponent$1({
     nuxtApp.deferHydration();
     return () => {
       return h(RouterView, { name: props.name, route: props.route, ...attrs }, {
-        default: (routeProps) => {
+        default: markStableSlot((routeProps) => {
           return h(Suspense, { suspensible: true }, {
             default() {
               return h(RouteProvider, {
@@ -14908,11 +14089,25 @@ const __nuxt_component_1$1 = defineComponent$1({
               });
             }
           });
-        }
+        })
       });
     };
   }
 });
+function markStableSlot(fn) {
+  const wrapped = ((routeProps) => {
+    const result = fn(routeProps);
+    if (Array.isArray(result)) {
+      return result;
+    }
+    if (result == null || !isVNode$1(result)) {
+      return [createCommentVNode()];
+    }
+    return [result];
+  });
+  wrapped._n = true;
+  return wrapped;
+}
 function normalizeSlot(slot, data) {
   const slotContent = slot(data);
   return slotContent.length === 1 ? h(slotContent[0]) : h(Fragment, void 0, slotContent);
@@ -15064,10 +14259,7 @@ const VApp = genericComponent()({
     }, [createVNode("div", {
       "class": "v-application__wrap"
     }, [createVNode(Suspense, null, {
-      default: () => {
-        var _a;
-        return [createVNode(Fragment, null, [(_a = slots.default) == null ? void 0 : _a.call(slots)])];
-      }
+      default: () => [createVNode(Fragment, null, [slots.default?.()])]
     })])]));
     return {
       getLayoutItem,
@@ -15096,13 +14288,10 @@ const VLocaleProvider = genericComponent()({
     const {
       rtlClasses
     } = provideLocale(props);
-    useRender(() => {
-      var _a;
-      return createVNode("div", {
-        "class": ["v-locale-provider", rtlClasses.value, props.class],
-        "style": props.style
-      }, [(_a = slots.default) == null ? void 0 : _a.call(slots)]);
-    });
+    useRender(() => createVNode("div", {
+      "class": ["v-locale-provider", rtlClasses.value, props.class],
+      "style": props.style
+    }, [slots.default?.()]));
     return {};
   }
 });
@@ -15259,8 +14448,7 @@ const _sfc_main$1 = /* @__PURE__ */ defineComponent$1({
     const authThemeMask = useGenerateImageVariant(miscMaskLight, miscMaskDark);
     const isDev = false;
     const errToShow = computed(() => {
-      var _a, _b;
-      const is404 = ((_a = props.error) == null ? void 0 : _a.statusCode) === 404 || ((_b = props.error.message) == null ? void 0 : _b.includes("404"));
+      const is404 = props.error?.statusCode === 404 || props.error.message?.includes("404");
       if (is404) {
         return {
           title: "Page Not Found",
@@ -15386,14 +14574,25 @@ const _sfc_main = {
     nuxtApp.ssrContext.url;
     const SingleRenderer = false;
     provide(PageRouteSymbol, useRoute$1());
-    nuxtApp.hooks.callHookWith((hooks) => hooks.map((hook) => hook()), "vue:setup");
-    const error = useError();
+    nuxtApp.hooks.callHookWith((hooks) => hooks.map((hook) => hook()), "vue:setup", []);
+    const error = /* @__PURE__ */ useError();
     const abortRender = error.value && !nuxtApp.ssrContext.error;
+    function invokeAppErrorHandler(err, target, info) {
+      const errorHandler = nuxtApp.vueApp.config.errorHandler;
+      if (errorHandler && !errorHandler.__nuxt_default) {
+        try {
+          errorHandler(err, target, info);
+        } catch (handlerError) {
+          console.error("[nuxt] Error in `app.config.errorHandler`", handlerError);
+        }
+      }
+    }
     onErrorCaptured((err, target, info) => {
       nuxtApp.hooks.callHook("vue:error", err, target, info).catch((hookError) => console.error("[nuxt] Error in `vue:error` hook", hookError));
       {
         const p = nuxtApp.runWithContext(() => showError(err));
         onServerPrefetch(() => p);
+        invokeAppErrorHandler(err, target, info);
         return false;
       }
     });
@@ -15427,7 +14626,6 @@ _sfc_main.setup = (props, ctx) => {
 let entry;
 {
   entry = async function createNuxtAppServer(ssrContext) {
-    var _a;
     const vueApp = createApp(_sfc_main);
     const nuxt = createNuxtApp({ vueApp, ssrContext });
     try {
@@ -15435,14 +14633,14 @@ let entry;
       await nuxt.hooks.callHook("app:created", vueApp);
     } catch (error) {
       await nuxt.hooks.callHook("app:error", error);
-      (_a = nuxt.payload).error || (_a.error = createError(error));
+      nuxt.payload.error ||= createError(error);
     }
-    if (ssrContext == null ? void 0 : ssrContext._renderResponse) {
+    if (ssrContext && (ssrContext["~renderResponse"] || ssrContext._renderResponse)) {
       throw new Error("skipping render");
     }
     return vueApp;
   };
 }
-const entry$1 = (ssrContext) => entry(ssrContext);
+const entry_default = ((ssrContext) => entry(ssrContext));
 
-export { LoaderSlot as $, useRouter as A, useProxiedModel as B, toPhysical as C, useLayoutItem as D, provideDefaults as E, useRender as F, VDefaultsProvider as G, makeThemeProps as H, makeTagProps as I, makeRoundedProps as J, makeLayoutItemProps as K, makeElevationProps as L, makeDisplayProps as M, makeComponentProps as N, makeBorderProps as O, makeDensityProps as P, IconValue as Q, Ripple as R, useVariant as S, useDensity as T, useDimension as U, VBtn as V, useLoader as W, useLocation as X, usePosition as Y, useLink as Z, genOverlays as _, VIcon as a, VuetifyLayoutKey as a$, makeVariantProps as a0, makeRouterProps as a1, makePositionProps as a2, makeLocationProps as a3, makeLoaderProps as a4, makeDimensionProps as a5, breakpoints as a6, EventProp as a7, useLocale as a8, wrapInArray as a9, useGroup as aA, useGoTo as aB, makeGroupProps as aC, useGroupItem as aD, makeGroupItemProps as aE, noop$1 as aF, defineFunctionalComponent as aG, consoleError as aH, getObjectValueByPath as aI, isEmpty as aJ, createRange as aK, keyValues as aL, destructComputed as aM, parseAnchor as aN, flipSide as aO, flipAlign as aP, flipCorner as aQ, getAxis as aR, defer as aS, templateRef as aT, useAuthStore as aU, themeConfig as aV, _export_sfc as aW, VBtnToggle as aX, makeVBtnProps as aY, keys as aZ, isObject$1 as a_, useTextColor as aa, getCurrentInstanceName as ab, consoleWarn as ac, getUid as ad, getCurrentInstance as ae, only as af, isOn as ag, pick as ah, filterInputAttrs as ai, callEvent as aj, useResizeObserver as ak, debounce as al, clamp as am, ensureValidVNode as an, omit as ao, matchesSelector as ap, getPropertyFromItem as aq, isClickInsideElement as ar, focusableChildren as as, focusChild as at, getNextElement as au, defineComponent as av, deprecate as aw, deepEqual as ax, useSize as ay, makeSizeProps as az, VProgressCircular as b, refElement as b0, VProgressLinear as b1, useLayout as b2, useConfigStore as b3, useFocus as b4, useTheme as b5, IN_BROWSER as b6, defineNuxtRouteMiddleware as b7, storeToRefs as b8, AppContentLayoutNav as b9, useRoute$1 as ba, useLayoutConfigStore as bb, isNavGroupActive as bc, layoutConfig as bd, getDynamicI18nProps as be, getComputedNavLinkToProp as bf, isNavLinkActive as bg, until as bh, useEventListener as bi, useCookie as bj, useI18n as bk, pickWithRest as bl, useElementHover as bm, injectionKeyIsVerticalNavHovered as bn, openGroups as bo, useWindowSize as bp, useToggle as bq, syncRef as br, withQuery as bs, switchToVerticalNavOnLtOverlayNavBreakpoint as bt, useMagicKeys as bu, useRouter$1 as c, resolveRouteObject$1 as d, entry$1 as default, useRuntimeConfig as e, withoutTrailingSlash as f, nuxtLinkDefaults as g, hasProtocol as h, watchDebounced as i, joinURL as j, convertToUnit as k, useToggleScope as l, genericComponent as m, navigateTo as n, propsFactory as o, parseQuery as p, useRtl as q, refDebounced as r, provideTheme as s, useBorder as t, useNuxtApp as u, useBackgroundColor as v, withTrailingSlash as w, useElevation as x, useDisplay as y, useRounded as z };
+export { useLink as $, useRounded as A, useRouter as B, useProxiedModel as C, toPhysical as D, useLayoutItem as E, provideDefaults as F, useRender as G, VDefaultsProvider as H, propsFactory as I, makeThemeProps as J, makeTagProps as K, makeRoundedProps as L, makeLayoutItemProps as M, makeElevationProps as N, makeDisplayProps as O, makeComponentProps as P, makeBorderProps as Q, IconValue as R, makeDensityProps as S, Ripple as T, useVariant as U, VBtn as V, useDensity as W, useDimension as X, useLoader as Y, useLocation as Z, usePosition as _, VIcon as a, keys as a$, LoaderSlot as a0, genOverlays as a1, makeVariantProps as a2, makeRouterProps as a3, makePositionProps as a4, makeLocationProps as a5, makeLoaderProps as a6, makeDimensionProps as a7, breakpoints as a8, EventProp as a9, useSize as aA, makeSizeProps as aB, useGroup as aC, useGoTo as aD, makeGroupProps as aE, useGroupItem as aF, makeGroupItemProps as aG, noop$1 as aH, defineFunctionalComponent as aI, consoleError as aJ, getObjectValueByPath as aK, isEmpty as aL, createRange as aM, keyValues as aN, destructComputed as aO, parseAnchor as aP, flipSide as aQ, flipAlign as aR, flipCorner as aS, getAxis as aT, defer as aU, templateRef as aV, useAuthStore as aW, themeConfig as aX, _export_sfc as aY, VBtnToggle as aZ, makeVBtnProps as a_, useLocale as aa, wrapInArray as ab, useTextColor as ac, getCurrentInstanceName as ad, consoleWarn as ae, getUid as af, getCurrentInstance as ag, only as ah, isOn as ai, pick as aj, filterInputAttrs as ak, callEvent as al, useResizeObserver as am, clamp as an, debounce as ao, ensureValidVNode as ap, matchesSelector as aq, omit as ar, getPropertyFromItem as as, isClickInsideElement as at, focusableChildren as au, focusChild as av, getNextElement as aw, defineComponent as ax, deprecate as ay, deepEqual as az, VProgressCircular as b, isObject$1 as b0, VuetifyLayoutKey as b1, refElement as b2, VProgressLinear as b3, useLayout as b4, useConfigStore as b5, useFocus as b6, useTheme as b7, IN_BROWSER as b8, defineNuxtRouteMiddleware as b9, storeToRefs as ba, AppContentLayoutNav as bb, useRoute$1 as bc, useLayoutConfigStore as bd, isNavGroupActive as be, layoutConfig as bf, getDynamicI18nProps as bg, getComputedNavLinkToProp as bh, isNavLinkActive as bi, until as bj, useEventListener as bk, useCookie as bl, useI18n as bm, pickWithRest as bn, useElementHover as bo, injectionKeyIsVerticalNavHovered as bp, openGroups as bq, useWindowSize as br, useToggle as bs, syncRef as bt, withQuery as bu, switchToVerticalNavOnLtOverlayNavBreakpoint as bv, useMagicKeys as bw, useRouter$1 as c, resolveRouteObject$1 as d, entry_default as default, encodeRoutePath as e, useRuntimeConfig as f, withoutTrailingSlash as g, hasProtocol as h, isScriptProtocol as i, joinURL as j, nuxtLinkDefaults as k, watchDebounced as l, convertToUnit as m, navigateTo as n, useToggleScope as o, parseQuery as p, genericComponent as q, refDebounced as r, useRtl as s, provideTheme as t, useNuxtApp as u, useBorder as v, withTrailingSlash as w, useBackgroundColor as x, useElevation as y, useDisplay as z };

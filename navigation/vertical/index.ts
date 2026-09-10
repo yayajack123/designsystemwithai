@@ -58,6 +58,11 @@ export const mainNavItems = [
     to: { name: 'design-system' },
     icon: { icon: 'ri-palette-line' },
   },
+  {
+    title: 'Themes',
+    to: { name: 'themes' },
+    icon: { icon: 'ri-paint-brush-line' },
+  },
 ]
 
 export const bottomNavItems = [
@@ -74,4 +79,3 @@ export const bottomNavItems = [
 ]
 
 export default mainNavItems
-

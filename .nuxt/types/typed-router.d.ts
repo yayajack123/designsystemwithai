@@ -163,6 +163,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    'themes': RouteRecordInfo<
+      'themes',
+      '/themes',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     'user': RouteRecordInfo<
       'user',
       '/user',
@@ -307,6 +314,12 @@ declare module 'vue-router/auto-routes' {
     'pages/students.vue': {
       routes:
         | 'students'
+      views:
+        | never
+    }
+    'pages/themes.vue': {
+      routes:
+        | 'themes'
       views:
         | never
     }

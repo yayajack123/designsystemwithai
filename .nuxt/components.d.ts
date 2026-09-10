@@ -75,6 +75,7 @@ export const AccountAvatar: typeof import("../components/sections/account-settin
 export const AccountSettings: typeof import("../components/sections/account-settings/AccountSettings.vue")['default']
 export const AccountSettingsDelete: typeof import("../components/sections/account-settings/AccountSettingsDelete.vue")['default']
 export const AccountSettingsSecurity: typeof import("../components/sections/account-settings/AccountSettingsSecurity.vue")['default']
+export const ThemeCard: typeof import("../components/themes/ThemeCard.vue")['default']
 export const UiAutoComplete: typeof import("../components/ui/UiAutoComplete.vue")['default']
 export const UiSectionHeader: typeof import("../components/ui/UiSectionHeader.vue")['default']
 export const UiTableView: typeof import("../components/ui/UiTableView.vue")['default']
@@ -164,6 +165,7 @@ export const LazyAccountAvatar: LazyComponent<typeof import("../components/secti
 export const LazyAccountSettings: LazyComponent<typeof import("../components/sections/account-settings/AccountSettings.vue")['default']>
 export const LazyAccountSettingsDelete: LazyComponent<typeof import("../components/sections/account-settings/AccountSettingsDelete.vue")['default']>
 export const LazyAccountSettingsSecurity: LazyComponent<typeof import("../components/sections/account-settings/AccountSettingsSecurity.vue")['default']>
+export const LazyThemeCard: LazyComponent<typeof import("../components/themes/ThemeCard.vue")['default']>
 export const LazyUiAutoComplete: LazyComponent<typeof import("../components/ui/UiAutoComplete.vue")['default']>
 export const LazyUiSectionHeader: LazyComponent<typeof import("../components/ui/UiSectionHeader.vue")['default']>
 export const LazyUiTableView: LazyComponent<typeof import("../components/ui/UiTableView.vue")['default']>

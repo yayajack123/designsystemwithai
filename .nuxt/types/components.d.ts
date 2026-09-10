@@ -75,6 +75,7 @@ interface _GlobalComponents {
   AccountSettings: typeof import("../../components/sections/account-settings/AccountSettings.vue")['default']
   AccountSettingsDelete: typeof import("../../components/sections/account-settings/AccountSettingsDelete.vue")['default']
   AccountSettingsSecurity: typeof import("../../components/sections/account-settings/AccountSettingsSecurity.vue")['default']
+  ThemeCard: typeof import("../../components/themes/ThemeCard.vue")['default']
   UiAutoComplete: typeof import("../../components/ui/UiAutoComplete.vue")['default']
   UiSectionHeader: typeof import("../../components/ui/UiSectionHeader.vue")['default']
   UiTableView: typeof import("../../components/ui/UiTableView.vue")['default']
@@ -164,6 +165,7 @@ interface _GlobalComponents {
   LazyAccountSettings: LazyComponent<typeof import("../../components/sections/account-settings/AccountSettings.vue")['default']>
   LazyAccountSettingsDelete: LazyComponent<typeof import("../../components/sections/account-settings/AccountSettingsDelete.vue")['default']>
   LazyAccountSettingsSecurity: LazyComponent<typeof import("../../components/sections/account-settings/AccountSettingsSecurity.vue")['default']>
+  LazyThemeCard: LazyComponent<typeof import("../../components/themes/ThemeCard.vue")['default']>
   LazyUiAutoComplete: LazyComponent<typeof import("../../components/ui/UiAutoComplete.vue")['default']>
   LazyUiSectionHeader: LazyComponent<typeof import("../../components/ui/UiSectionHeader.vue")['default']>
   LazyUiTableView: LazyComponent<typeof import("../../components/ui/UiTableView.vue")['default']>
