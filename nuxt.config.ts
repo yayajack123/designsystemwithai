@@ -49,7 +49,7 @@ export default defineNuxtConfig({
     }],
   },
 
-  plugins: ['@/plugins/vuetify/index.ts', '@/plugins/iconify/index.ts'],
+  plugins: ['@/plugins/vuetify/index.ts', '@/plugins/iconify/index.ts', '@/plugins/lordicon.client.ts'],
 
   imports: {
     dirs: ['./@core/utils', './@core/composable/', './plugins/*/composables/*'],
@@ -89,7 +89,7 @@ export default defineNuxtConfig({
 
   vue: {
     compilerOptions: {
-      isCustomElement: tag => tag === 'swiper-container' || tag === 'swiper-slide',
+      isCustomElement: tag => tag === 'swiper-container' || tag === 'swiper-slide' || tag === 'lord-icon',
     },
   },
 

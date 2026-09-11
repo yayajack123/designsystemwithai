@@ -1,4 +1,4 @@
-import process from 'node:process';globalThis._importMeta_=globalThis._importMeta_||{url:"file:///_entry.js",env:process.env};import { resolveDynamicComponent, computed, toRef, isRef, ref, toRaw, inject as inject$1, provide, shallowRef, nextTick, unref, toRefs, withDirectives, createVNode, Text, Fragment, reactive, watch, warn as warn$1, watchEffect, h, mergeProps, getCurrentInstance as getCurrentInstance$1, readonly, isVNode as isVNode$1, Comment, Transition, isReactive, hasInjectionContext, onScopeDispose, defineComponent as defineComponent$1, capitalize as capitalize$1, getCurrentScope, onMounted, customRef, effectScope, markRaw, createElementBlock, cloneVNode, defineAsyncComponent, shallowReactive, Suspense, useSSRContext, createApp, createCommentVNode, withCtx, createTextVNode, openBlock, createBlock, onErrorCaptured, onServerPrefetch, isReadonly, isShallow, toValue as toValue$1, createElementVNode } from 'vue';
+import process from 'node:process';globalThis._importMeta_=globalThis._importMeta_||{url:"file:///_entry.js",env:process.env};import { resolveDynamicComponent, computed, toRef, isRef, ref, toRaw, inject as inject$1, provide, shallowRef, nextTick, unref, toRefs, withDirectives, createVNode, Text, Fragment, reactive, watch, warn as warn$1, watchEffect, h, mergeProps, getCurrentInstance as getCurrentInstance$1, readonly, isVNode as isVNode$1, Comment, Transition, defineComponent as defineComponent$1, cloneVNode, createElementBlock, isReactive, hasInjectionContext, onScopeDispose, capitalize as capitalize$1, getCurrentScope, onMounted, customRef, effectScope, markRaw, defineAsyncComponent, shallowReactive, Suspense, useSSRContext, createApp, createCommentVNode, withCtx, createTextVNode, openBlock, createBlock, onErrorCaptured, onServerPrefetch, isReadonly, isShallow, toValue as toValue$1, createElementVNode } from 'vue';
 import http from 'node:http';
 import https from 'node:https';
 import { w as withBase, m as withQuery$1, n as destr, o as i, s, q as l, r as klona, t as getRequestHeader, v as isEqual$2, x as sanitizeStatusCode, y as setCookie, z as getCookie, A as deleteCookie, B as getContext, C as baseURL, D as defu, E as createHooks, f as createError$1, F as executeAsync, G as getRequestHeaders, H as getRequestProtocol } from '../nitro/nitro.mjs';
@@ -1252,7 +1252,7 @@ const _routes = [
     name: "dashboard-teacher",
     path: "/dashboard-teacher",
     meta: __nuxt_page_meta$1 || {},
-    component: () => import('./dashboard-teacher-D4wue5PN.mjs')
+    component: () => import('./dashboard-teacher-AsPMXh6s.mjs')
   },
   {
     name: "meeting-journal-create",
@@ -1791,8 +1791,8 @@ const globalMiddleware = [
   manifest_45route_45rule
 ];
 const namedMiddleware = {
-  auth: () => import('./auth-qM9ndgWB.mjs'),
-  guest: () => import('./guest-ACq8lI4l.mjs')
+  auth: () => import('./auth-CKN1qGO9.mjs'),
+  guest: () => import('./guest-BBrVS7GU.mjs')
 };
 Object.assign(/* @__PURE__ */ Object.create(null), {});
 const pageIslandRoutes = Object.assign(/* @__PURE__ */ Object.create(null), {});
@@ -2049,7 +2049,7 @@ defineComponent$1({
   }
 });
 const clientOnlySymbol = /* @__PURE__ */ Symbol.for("nuxt:client-only");
-defineComponent$1({
+const __nuxt_component_0$1 = defineComponent$1({
   name: "ClientOnly",
   inheritAttrs: false,
   props: ["fallback", "placeholder", "placeholderTag", "fallbackTag"],
@@ -2206,6 +2206,14 @@ const plugin = /* @__PURE__ */ defineNuxtPlugin((nuxtApp) => {
     }
   };
 });
+function warn(msg, err) {
+  if (typeof console !== "undefined") {
+    console.warn(`[intlify] ` + msg);
+    if (err) {
+      console.warn(err.stack);
+    }
+  }
+}
 const makeSymbol = (name, shareable = false) => !shareable ? Symbol(name) : Symbol.for(name);
 const generateFormatCacheKey = (locale, key, source) => friendlyJSONstringify({ l: locale, k: key, s: source });
 const friendlyJSONstringify = (json) => JSON.stringify(json).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029").replace(/\u0027/g, "\\u0027");
@@ -2217,7 +2225,28 @@ const assign = Object.assign;
 const _create = Object.create;
 const create = (obj = null) => _create(obj);
 function escapeHtml(rawText) {
-  return rawText.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+  return rawText.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;").replace(/\//g, "&#x2F;").replace(/=/g, "&#x3D;");
+}
+function escapeAttributeValue(value) {
+  return value.replace(/&(?![a-zA-Z0-9#]{2,6};)/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&apos;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function sanitizeTranslatedHtml(html) {
+  html = html.replace(/(\w+)\s*=\s*"([^"]*)"/g, (_, attrName, attrValue) => `${attrName}="${escapeAttributeValue(attrValue)}"`);
+  html = html.replace(/(\w+)\s*=\s*'([^']*)'/g, (_, attrName, attrValue) => `${attrName}='${escapeAttributeValue(attrValue)}'`);
+  const eventHandlerPattern = /\s*on\w+\s*=\s*["']?[^"'>]+["']?/gi;
+  if (eventHandlerPattern.test(html)) {
+    html = html.replace(/(\s+)(on)(\w+\s*=)/gi, "$1&#111;n$3");
+  }
+  const javascriptUrlPattern = [
+    // In href, src, action, formaction attributes
+    /(\s+(?:href|src|action|formaction)\s*=\s*["']?)\s*javascript:/gi,
+    // In style attributes within url()
+    /(style\s*=\s*["'][^"']*url\s*\(\s*)javascript:/gi
+  ];
+  javascriptUrlPattern.forEach((pattern) => {
+    html = html.replace(pattern, "$1javascript&#58;");
+  });
+  return html;
 }
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 function hasOwn(obj, key) {
@@ -2239,14 +2268,6 @@ const toDisplayString = (val) => {
 };
 function join(items, separator = "") {
   return items.reduce((str, item, index) => index === 0 ? str + item : str + separator + item, "");
-}
-function warn(msg, err) {
-  if (typeof console !== "undefined") {
-    console.warn(`[intlify] ` + msg);
-    if (err) {
-      console.warn(err.stack);
-    }
-  }
 }
 const isNotObjectOrIsArray = (val) => !isObject$2(val) || isArray(val);
 function deepCopy(src, des) {
@@ -5180,7 +5201,7 @@ function resolveValue(obj, path) {
   }
   return last;
 }
-const VERSION$1 = "10.0.7";
+const VERSION$1 = "10.0.8";
 const NOT_REOSLVED = -1;
 const DEFAULT_LOCALE = "en-US";
 const MISSING_RESOLVE_VALUE = "";
@@ -5689,7 +5710,10 @@ function translate(context, ...args) {
   const ctxOptions = getMessageContextOptions(context, targetLocale, message, options);
   const msgContext = createMessageContext(ctxOptions);
   const messaged = evaluateMessage(context, msg, msgContext);
-  const ret = postTranslation ? postTranslation(messaged, key) : messaged;
+  let ret = postTranslation ? postTranslation(messaged, key) : messaged;
+  if (escapeParameter && isString(ret)) {
+    ret = sanitizeTranslatedHtml(ret);
+  }
   return ret;
 }
 function escapeParams(options) {
@@ -5847,7 +5871,7 @@ function getMessageContextOptions(context, locale, message, options) {
   }
   return ctxOptions;
 }
-const VERSION = "10.0.7";
+const VERSION = "10.0.8";
 const I18nErrorCodes = {
   // composer module errors
   UNEXPECTED_RETURN_TYPE: CORE_ERROR_CODES_EXTEND_POINT,
@@ -13851,16 +13875,16 @@ const plugins = [
   ssg_detect_IpHCGcQQ_IR5Rl99qyukWoMA9fJGfuTYyoksTzy81cs
 ];
 const layouts = {
-  blank: defineAsyncComponent(() => import('./blank-COp4IHfV.mjs').then((m) => m.default || m)),
-  "components-default-layout-with-horizontal-nav": defineAsyncComponent(() => import('./DefaultLayoutWithHorizontalNav-DMdF8XAz.mjs').then((m) => m.default || m)),
-  "components-default-layout-with-vertical-nav": defineAsyncComponent(() => import('./DefaultLayoutWithVerticalNav-C61k4Aa5.mjs').then((m) => m.default || m)),
+  blank: defineAsyncComponent(() => import('./blank-BbJMoXd6.mjs').then((m) => m.default || m)),
+  "components-default-layout-with-horizontal-nav": defineAsyncComponent(() => import('./DefaultLayoutWithHorizontalNav-Bsibo2Di.mjs').then((m) => m.default || m)),
+  "components-default-layout-with-vertical-nav": defineAsyncComponent(() => import('./DefaultLayoutWithVerticalNav-C7p9J0zF.mjs').then((m) => m.default || m)),
   "components-footer": defineAsyncComponent(() => import('./Footer-CgBf2AWj.mjs').then((m) => m.default || m)),
-  "components-nav-bar-notifications": defineAsyncComponent(() => import('./NavBarNotifications-CBiSFxoh.mjs').then((m) => m.default || m)),
-  "components-nav-search-bar": defineAsyncComponent(() => import('./NavSearchBar-CY66e_Yy.mjs').then((m) => m.default || m)),
+  "components-nav-bar-notifications": defineAsyncComponent(() => import('./NavBarNotifications-D_taL_u2.mjs').then((m) => m.default || m)),
+  "components-nav-search-bar": defineAsyncComponent(() => import('./NavSearchBar-BsB7NHiv.mjs').then((m) => m.default || m)),
   "components-navbar-shortcuts": defineAsyncComponent(() => import('./NavbarShortcuts-Di0wExRN.mjs').then((m) => m.default || m)),
   "components-navbar-theme-switcher": defineAsyncComponent(() => import('./NavbarThemeSwitcher-C6RXK2Po.mjs').then((m) => m.default || m)),
-  "components-user-profile": defineAsyncComponent(() => import('./UserProfile-MTJs3d-E.mjs').then((m) => m.default || m)),
-  default: defineAsyncComponent(() => import('./default-DQLOVdID.mjs').then((m) => m.default || m))
+  "components-user-profile": defineAsyncComponent(() => import('./UserProfile-MZ4PJGmH.mjs').then((m) => m.default || m)),
+  default: defineAsyncComponent(() => import('./default-BpPs59f9.mjs').then((m) => m.default || m))
 };
 const routeRulesMatcher = _routeRulesMatcher;
 const LayoutLoader = defineComponent$1({
@@ -14644,4 +14668,4 @@ let entry;
 }
 const entry_default = ((ssrContext) => entry(ssrContext));
 
-export { useLink as $, useRounded as A, useRouter as B, useProxiedModel as C, toPhysical as D, useLayoutItem as E, provideDefaults as F, useRender as G, VDefaultsProvider as H, propsFactory as I, makeThemeProps as J, makeTagProps as K, makeRoundedProps as L, makeLayoutItemProps as M, makeElevationProps as N, makeDisplayProps as O, makeComponentProps as P, makeBorderProps as Q, IconValue as R, makeDensityProps as S, Ripple as T, useVariant as U, VBtn as V, useDensity as W, useDimension as X, useLoader as Y, useLocation as Z, usePosition as _, VIcon as a, keys as a$, LoaderSlot as a0, genOverlays as a1, makeVariantProps as a2, makeRouterProps as a3, makePositionProps as a4, makeLocationProps as a5, makeLoaderProps as a6, makeDimensionProps as a7, breakpoints as a8, EventProp as a9, useSize as aA, makeSizeProps as aB, useGroup as aC, useGoTo as aD, makeGroupProps as aE, useGroupItem as aF, makeGroupItemProps as aG, noop$1 as aH, defineFunctionalComponent as aI, consoleError as aJ, getObjectValueByPath as aK, isEmpty as aL, createRange as aM, keyValues as aN, destructComputed as aO, parseAnchor as aP, flipSide as aQ, flipAlign as aR, flipCorner as aS, getAxis as aT, defer as aU, templateRef as aV, useAuthStore as aW, themeConfig as aX, _export_sfc as aY, VBtnToggle as aZ, makeVBtnProps as a_, useLocale as aa, wrapInArray as ab, useTextColor as ac, getCurrentInstanceName as ad, consoleWarn as ae, getUid as af, getCurrentInstance as ag, only as ah, isOn as ai, pick as aj, filterInputAttrs as ak, callEvent as al, useResizeObserver as am, clamp as an, debounce as ao, ensureValidVNode as ap, matchesSelector as aq, omit as ar, getPropertyFromItem as as, isClickInsideElement as at, focusableChildren as au, focusChild as av, getNextElement as aw, defineComponent as ax, deprecate as ay, deepEqual as az, VProgressCircular as b, isObject$1 as b0, VuetifyLayoutKey as b1, refElement as b2, VProgressLinear as b3, useLayout as b4, useConfigStore as b5, useFocus as b6, useTheme as b7, IN_BROWSER as b8, defineNuxtRouteMiddleware as b9, storeToRefs as ba, AppContentLayoutNav as bb, useRoute$1 as bc, useLayoutConfigStore as bd, isNavGroupActive as be, layoutConfig as bf, getDynamicI18nProps as bg, getComputedNavLinkToProp as bh, isNavLinkActive as bi, until as bj, useEventListener as bk, useCookie as bl, useI18n as bm, pickWithRest as bn, useElementHover as bo, injectionKeyIsVerticalNavHovered as bp, openGroups as bq, useWindowSize as br, useToggle as bs, syncRef as bt, withQuery as bu, switchToVerticalNavOnLtOverlayNavBreakpoint as bv, useMagicKeys as bw, useRouter$1 as c, resolveRouteObject$1 as d, entry_default as default, encodeRoutePath as e, useRuntimeConfig as f, withoutTrailingSlash as g, hasProtocol as h, isScriptProtocol as i, joinURL as j, nuxtLinkDefaults as k, watchDebounced as l, convertToUnit as m, navigateTo as n, useToggleScope as o, parseQuery as p, genericComponent as q, refDebounced as r, useRtl as s, provideTheme as t, useNuxtApp as u, useBorder as v, withTrailingSlash as w, useBackgroundColor as x, useElevation as y, useDisplay as z };
+export { useLink as $, useRounded as A, useRouter as B, useProxiedModel as C, toPhysical as D, useLayoutItem as E, provideDefaults as F, useRender as G, VDefaultsProvider as H, propsFactory as I, makeThemeProps as J, makeTagProps as K, makeRoundedProps as L, makeLayoutItemProps as M, makeElevationProps as N, makeDisplayProps as O, makeComponentProps as P, makeBorderProps as Q, IconValue as R, makeDensityProps as S, Ripple as T, useVariant as U, VBtn as V, useDensity as W, useDimension as X, useLoader as Y, useLocation as Z, usePosition as _, VIcon as a, keys as a$, LoaderSlot as a0, genOverlays as a1, makeVariantProps as a2, makeRouterProps as a3, makePositionProps as a4, makeLocationProps as a5, makeLoaderProps as a6, makeDimensionProps as a7, breakpoints as a8, EventProp as a9, useSize as aA, makeSizeProps as aB, useGroup as aC, useGoTo as aD, makeGroupProps as aE, useGroupItem as aF, makeGroupItemProps as aG, noop$1 as aH, defineFunctionalComponent as aI, consoleError as aJ, getObjectValueByPath as aK, isEmpty as aL, createRange as aM, keyValues as aN, destructComputed as aO, parseAnchor as aP, flipSide as aQ, flipAlign as aR, flipCorner as aS, getAxis as aT, defer as aU, templateRef as aV, useAuthStore as aW, themeConfig as aX, _export_sfc as aY, VBtnToggle as aZ, makeVBtnProps as a_, useLocale as aa, wrapInArray as ab, useTextColor as ac, getCurrentInstanceName as ad, consoleWarn as ae, getUid as af, getCurrentInstance as ag, only as ah, isOn as ai, pick as aj, filterInputAttrs as ak, callEvent as al, useResizeObserver as am, clamp as an, debounce as ao, ensureValidVNode as ap, matchesSelector as aq, omit as ar, getPropertyFromItem as as, isClickInsideElement as at, focusableChildren as au, focusChild as av, getNextElement as aw, defineComponent as ax, deprecate as ay, deepEqual as az, VProgressCircular as b, isObject$1 as b0, VuetifyLayoutKey as b1, refElement as b2, VProgressLinear as b3, useLayout as b4, useConfigStore as b5, useFocus as b6, useTheme as b7, IN_BROWSER as b8, __nuxt_component_0$1 as b9, defineNuxtRouteMiddleware as ba, storeToRefs as bb, AppContentLayoutNav as bc, useRoute$1 as bd, useLayoutConfigStore as be, isNavGroupActive as bf, layoutConfig as bg, getDynamicI18nProps as bh, getComputedNavLinkToProp as bi, isNavLinkActive as bj, until as bk, useEventListener as bl, useCookie as bm, useI18n as bn, pickWithRest as bo, useElementHover as bp, injectionKeyIsVerticalNavHovered as bq, openGroups as br, useWindowSize as bs, useToggle as bt, syncRef as bu, withQuery as bv, switchToVerticalNavOnLtOverlayNavBreakpoint as bw, useMagicKeys as bx, useRouter$1 as c, resolveRouteObject$1 as d, entry_default as default, encodeRoutePath as e, useRuntimeConfig as f, withoutTrailingSlash as g, hasProtocol as h, isScriptProtocol as i, joinURL as j, nuxtLinkDefaults as k, watchDebounced as l, convertToUnit as m, navigateTo as n, useToggleScope as o, parseQuery as p, genericComponent as q, refDebounced as r, useRtl as s, provideTheme as t, useNuxtApp as u, useBorder as v, withTrailingSlash as w, useBackgroundColor as x, useElevation as y, useDisplay as z };

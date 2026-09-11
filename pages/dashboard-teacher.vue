@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import teacherWelcomeIllustration from '@images/pages/teacher-welcome-illustration.png'
+import { DotLottieVue } from '@lottiefiles/dotlottie-vue'
 import UiTableView from '@/components/ui/UiTableView.vue'
 
 definePageMeta({
@@ -16,14 +17,14 @@ interface AppreciationItem {
   title: string
   quote: string
   detail: string
-  icon: string
+  fallbackIcon: string
+  lordIconSrc: string
 }
 
 interface SummaryItem {
   label: string
   value: number
   period: string
-  helper: string
   icon: string
   tone: 'primary' | 'info' | 'warning' | 'success'
 }
@@ -63,38 +64,49 @@ interface ScheduleItem {
   status: ScheduleStatus
 }
 
+interface SelfLearningItem {
+  id: string
+  title: string
+  estimate: string
+  deadline?: string
+}
+
 const appreciationItems: AppreciationItem[] = [
   {
     title: 'Your consistency gives students room to grow.',
     quote: 'Small moments of clarity become big leaps over time.',
     detail: 'You have sent 12 parent updates this month.',
-    icon: 'ri-sparkling-2-line',
+    fallbackIcon: 'ri-sparkling-2-line',
+    lordIconSrc: '/icons/lordicon/recognition/bar-chart-vertical-grow.json',
   },
   {
     title: 'Eight students moved up a level this month.',
     quote: 'Progress looks different for every student. You keep making space for it.',
     detail: 'Student impact is up from your previous review window.',
-    icon: 'ri-flag-2-line',
+    fallbackIcon: 'ri-flag-2-line',
+    lordIconSrc: '/icons/lordicon/recognition/arrow-trending-up-system-outline.json',
   },
   {
     title: 'You are in the top 10% for student satisfaction.',
     quote: 'The way you listen is part of what students remember.',
     detail: 'Based on the latest student survey cycle.',
-    icon: 'ri-heart-3-line',
+    fallbackIcon: 'ri-heart-3-line',
+    lordIconSrc: '/icons/lordicon/recognition/confetti-system-outline.json',
   },
   {
     title: 'Three new skills are now part of your toolkit.',
     quote: 'A prepared teacher makes curiosity feel safe.',
     detail: 'Your learning record is up to date.',
-    icon: 'ri-lightbulb-flash-line',
+    fallbackIcon: 'ri-lightbulb-flash-line',
+    lordIconSrc: '/icons/lordicon/recognition/badge-ribbon-system-outline.json',
   },
 ]
 
 const summaryItems: SummaryItem[] = [
-  { label: 'Parents updated', value: 12, period: 'This month', helper: 'Journal updates sent', icon: 'ri-chat-3-line', tone: 'primary' },
-  { label: 'Students impacted', value: 8, period: 'This month', helper: 'Reached a new level', icon: 'ri-arrow-up-circle-line', tone: 'info' },
-  { label: 'Skill growth', value: 3, period: 'This month', helper: 'New skills mastered', icon: 'ri-lightbulb-line', tone: 'warning' },
-  { label: 'Projects submitted', value: 6, period: 'Ready to review', helper: 'Waiting for your review', icon: 'ri-folder-check-line', tone: 'success' },
+  { label: 'Parents updated', value: 12, period: 'This month', icon: 'ri-chat-3-line', tone: 'primary' },
+  { label: 'Students impacted', value: 8, period: 'This month', icon: 'ri-arrow-up-circle-line', tone: 'info' },
+  { label: 'Skill growth', value: 3, period: 'This month', icon: 'ri-lightbulb-line', tone: 'warning' },
+  { label: 'Projects submitted', value: 6, period: 'Ready to review', icon: 'ri-folder-check-line', tone: 'success' },
 ]
 
 const watchlistTabs: WatchlistType[] = ['Attendance', 'Productivity', 'Quiz']
@@ -168,6 +180,12 @@ const scheduleItems: ScheduleItem[] = [
   { id: 'schedule-3', startsAt: '2026-09-12T08:00:00+08:00', endsAt: '2026-09-12T09:30:00+08:00', dateLabel: '12 Sep', timeLabel: '08:00–09:30', name: 'Future Coders', type: 'Adaptive', students: 6, status: 'ready' },
 ]
 
+const selfLearningItems: SelfLearningItem[] = [
+  { id: 'learning-1', title: 'Check LMS reflection notes', estimate: '10 min' },
+  { id: 'learning-2', title: 'Review Python Game Dev Lesson 7 material', estimate: '15 min', deadline: 'Today' },
+  { id: 'learning-3', title: 'Prepare for Tech Explorer class tomorrow', estimate: '20 min', deadline: 'Tomorrow' },
+]
+
 const currentTime = ref<number | null>(null)
 let countdownTimer: ReturnType<typeof setInterval> | undefined
 
@@ -196,6 +214,13 @@ onBeforeUnmount(() => {
 })
 
 const currentAppreciation = ref(0)
+const prefersReducedMotion = ref(false)
+let reducedMotionMediaQuery: MediaQueryList | undefined
+
+const updateReducedMotion = (event?: MediaQueryListEvent) => {
+  prefersReducedMotion.value = event?.matches ?? reducedMotionMediaQuery?.matches ?? false
+}
+
 let appreciationTimer: ReturnType<typeof setInterval> | undefined
 
 const activeAppreciation = computed(() => appreciationItems[currentAppreciation.value])
@@ -217,11 +242,15 @@ const pauseAppreciationRotation = () => {
 }
 
 onMounted(() => {
+  reducedMotionMediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+  updateReducedMotion()
+  reducedMotionMediaQuery.addEventListener('change', updateReducedMotion)
   startAppreciationRotation()
 })
 
 onBeforeUnmount(() => {
   pauseAppreciationRotation()
+  reducedMotionMediaQuery?.removeEventListener('change', updateReducedMotion)
 })
 
 const riskColor = (risk: RiskLevel) => ({ Green: 'success', Yellow: 'warning', Red: 'error' })[risk]
@@ -241,6 +270,15 @@ const activeWatchlistItem = ref<WatchlistItem | null>(null)
 const actionNote = ref('')
 const toastShow = ref(false)
 const toastText = ref('')
+const dashboardHeaderAnimationLayout = {
+  fit: 'contain' as const,
+  align: [0.5, 0.5] as [number, number],
+}
+
+const dashboardHeaderAnimationRenderConfig = {
+  autoResize: true,
+  freezeOnOffscreen: true,
+}
 
 const openActionDialog = (item: WatchlistItem) => {
   activeWatchlistItem.value = item
@@ -254,6 +292,11 @@ const submitAction = () => {
   activeWatchlistItem.value.status = 'In Progress'
   isActionDialogOpen.value = false
   toastText.value = `Action saved for ${activeWatchlistItem.value.name}`
+  toastShow.value = true
+}
+
+const openSelfLearningItem = (item: SelfLearningItem) => {
+  toastText.value = `${item.title} opened in demo mode`
   toastShow.value = true
 }
 </script>
@@ -270,11 +313,26 @@ const submitAction = () => {
         </p>
       </div>
       <div class="dashboard-header__art" aria-hidden="true">
-        <img
-          :src="teacherWelcomeIllustration"
-          alt=""
-          class="dashboard-header__illustration"
-        >
+        <ClientOnly>
+          <DotLottieVue
+            src="/animations/dashboard-teacher-header.lottie"
+            animation-id="icon"
+            :autoplay="!prefersReducedMotion"
+            :loop="!prefersReducedMotion"
+            :layout="dashboardHeaderAnimationLayout"
+            :render-config="dashboardHeaderAnimationRenderConfig"
+            background-color="transparent"
+            aria-hidden="true"
+            class="dashboard-header__animation"
+          />
+          <template #fallback>
+            <img
+              :src="teacherWelcomeIllustration"
+              alt=""
+              class="dashboard-header__illustration"
+            >
+          </template>
+        </ClientOnly>
       </div>
     </header>
 
@@ -288,7 +346,20 @@ const submitAction = () => {
         >
           <div class="recognition-banner">
             <div class="recognition-rail" aria-hidden="true">
-              <VIcon :icon="activeAppreciation.icon" size="20" />
+              <lord-icon
+                v-if="!prefersReducedMotion"
+                :key="activeAppreciation.lordIconSrc"
+                :src="activeAppreciation.lordIconSrc"
+                trigger="loop"
+                loading="lazy"
+                class="recognition-lord-icon current-color"
+                aria-hidden="true"
+              />
+              <VIcon
+                v-else
+                :icon="activeAppreciation.fallbackIcon"
+                size="20"
+              />
             </div>
             <div class="recognition-content">
               <div class="appreciation-copy" aria-live="polite">
@@ -354,7 +425,6 @@ const submitAction = () => {
               </div>
               <span class="summary-card__value text-h3 font-weight-medium">{{ item.value }}</span>
               <span class="summary-card__label text-body-2 font-weight-medium">{{ item.label }}</span>
-              <span class="summary-card__helper text-caption">{{ item.helper }}</span>
             </VCard>
           </div>
         </section>
@@ -417,7 +487,7 @@ const submitAction = () => {
 
             <template #item.issue="{ item }">
               <div class="issue-cell">
-                <span class="issue-title font-weight-medium">{{ item.issue }}</span>
+                <span class="issue-title">{{ item.issue }}</span>
                 <span class="issue-metric text-caption">{{ item.metric }}</span>
               </div>
             </template>
@@ -567,7 +637,40 @@ const submitAction = () => {
           </VBtn>
         </VCard>
 
-        <VCard class="freshness-card dashboard-reveal dashboard-reveal--3" elevation="0">
+        <VCard class="learning-card dashboard-card dashboard-reveal dashboard-reveal--3" elevation="0">
+          <div class="learning-card__header">
+            <div class="learning-card__title-row">
+              <h2 class="text-h5 text-high-emphasis font-weight-medium mb-0">Self learning reminder</h2>
+            </div>
+          </div>
+          <VDivider />
+          <div class="learning-list">
+            <div v-for="item in selfLearningItems" :key="item.id" class="learning-item">
+              <div class="learning-item__icon" aria-hidden="true">
+                <VIcon icon="ri-book-open-line" color="primary" size="16" />
+              </div>
+              <div class="learning-item__content">
+                <span class="learning-item__title text-body-2 font-weight-medium">{{ item.title }}</span>
+                <span class="learning-item__meta text-caption">
+                  Estimation: {{ item.estimate }}<template v-if="item.deadline"> · Deadline: {{ item.deadline }}</template>
+                </span>
+              </div>
+              <VBtn
+                variant="outlined"
+                rounded="pill"
+                color="primary"
+                size="small"
+                class="learning-item__action"
+                :aria-label="`Open ${item.title}`"
+                @click="openSelfLearningItem(item)"
+              >
+                Open
+              </VBtn>
+            </div>
+          </div>
+        </VCard>
+
+        <VCard class="freshness-card dashboard-reveal dashboard-reveal--4" elevation="0">
           <div class="freshness-icon">
             <VIcon icon="ri-refresh-line" color="primary" size="19" />
           </div>
@@ -667,14 +770,23 @@ const submitAction = () => {
   min-height: 140px;
 }
 
-.dashboard-header__illustration {
+.dashboard-header__illustration,
+.dashboard-header__animation {
   position: absolute;
   bottom: 0;
   right: 20px;
-  width: auto;
   height: 220px;
   max-width: none;
+}
+
+.dashboard-header__illustration {
+  width: auto;
   object-fit: contain;
+}
+
+.dashboard-header__animation {
+  width: 251px;
+  overflow: visible;
 }
 
 .status-dot {
@@ -688,7 +800,7 @@ const submitAction = () => {
 
 .dashboard-layout {
   display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(280px, 1fr);
+  grid-template-columns: minmax(0, 7fr) minmax(280px, 3fr);
   align-items: start;
   gap: 24px;
 }
@@ -734,6 +846,12 @@ const submitAction = () => {
   border-radius: 6px;
   background: rgb(var(--v-theme-surface));
   color: rgb(var(--v-theme-warning-darken-1));
+}
+
+.recognition-lord-icon {
+  display: block;
+  width: 28px;
+  height: 28px;
 }
 
 .recognition-content {
@@ -832,7 +950,6 @@ const submitAction = () => {
 .summary-card--success { --summary-tone: var(--v-theme-success); }
 
 .summary-card__top,
-.summary-card__helper,
 .summary-card__label,
 .summary-card__period {
   display: block;
@@ -857,11 +974,6 @@ const submitAction = () => {
 
 .summary-card__label {
   color: rgb(var(--v-theme-on-surface));
-}
-
-.summary-card__helper {
-  color: rgb(var(--v-theme-secondary));
-  margin-block-start: 3px;
 }
 
 .dashboard-card {
@@ -1095,6 +1207,69 @@ const submitAction = () => {
   text-transform: none;
 }
 
+.learning-card {
+  overflow: hidden;
+}
+
+.learning-card__header {
+  padding: 16px;
+}
+
+.learning-card__title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.learning-list {
+  padding: 6px 16px 10px;
+}
+
+.learning-item {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding-block: 9px;
+}
+
+.learning-item__icon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 8px;
+  background: rgba(var(--v-theme-primary), 0.08);
+}
+
+.learning-item__content {
+  min-width: 0;
+}
+
+.learning-item__title,
+.learning-item__meta {
+  display: block;
+}
+
+.learning-item__title {
+  color: rgb(var(--v-theme-on-surface));
+  line-height: 1.35;
+}
+
+.learning-item__meta {
+  color: rgb(var(--v-theme-secondary));
+  line-height: 1.35;
+  margin-block-start: 3px;
+}
+
+.learning-item__action {
+  min-width: 52px;
+  min-height: 32px;
+  padding-inline: 11px;
+  text-transform: none;
+}
+
 .freshness-card {
   display: flex;
   align-items: flex-start;
@@ -1162,7 +1337,8 @@ const submitAction = () => {
 }
 
 @media (max-width: 1100px) {
-  .dashboard-header__illustration {
+  .dashboard-header__illustration,
+  .dashboard-header__animation {
     right: 0;
   }
 
@@ -1203,11 +1379,11 @@ const submitAction = () => {
     min-height: 180px;
   }
 
-  .dashboard-header__illustration {
+  .dashboard-header__illustration,
+  .dashboard-header__animation {
     top: -20px;
     bottom: auto;
     right: 50%;
-    height: 220px;
     transform: translateX(50%);
   }
 

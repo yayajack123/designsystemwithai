@@ -29,6 +29,7 @@ type NuxtAppInjections =
   InjectionType<typeof import("../../node_modules/nuxt/dist/app/plugins/check-if-layout-used.js")> &
   InjectionType<typeof import("../../plugins/vuetify/index")> &
   InjectionType<typeof import("../../plugins/iconify/index")> &
+  InjectionType<typeof import("../../plugins/lordicon.client")> &
   InjectionType<typeof import("../../plugins/api")> &
   InjectionType<typeof import("../../plugins/check-auth.server")> &
   InjectionType<typeof import("../../plugins/layouts")> &
