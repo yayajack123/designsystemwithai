@@ -215,21 +215,30 @@ onBeforeUnmount(() => {
 
 const currentAppreciation = ref(0)
 const prefersReducedMotion = ref(false)
+const isMobileViewport = ref(false)
 let reducedMotionMediaQuery: MediaQueryList | undefined
+let mobileViewportMediaQuery: MediaQueryList | undefined
 
 const updateReducedMotion = (event?: MediaQueryListEvent) => {
   prefersReducedMotion.value = event?.matches ?? reducedMotionMediaQuery?.matches ?? false
 }
 
+const updateMobileViewport = (event?: MediaQueryListEvent) => {
+  isMobileViewport.value = event?.matches ?? mobileViewportMediaQuery?.matches ?? false
+}
+
 let appreciationTimer: ReturnType<typeof setInterval> | undefined
 
 const activeAppreciation = computed(() => appreciationItems[currentAppreciation.value])
+const shouldAutoRotateAppreciation = computed(() => !prefersReducedMotion.value && !isMobileViewport.value)
 
 const changeAppreciation = (direction: 1 | -1) => {
   currentAppreciation.value = (currentAppreciation.value + direction + appreciationItems.length) % appreciationItems.length
 }
 
 const startAppreciationRotation = () => {
+  if (!shouldAutoRotateAppreciation.value) return
+
   if (appreciationTimer) clearInterval(appreciationTimer)
   appreciationTimer = setInterval(() => changeAppreciation(1), 5000)
 }
@@ -245,12 +254,21 @@ onMounted(() => {
   reducedMotionMediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
   updateReducedMotion()
   reducedMotionMediaQuery.addEventListener('change', updateReducedMotion)
+  mobileViewportMediaQuery = window.matchMedia('(max-width: 760px)')
+  updateMobileViewport()
+  mobileViewportMediaQuery.addEventListener('change', updateMobileViewport)
   startAppreciationRotation()
+})
+
+watch(shouldAutoRotateAppreciation, shouldRotate => {
+  if (shouldRotate) startAppreciationRotation()
+  else pauseAppreciationRotation()
 })
 
 onBeforeUnmount(() => {
   pauseAppreciationRotation()
   reducedMotionMediaQuery?.removeEventListener('change', updateReducedMotion)
+  mobileViewportMediaQuery?.removeEventListener('change', updateMobileViewport)
 })
 
 const riskColor = (risk: RiskLevel) => ({ Green: 'success', Yellow: 'warning', Red: 'error' })[risk]
@@ -336,13 +354,18 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
       </div>
     </header>
 
-    <div class="dashboard-layout">
-      <main class="dashboard-main">
+    <VRow class="dashboard-layout">
+      <VCol cols="12" md="8" lg="8" class="dashboard-main-column">
+        <main class="dashboard-main">
         <section
           class="recognition-card dashboard-reveal dashboard-reveal--2"
           aria-label="Personal achievement"
           @mouseenter="pauseAppreciationRotation"
           @mouseleave="startAppreciationRotation"
+          @focusin="pauseAppreciationRotation"
+          @focusout="startAppreciationRotation"
+          @touchstart="pauseAppreciationRotation"
+          @touchend="startAppreciationRotation"
         >
           <div class="recognition-banner">
             <div class="recognition-rail" aria-hidden="true">
@@ -442,6 +465,7 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
             hide-filters
             hide-pagination
             tabs-inside-card
+            mobile-cards
             card-class="dashboard-card"
             table-class="dashboard-table watchlist-table"
             flat
@@ -470,6 +494,78 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
                   View all
                   <VIcon end icon="ri-arrow-right-line" size="16" />
                 </VBtn>
+              </div>
+            </template>
+
+            <template #mobile-cards="{ items }">
+              <div
+                v-if="items.length"
+                class="watchlist-mobile-list"
+              >
+                <article
+                  v-for="item in items"
+                  :key="item.id"
+                  class="watchlist-mobile-card"
+                >
+                  <div class="watchlist-mobile-card__topline">
+                    <div class="student-cell watchlist-mobile-card__student">
+                      <VAvatar size="34" color="grey-100" class="border">
+                        <span class="text-caption font-weight-medium text-high-emphasis">
+                          {{ getInitials(item.name) }}
+                        </span>
+                      </VAvatar>
+                      <div class="min-w-0">
+                        <h3 class="text-body-1 font-weight-medium mb-1">
+                          {{ item.name }}
+                        </h3>
+                        <p class="text-caption text-medium-emphasis mb-0">
+                          {{ item.course }} · {{ item.window }}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div class="watchlist-mobile-card__risk">
+                      <span class="text-caption text-medium-emphasis">Risk</span>
+                      <VChip :color="riskColor(item.risk)" variant="tonal" size="small" class="status-chip text-caption font-weight-medium">
+                        <span class="status-dot" />
+                        {{ item.risk }}
+                      </VChip>
+                    </div>
+                  </div>
+
+                  <div class="watchlist-mobile-card__issue">
+                    <span class="text-caption text-medium-emphasis">Issue</span>
+                    <span class="text-body-2 text-high-emphasis">{{ item.issue }}</span>
+                    <span class="text-caption text-medium-emphasis">{{ item.metric }}</span>
+                  </div>
+
+                  <div class="watchlist-mobile-card__status">
+                    <span class="text-caption text-medium-emphasis">Status</span>
+                    <VChip :color="statusColor(item.status)" variant="outlined" size="small" class="status-chip text-caption font-weight-medium">
+                      {{ item.status }}
+                    </VChip>
+                  </div>
+
+                  <VBtn
+                    variant="outlined"
+                    color="primary"
+                    rounded="pill"
+                    block
+                    size="small"
+                    class="watchlist-mobile-card__action"
+                    @click="openActionDialog(item)"
+                  >
+                    Action
+                    <VIcon end icon="ri-arrow-right-up-line" size="15" />
+                  </VBtn>
+                </article>
+              </div>
+
+              <div
+                v-else
+                class="empty-cell"
+              >
+                No students in this evaluation view.
               </div>
             </template>
 
@@ -538,6 +634,7 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
             hide-filters
             hide-pagination
             tabs-inside-card
+            mobile-cards
             card-class="dashboard-card"
             table-class="dashboard-table pending-table"
             flat
@@ -563,6 +660,55 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
                   View all
                   <VIcon end icon="ri-arrow-right-line" size="16" />
                 </VBtn>
+              </div>
+            </template>
+
+            <template #mobile-cards="{ items }">
+              <div
+                v-if="items.length"
+                class="pending-mobile-list"
+              >
+                <article
+                  v-for="item in items"
+                  :key="item.id"
+                  class="pending-task-card"
+                >
+                  <div class="pending-task-card__topline">
+                    <div class="min-w-0">
+                      <h3 class="text-body-1 font-weight-medium mb-1">
+                        {{ item.student }}
+                      </h3>
+                      <p class="text-caption text-medium-emphasis mb-0">
+                        {{ item.course }} · {{ item.lesson }}
+                      </p>
+                    </div>
+
+                    <div class="pending-task-card__due">
+                      <span class="text-caption text-medium-emphasis">Due</span>
+                      <span class="due-label text-body-2 font-weight-medium">{{ item.due }}</span>
+                    </div>
+                  </div>
+
+                  <VBtn
+                    :to="getTaskRoute(item)"
+                    variant="outlined"
+                    color="primary"
+                    rounded="pill"
+                    block
+                    size="small"
+                    class="pending-task-card__action"
+                  >
+                    {{ item.action }}
+                    <VIcon end icon="ri-arrow-right-up-line" size="15" />
+                  </VBtn>
+                </article>
+              </div>
+
+              <div
+                v-else
+                class="empty-cell"
+              >
+                Nothing is waiting here. Keep the good rhythm going.
               </div>
             </template>
 
@@ -596,9 +742,11 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
             </template>
           </UiTableView>
         </section>
-      </main>
+        </main>
+      </VCol>
 
-      <aside class="dashboard-aside dashboard-reveal dashboard-reveal--2">
+      <VCol cols="12" md="4" lg="4" class="dashboard-aside-column">
+        <aside class="dashboard-aside dashboard-reveal dashboard-reveal--2">
         <VCard class="schedule-card dashboard-card" elevation="0">
           <div class="schedule-card__header">
             <div>
@@ -681,8 +829,9 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
             <p class="text-caption text-medium-emphasis mb-0">Your next watchlist review is ready.</p>
           </div>
         </VCard>
-      </aside>
-    </div>
+        </aside>
+      </VCol>
+    </VRow>
 
     <VDialog v-model="isActionDialogOpen" max-width="520">
       <VCard class="action-dialog" elevation="0">
@@ -801,10 +950,7 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
 }
 
 .dashboard-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 7fr) minmax(280px, 3fr);
   align-items: start;
-  gap: 24px;
 }
 
 .dashboard-main,
@@ -821,7 +967,7 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
 .dashboard-aside {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px;
 }
 
 .recognition-card {
@@ -1131,6 +1277,110 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
   text-transform: none;
 }
 
+.pending-mobile-list {
+  padding: 0 16px 8px;
+}
+
+.pending-task-card {
+  padding: 18px 4px;
+  border-block-end: 1px solid var(--dashboard-muted-line);
+}
+
+.pending-task-card:last-child {
+  border-block-end: 0;
+}
+
+.pending-task-card__topline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+}
+
+.pending-task-card__due {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  text-align: end;
+}
+
+.pending-task-card__action {
+  min-height: 40px;
+  margin-block-start: 16px;
+  text-transform: none;
+}
+
+.watchlist-mobile-list {
+  padding: 0 16px 8px;
+}
+
+.watchlist-mobile-card {
+  padding: 18px 4px;
+  border-block-end: 1px solid var(--dashboard-muted-line);
+}
+
+.watchlist-mobile-card:last-child {
+  border-block-end: 0;
+}
+
+.watchlist-mobile-card__topline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+}
+
+.watchlist-mobile-card__student {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.watchlist-mobile-card__student h3,
+.watchlist-mobile-card__student p {
+  overflow-wrap: anywhere;
+}
+
+.watchlist-mobile-card__risk {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  text-align: end;
+}
+
+.watchlist-mobile-card__issue {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-block-start: 16px;
+  border-radius: 6px;
+  background: rgba(var(--v-theme-on-surface), 0.035);
+  padding: 10px 12px;
+}
+
+.watchlist-mobile-card__issue > span {
+  overflow-wrap: anywhere;
+}
+
+.watchlist-mobile-card__status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-block-start: 14px;
+}
+
+.watchlist-mobile-card__action {
+  min-height: 40px;
+  margin-block-start: 16px;
+  text-transform: none;
+}
+
 .schedule-card {
   overflow: hidden;
 }
@@ -1355,34 +1605,81 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
   .dashboard-header__animation {
     right: 0;
   }
+}
 
-  .dashboard-layout {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
+@media (min-width: 761px) and (max-width: 959px) {
   .dashboard-aside {
     display: grid;
     grid-template-columns: minmax(0, 1.4fr) minmax(240px, 1fr);
     align-items: start;
   }
+
+  .dashboard-aside-column {
+    order: -1;
+  }
+}
+
+@media (max-width: 1100px) {
+  .dashboard-table-view :deep(.v-table__wrapper) {
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .dashboard-table-view :deep(.dashboard-table) {
+    min-width: 0;
+  }
+
+  .dashboard-table-view :deep(.dashboard-table table) {
+    min-width: 720px;
+    width: 100%;
+  }
+
+  .dashboard-table-view :deep(.dashboard-table tr) {
+    border: 0;
+    padding: 0;
+  }
+
+  .dashboard-table-view :deep(.dashboard-table th),
+  .dashboard-table-view :deep(.dashboard-table td) {
+    white-space: nowrap;
+  }
+
+  .dashboard-table-view :deep(.dashboard-table tbody tr:last-child td) {
+    border-block-end: 0;
+  }
+
+  .action-button {
+    min-width: auto;
+  }
 }
 
 @media (max-width: 760px) {
+  :global(.layout-page-content:has(.teacher-dashboard)) {
+    padding-inline: 16px;
+  }
+
   .teacher-dashboard {
-    padding-block: 72px 20px;
+    padding-block: 24px 20px;
   }
 
   .card-heading,
   .section-heading,
   .schedule-card__header {
     flex-direction: column;
-    align-items: stretch;
+    align-items: flex-start;
     gap: 12px;
+  }
+
+  .section-link {
+    align-self: flex-start;
+    margin-inline: 0;
   }
 
   .dashboard-header {
     grid-template-columns: 1fr;
     min-height: 0;
+    overflow: hidden;
   }
 
   .dashboard-header__content {
@@ -1390,28 +1687,35 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
   }
 
   .dashboard-header__art {
-    min-height: 180px;
+    min-height: 220px;
   }
 
   .dashboard-header__illustration,
   .dashboard-header__animation {
-    top: -20px;
-    bottom: auto;
+    top: auto;
+    bottom: 0;
     right: 50%;
     transform: translateX(50%);
   }
 
   .recognition-card {
-    padding: 14px;
+    padding: 0;
   }
 
   .recognition-banner {
+    flex-direction: column;
     align-items: flex-start;
-    padding: 12px;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .recognition-content {
+    width: 100%;
+    min-height: 0;
   }
 
   .recognition-banner-nav {
-    gap: 4px !important;
+    display: none;
   }
 
   .summary-grid {
@@ -1420,102 +1724,6 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
 
   .dashboard-aside {
     display: flex;
-  }
-
-  .dashboard-table-view :deep(.v-table__wrapper) {
-    padding: 0 14px 10px;
-  }
-
-  .dashboard-table-view :deep(.dashboard-table .v-data-table__thead) {
-    display: none;
-  }
-
-  .dashboard-table-view :deep(.dashboard-table table),
-  .dashboard-table-view :deep(.dashboard-table .v-data-table__tbody),
-  .dashboard-table-view :deep(.dashboard-table .v-data-table__tr),
-  .dashboard-table-view :deep(.dashboard-table .v-data-table__td) {
-    display: block;
-    width: 100%;
-  }
-
-  .dashboard-table-view :deep(.dashboard-table .v-data-table__tr) {
-    border-block-end: 1px solid var(--dashboard-muted-line);
-    padding-block: 12px;
-  }
-
-  .dashboard-table-view :deep(.dashboard-table .v-data-table__tbody .v-data-table__tr:last-child) {
-    border-block-end: 0;
-  }
-
-  .dashboard-table-view :deep(.dashboard-table .v-data-table__td) {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    border: 0;
-    padding: 7px 6px;
-    text-align: end;
-  }
-
-  .dashboard-table-view :deep(.dashboard-table .v-data-table__td::before) {
-    color: rgb(var(--v-theme-secondary));
-    content: '';
-    flex: 0 0 auto;
-    font: inherit;
-    font-weight: 500;
-    text-align: start;
-    text-transform: uppercase;
-  }
-
-  .dashboard-table-view :deep(.watchlist-table .v-data-table__td:nth-child(1)::before) { content: 'Student'; }
-  .dashboard-table-view :deep(.watchlist-table .v-data-table__td:nth-child(2)::before) { content: 'Issue'; }
-  .dashboard-table-view :deep(.watchlist-table .v-data-table__td:nth-child(3)::before) { content: 'Risk'; }
-  .dashboard-table-view :deep(.watchlist-table .v-data-table__td:nth-child(4)::before) { content: 'Status'; }
-  .dashboard-table-view :deep(.watchlist-table .v-data-table__td:nth-child(5)::before) { content: 'Action'; }
-  .dashboard-table-view :deep(.pending-table .v-data-table__td:nth-child(1)::before) { content: 'Student'; }
-  .dashboard-table-view :deep(.pending-table .v-data-table__td:nth-child(2)::before) { content: 'Course'; }
-  .dashboard-table-view :deep(.pending-table .v-data-table__td:nth-child(3)::before) { content: 'Mtg / Lesson'; }
-  .dashboard-table-view :deep(.pending-table .v-data-table__td:nth-child(4)::before) { content: 'Due'; }
-  .dashboard-table-view :deep(.pending-table .v-data-table__td:nth-child(5)::before) { content: 'Action'; }
-
-  .dashboard-table-view :deep(.dashboard-table .v-data-table__td:first-child) {
-    align-items: flex-start;
-  }
-
-  .dashboard-table-view :deep(.dashboard-table .v-data-table__td:first-child::before) {
-    margin-block-start: 8px;
-  }
-
-  .dashboard-table-view :deep(.dashboard-table .v-data-table__td:nth-child(5)) {
-    justify-content: space-between;
-  }
-
-  .dashboard-table-view :deep(.dashboard-table .empty-cell) {
-    display: block;
-    text-align: center;
-  }
-
-  .dashboard-table-view :deep(.dashboard-table .empty-cell::before) {
-    display: none;
-  }
-
-  .student-cell,
-  .issue-cell {
-    min-width: 0;
-    text-align: end;
-  }
-
-  .student-cell {
-    flex-direction: row-reverse;
-    text-align: end;
-  }
-
-  .issue-cell {
-    max-width: 70%;
-  }
-
-  .action-button {
-    min-width: auto;
   }
 }
 

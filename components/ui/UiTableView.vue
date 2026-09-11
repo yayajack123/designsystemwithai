@@ -24,6 +24,7 @@ const props = withDefaults(defineProps<{
   tableClass?: string
   flat?: boolean
   showViewToggle?: boolean
+  mobileCards?: boolean
   back?: any
 }>(), {
   tabs: () => [],
@@ -38,6 +39,7 @@ const props = withDefaults(defineProps<{
   tableClass: undefined,
   flat: false,
   showViewToggle: false,
+  mobileCards: false,
 })
 
 const emit = defineEmits<{
@@ -49,7 +51,10 @@ const viewType = defineModel<string>('viewType', { default: 'list' })
 </script>
 
 <template>
-  <section class="ui-table-view">
+  <section
+    class="ui-table-view"
+    :class="{ 'ui-table-view--mobile-cards': props.mobileCards }"
+  >
     <!-- Page Header Title & Description -->
     <UiSectionHeader
       v-if="props.title"
@@ -193,29 +198,41 @@ const viewType = defineModel<string>('viewType', { default: 'list' })
       <!-- Data Table or Custom views -->
       <template v-else>
         <!-- Standard list view using VDataTable -->
-        <div v-if="viewType === 'list'">
-          <slot name="table-content">
-            <VDataTable
-              :headers="props.headers"
-              :items="props.items"
-              :items-per-page="props.itemsPerPage"
-              :hide-default-footer="props.hidePagination"
-              :class="[props.tableClass, 'text-no-wrap']"
-            >
-              <!-- Forward all dynamic slots (like #item.status, #no-data, etc.) to parent -->
-              <template
-                v-for="(_, slotName) in $slots"
-                #[slotName]="slotData"
+        <template v-if="viewType === 'list'">
+          <div class="ui-table-view__desktop-table">
+            <slot name="table-content">
+              <VDataTable
+                :headers="props.headers"
+                :items="props.items"
+                :items-per-page="props.itemsPerPage"
+                :hide-default-footer="props.hidePagination"
+                :class="[props.tableClass, 'text-no-wrap']"
               >
-                <slot
-                  v-if="slotName.startsWith('item.') || slotName === 'no-data'"
-                  :name="slotName"
-                  v-bind="slotData"
-                />
-              </template>
-            </VDataTable>
-          </slot>
-        </div>
+                <!-- Forward all dynamic slots (like #item.status, #no-data, etc.) to parent -->
+                <template
+                  v-for="(_, slotName) in $slots"
+                  #[slotName]="slotData"
+                >
+                  <slot
+                    v-if="slotName.startsWith('item.') || slotName === 'no-data'"
+                    :name="slotName"
+                    v-bind="slotData"
+                  />
+                </template>
+              </VDataTable>
+            </slot>
+          </div>
+
+          <div
+            v-if="props.mobileCards && $slots['mobile-cards']"
+            class="ui-table-view__mobile-cards"
+          >
+            <slot
+              name="mobile-cards"
+              :items="props.items"
+            />
+          </div>
+        </template>
 
         <!-- Slot for custom viewTypes (e.g. view-team, view-room, etc.) -->
         <div v-else>
@@ -238,6 +255,22 @@ const viewType = defineModel<string>('viewType', { default: 'list' })
   line-height: 1;
   min-width: 24px;
   height: 18px;
+}
+
+.ui-table-view__mobile-cards {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .ui-table-view--mobile-cards {
+    .ui-table-view__desktop-table {
+      display: none;
+    }
+
+    .ui-table-view__mobile-cards {
+      display: block;
+    }
+  }
 }
 
 // Custom styles for the toggle button group matching assessment page

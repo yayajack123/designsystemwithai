@@ -47,6 +47,20 @@ Vuetify applies these typography settings automatically across components:
 1. **Tags / Classes:** You can apply these styles to any element using the Vuetify CSS class equivalent (e.g., `<span class="text-h3">Title</span>`).
 2. **Vuetify Buttons:** The `button` typography token properties (font-size, font-weight, capitalized transform) are automatically bound to the `<VBtn>` component via Vuetify's default compiler.
 
+### Eyebrow / Overline Usage
+
+- Use eyebrow or overline text above a main title only when it communicates real context, such as category, scope, status, or hierarchy.
+- Do not add eyebrow text as decorative filler. Avoid redundant stacks where the eyebrow, title, and subtitle repeat the same message.
+- Keep eyebrow copy short, specific, sentence case, and visually subordinate to the main title.
+- Do not use arbitrary numbering, generic labels, or interchangeable phrases unless they communicate meaningful product context.
+
+### Avoiding AI-Generated Visual Patterns
+
+- Design must feel intentional and grounded in the product context, not assembled from generic AI patterns.
+- Avoid decorative gradients, excessive badges, repeated rounded cards, arbitrary icons, unnecessary overlines, and vague or inflated copy.
+- Every decorative element must support hierarchy, meaning, interaction, or accessibility. Remove decoration that adds no information.
+- Choose one distinctive visual signature per page and keep the surrounding layout disciplined.
+
 ## 3. Color Specification
 
 This section details the color tokens, primitive palettes, opacity levels, and active light/dark Vuetify theme colors configured in [theme.ts](../plugins/vuetify/theme.ts).
@@ -198,6 +212,18 @@ Below details what specific color and typography tokens are configured on these 
 
 - **Typography:** None.
 - **Colors:** Implicitly inherits `background` (`#FAFAFA` in light theme, `#28243D` in dark theme).
+- **Layout rule:** Page-level and section-level layouts must use Vuetify `VRow` and `VCol`. Do not use raw `div`-based CSS Grid for outer page shells or primary columns.
+- **Spacing rule:** Use `gap: 24px` (`gap-6` equivalent) between primary layout sections. Keep spacing consistent across desktop, tablet, and mobile breakpoints.
+- **Sizing rule:** Use `cols="12"` as the mobile baseline, then add Vuetify breakpoint props such as `sm`, `md`, or `lg` for larger layouts.
+
+#### Teacher Dashboard Shell
+
+- Use Vuetify's standard 12-column grid: `VRow` with `VCol cols="12" lg="8"` for the main content and `VCol cols="12" lg="4"` for the sidebar.
+- Keep the default `VRow`/`VCol` gutters, which provide 24px visual separation between columns and rows. Do not add a second 24px gap on top of those gutters.
+- Keep the main content and sidebar stacks at `gap: 24px` internally.
+- Use the direct welcome headline (`Good morning, Julie.`) with supporting copy below; do not add a decorative eyebrow above the main title.
+- Keep `min-width: 0` on dashboard content containers so tables can shrink without horizontal overflow.
+- Keep dashboard-specific internal grids only for local content patterns such as summary cards or schedule rows; outer page layout remains `VRow`/`VCol`.
 
 #### Cards (`VCard`, `VCardText`, `VCardTitle`, `VCardActions`)
 
@@ -232,3 +258,4 @@ Below details what specific color and typography tokens are configured on these 
 
 - **Typography:** Table headers use `subtitle-2` or `overline`. Cell text uses `body-2`.
 - **Colors:** Row borders use `grey-100`. Alternate rows or hover states use `grey-50` (`#FAFAFA` light, `#2A2E42` dark).
+- **Responsive pattern:** Keep `VDataTable` for desktop and use `UiTableView`'s optional `mobileCards` mode with an explicit `mobile-cards` slot when mobile needs different content grouping or action hierarchy. Avoid `nth-child` and pseudo-element labels for structural transformations.
