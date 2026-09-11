@@ -362,18 +362,20 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
               />
             </div>
             <div class="recognition-content">
-              <div class="appreciation-copy" aria-live="polite">
-                <h2 class="text-h6 font-weight-medium text-high-emphasis mb-1">
-                  {{ activeAppreciation.title }}
-                </h2>
-                <p class="text-body-2 text-medium-emphasis mb-1 appreciation-quote">
-                  “{{ activeAppreciation.quote }}”
-                </p>
-                <div class="d-flex align-center gap-2 text-caption text-medium-emphasis">
-                  <VIcon icon="ri-checkbox-circle-line" size="15" />
-                  <span>{{ activeAppreciation.detail }}</span>
+              <Transition name="appreciation-fade" mode="out-in">
+                <div :key="activeAppreciation.title" class="appreciation-copy" aria-live="polite">
+                  <h2 class="text-h6 font-weight-medium text-high-emphasis mb-1">
+                    {{ activeAppreciation.title }}
+                  </h2>
+                  <p class="text-body-2 text-medium-emphasis mb-1 appreciation-quote">
+                    “{{ activeAppreciation.quote }}”
+                  </p>
+                  <div class="d-flex align-center gap-2 text-caption text-medium-emphasis">
+                    <VIcon icon="ri-checkbox-circle-line" size="15" />
+                    <span>{{ activeAppreciation.detail }}</span>
+                  </div>
                 </div>
-              </div>
+              </Transition>
             </div>
             <div class="recognition-banner-nav d-flex align-center gap-2">
               <IconBtn
@@ -857,6 +859,18 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
 .recognition-content {
   flex: 1 1 auto;
   min-width: 0;
+  min-height: 64px;
+}
+
+.appreciation-fade-enter-active,
+.appreciation-fade-leave-active {
+  transition: opacity 200ms var(--dashboard-ease-out), transform 200ms var(--dashboard-ease-out);
+}
+
+.appreciation-fade-enter-from,
+.appreciation-fade-leave-to {
+  opacity: 0;
+  transform: translateY(4px);
 }
 
 .recognition-banner-nav {
@@ -1515,6 +1529,16 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
   .summary-card,
   .dashboard-table-view :deep(.dashboard-table tbody tr) {
     transition: none;
+  }
+
+  .appreciation-fade-enter-active,
+  .appreciation-fade-leave-active {
+    transition: opacity 160ms var(--dashboard-ease-out);
+  }
+
+  .appreciation-fade-enter-from,
+  .appreciation-fade-leave-to {
+    transform: none;
   }
 }
 </style>

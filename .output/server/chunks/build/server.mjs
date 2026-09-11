@@ -1252,7 +1252,7 @@ const _routes = [
     name: "dashboard-teacher",
     path: "/dashboard-teacher",
     meta: __nuxt_page_meta$1 || {},
-    component: () => import('./dashboard-teacher-AsPMXh6s.mjs')
+    component: () => import('./dashboard-teacher-Dwrf-6mW.mjs')
   },
   {
     name: "meeting-journal-create",

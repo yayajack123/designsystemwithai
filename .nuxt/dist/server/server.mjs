@@ -897,7 +897,7 @@ const _routes = [
     name: "dashboard-teacher",
     path: "/dashboard-teacher",
     meta: __nuxt_page_meta$1 || {},
-    component: () => import("./_nuxt/dashboard-teacher-AsPMXh6s.js")
+    component: () => import("./_nuxt/dashboard-teacher-Dwrf-6mW.js")
   },
   {
     name: "meeting-journal-create",

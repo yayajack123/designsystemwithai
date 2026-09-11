@@ -1,0 +1,1 @@
+import{d as c,k as s,b as t,a,g as i,f as l,o as r}from"./CnxwtAcC.js";const f=c({__name:"DialogCloseBtn",props:{icon:{default:"ri-close-line"},iconSize:{default:"24"}},setup(e){const o=e;return(p,_)=>{const n=l("IconBtn");return r(),s(n,{class:"v-dialog-close-btn"},{default:t(()=>[a(i,{icon:o.icon,size:o.iconSize},null,8,["icon","size"])]),_:1})}}});export{f as _};
