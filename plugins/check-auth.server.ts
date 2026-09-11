@@ -3,6 +3,11 @@ import { useAuthStore } from '~/stores/auth'
 import { resolveAuthOrigin } from '~/utils/auth-origin'
 
 export default defineNuxtPlugin(async ({ $pinia }) => {
+  const config = useRuntimeConfig()
+
+  if (!config.public.authEnabled)
+    return
+
   const authStore = useAuthStore($pinia as Pinia)
   const XSRF_TOKEN = useCookie('XSRF-TOKEN')
   const clientCookies = useRequestHeaders(['cookie', 'origin'])

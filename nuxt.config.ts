@@ -33,6 +33,7 @@ export default defineNuxtConfig({
       appBaseUrl: process.env.APP_BASE_URL || '',
       apiBaseUrl: process.env.API_BASE_URL || '',
       sanctumBaseUrl: process.env.SANCTUM_BASE_URL || '',
+      authEnabled: process.env.AUTH_ENABLED === 'true',
     }
   },
 

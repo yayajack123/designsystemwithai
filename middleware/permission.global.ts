@@ -3,6 +3,11 @@ import route from '~/permission/route'
 import { useAuthStore } from '~/stores/auth'
 
 export default defineNuxtRouteMiddleware(to => {
+  const config = useRuntimeConfig()
+
+  if (!config.public.authEnabled)
+    return
+
   const { userPermission } = storeToRefs(useAuthStore())
 
   const currentRoute = route.find((r: any) => r.name === to.name)

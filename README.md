@@ -7,9 +7,12 @@ Official admin starter kit for Timedoor Project. This template use [Materio Admi
 
 Copy this to .env
 ```sh
-API_URL=https://be-example.timedoor-web.my.id/api/admin/v1
-SANCTUM_URL=https://be-example.timedoor-web.my.id/sanctum
+AUTH_ENABLED=false
+API_BASE_URL=https://be-example.timedoor-web.my.id/api/admin/v1
+SANCTUM_BASE_URL=https://be-example.timedoor-web.my.id/sanctum
 ```
+
+Set `AUTH_ENABLED=true` when API authentication is ready.
 ```sh
 yarn install
 ```
@@ -31,5 +34,3 @@ password: demo123
 ```sh
 yarn build
 ```
-
-
