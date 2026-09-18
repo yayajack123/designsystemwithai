@@ -290,7 +290,7 @@ const toastShow = ref(false)
 const toastText = ref('')
 const dashboardHeaderAnimationLayout = {
   fit: 'contain' as const,
-  align: [0.5, 0.5] as [number, number],
+  align: [0.5, 1] as [number, number],
 }
 
 const dashboardHeaderAnimationRenderConfig = {
@@ -321,113 +321,110 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
 
 <template>
   <section class="teacher-dashboard">
-    <header class="dashboard-header dashboard-reveal dashboard-reveal--1">
-      <div class="dashboard-header__content">
-        <h1 class="text-h4 text-high-emphasis mb-2">
-          Good morning, Julie.
-        </h1>
-        <p class="text-body-1 text-medium-emphasis mb-0">
-          Here’s your teaching brief. Start with what needs your attention today.
-        </p>
-      </div>
-      <div class="dashboard-header__art" aria-hidden="true">
-        <ClientOnly>
-          <DotLottieVue
-            src="/animations/dashboard-teacher-header.lottie"
-            animation-id="icon"
-            :autoplay="!prefersReducedMotion"
-            :loop="!prefersReducedMotion"
-            :layout="dashboardHeaderAnimationLayout"
-            :render-config="dashboardHeaderAnimationRenderConfig"
-            background-color="transparent"
-            aria-hidden="true"
-            class="dashboard-header__animation"
-          />
-          <template #fallback>
-            <img
-              :src="teacherWelcomeIllustration"
-              alt=""
-              class="dashboard-header__illustration"
-            >
-          </template>
-        </ClientOnly>
-      </div>
+    <header class="dashboard-header-wrap dashboard-reveal dashboard-reveal--1">
+      <h1 class="dashboard-page-title text-h5 text-medium-emphasis">
+        Good morning, Julie.
+      </h1>
+      <VRow class="dashboard-header">
+        <VCol cols="12" md="8">
+          <div class="dashboard-header__composition">
+            <VCard class="dashboard-card dashboard-header__welcome" elevation="0">
+              <div class="dashboard-header__content">
+                <h2 class="text-h4 text-high-emphasis mb-2">
+                  Here’s your teaching brief.
+                </h2>
+                <p class="text-body-1 text-medium-emphasis mb-0">
+                  Start with what needs your attention today.
+                </p>
+              </div>
+            </VCard>
+            <div class="dashboard-header__art" aria-hidden="true">
+              <ClientOnly>
+                <DotLottieVue
+                  src="/animations/dashboard-teacher-header.lottie"
+                  animation-id="icon"
+                  :autoplay="!prefersReducedMotion"
+                  :loop="!prefersReducedMotion"
+                  :layout="dashboardHeaderAnimationLayout"
+                  :render-config="dashboardHeaderAnimationRenderConfig"
+                  background-color="transparent"
+                  aria-hidden="true"
+                  class="dashboard-header__animation"
+                />
+                <template #fallback>
+                  <img
+                    :src="teacherWelcomeIllustration"
+                    alt=""
+                    class="dashboard-header__illustration"
+                  >
+                </template>
+              </ClientOnly>
+            </div>
+          </div>
+        </VCol>
+
+        <VCol cols="12" md="4">
+          <VCard
+            tag="section"
+            class="dashboard-card recognition-card"
+            elevation="0"
+            aria-label="Personal achievement"
+            @mouseenter="pauseAppreciationRotation"
+            @mouseleave="startAppreciationRotation"
+            @touchstart="pauseAppreciationRotation"
+            @touchend="startAppreciationRotation"
+          >
+            <div class="recognition-banner">
+              <div class="recognition-rail" aria-hidden="true">
+                <lord-icon
+                  v-if="!prefersReducedMotion"
+                  :key="activeAppreciation.lordIconSrc"
+                  :src="activeAppreciation.lordIconSrc"
+                  trigger="loop"
+                  loading="lazy"
+                  class="recognition-lord-icon current-color"
+                  aria-hidden="true"
+                />
+                <VIcon
+                  v-else
+                  :icon="activeAppreciation.fallbackIcon"
+                  size="20"
+                />
+              </div>
+              <div class="recognition-content">
+                <Transition name="appreciation-fade" mode="out-in">
+                  <div :key="activeAppreciation.title" class="appreciation-copy" aria-live="polite">
+                    <h2 class="text-h6 font-weight-medium text-high-emphasis mb-1">
+                      {{ activeAppreciation.title }}
+                    </h2>
+                    <p class="text-body-2 text-medium-emphasis mb-1 appreciation-quote">
+                      “{{ activeAppreciation.quote }}”
+                    </p>
+                    <div class="d-flex align-center gap-2 text-caption text-medium-emphasis">
+                      <VIcon icon="ri-checkbox-circle-line" size="15" color="secondary" />
+                      <span class="text-secondary">{{ activeAppreciation.detail }}</span>
+                    </div>
+                  </div>
+                </Transition>
+              </div>
+            </div>
+            <div class="recognition-progress" aria-label="Appreciation carousel position">
+              <span
+                v-for="(_, index) in appreciationItems"
+                :key="index"
+                class="recognition-progress__item"
+                :class="{ 'recognition-progress__item--active': index === currentAppreciation }"
+              />
+            </div>
+          </VCard>
+        </VCol>
+      </VRow>
     </header>
 
     <VRow class="dashboard-layout">
       <VCol cols="12" md="8" lg="8" class="dashboard-main-column">
         <main class="dashboard-main">
-        <section
-          class="recognition-card dashboard-reveal dashboard-reveal--2"
-          aria-label="Personal achievement"
-          @mouseenter="pauseAppreciationRotation"
-          @mouseleave="startAppreciationRotation"
-          @focusin="pauseAppreciationRotation"
-          @focusout="startAppreciationRotation"
-          @touchstart="pauseAppreciationRotation"
-          @touchend="startAppreciationRotation"
-        >
-          <div class="recognition-banner">
-            <div class="recognition-rail" aria-hidden="true">
-              <lord-icon
-                v-if="!prefersReducedMotion"
-                :key="activeAppreciation.lordIconSrc"
-                :src="activeAppreciation.lordIconSrc"
-                trigger="loop"
-                loading="lazy"
-                class="recognition-lord-icon current-color"
-                aria-hidden="true"
-              />
-              <VIcon
-                v-else
-                :icon="activeAppreciation.fallbackIcon"
-                size="20"
-              />
-            </div>
-            <div class="recognition-content">
-              <Transition name="appreciation-fade" mode="out-in">
-                <div :key="activeAppreciation.title" class="appreciation-copy" aria-live="polite">
-                  <h2 class="text-h6 font-weight-medium text-high-emphasis mb-1">
-                    {{ activeAppreciation.title }}
-                  </h2>
-                  <p class="text-body-2 text-medium-emphasis mb-1 appreciation-quote">
-                    “{{ activeAppreciation.quote }}”
-                  </p>
-                  <div class="d-flex align-center gap-2 text-caption text-medium-emphasis">
-                    <VIcon icon="ri-checkbox-circle-line" size="15" />
-                    <span>{{ activeAppreciation.detail }}</span>
-                  </div>
-                </div>
-              </Transition>
-            </div>
-            <div class="recognition-banner-nav d-flex align-center gap-2">
-              <IconBtn
-                class="recognition-nav"
-                aria-label="Previous appreciation"
-                @click="changeAppreciation(-1)"
-              >
-                <VIcon icon="ri-arrow-left-line" size="18" />
-              </IconBtn>
-              <IconBtn
-                class="recognition-nav"
-                aria-label="Next appreciation"
-                @click="changeAppreciation(1)"
-              >
-                <VIcon icon="ri-arrow-right-line" size="18" />
-              </IconBtn>
-            </div>
-          </div>
-          <div class="recognition-progress" aria-label="Appreciation carousel position">
-            <span
-              v-for="(_, index) in appreciationItems"
-              :key="index"
-              class="recognition-progress__item"
-              :class="{ 'recognition-progress__item--active': index === currentAppreciation }"
-            />
-          </div>
-        </section>
-
-        <section class="dashboard-section dashboard-reveal dashboard-reveal--3" aria-labelledby="summary-heading">
+        <section class="dashboard-section dashboard-reveal dashboard-reveal--2" aria-labelledby="summary-heading">
           <div class="section-heading">
             <div>
               <h2 id="summary-heading" class="text-h5 text-high-emphasis mb-0">
@@ -454,7 +451,7 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
           </div>
         </section>
 
-        <section class="dashboard-section dashboard-reveal dashboard-reveal--4" aria-labelledby="watchlist-heading">
+        <section class="dashboard-section dashboard-reveal dashboard-reveal--3" aria-labelledby="watchlist-heading">
           <UiTableView
             v-model:activeTab="watchlistTab"
             title=""
@@ -623,7 +620,7 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
           </UiTableView>
         </section>
 
-        <section class="dashboard-section dashboard-reveal dashboard-reveal--5" aria-labelledby="pending-heading">
+        <section class="dashboard-section dashboard-reveal dashboard-reveal--4" aria-labelledby="pending-heading">
           <UiTableView
             v-model:activeTab="pendingTab"
             title=""
@@ -875,7 +872,6 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
   --dashboard-line: rgba(var(--v-theme-on-surface), 0.1);
   --dashboard-muted-line: rgba(var(--v-theme-on-surface), 0.07);
   --dashboard-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-  padding-block: 64px 20px;
 }
 
 .card-heading,
@@ -887,56 +883,71 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
   gap: 24px;
 }
 
-.dashboard-header {
+.dashboard-header-wrap {
+  margin-block-end: 20px;
+}
+
+.dashboard-page-title {
+  margin-block: 0 16px;
+}
+
+.dashboard-header__composition {
   position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.7fr);
-  align-items: stretch;
-  min-height: 140px;
-  margin-block-end: 28px;
+  height: 100%;
+  min-height: 220px;
   overflow: visible;
-  border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
-  border-radius: 6px;
-  background: rgb(var(--v-theme-surface));
+}
+
+.dashboard-header__welcome {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  min-width: 0;
+  min-height: 220px;
+  overflow: visible;
+  padding: 28px 32px;
 }
 
 .dashboard-header__content {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   display: flex;
   min-width: 0;
+  max-width: 46%;
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  padding: 12px 20px;
 }
 
 .dashboard-header__content > p {
-  max-width: 560px;
+  max-width: 360px;
 }
 
 .dashboard-header__art {
-  position: relative;
-  min-width: 0;
-  min-height: 140px;
+  position: absolute;
+  z-index: 1;
+  right: 12px;
+  bottom: 0;
+  width: min(40%, 300px);
+  aspect-ratio: 558 / 496;
+  overflow: visible;
+  pointer-events: none;
 }
 
 .dashboard-header__illustration,
 .dashboard-header__animation {
   position: absolute;
-  bottom: 0;
-  right: 20px;
-  height: 220px;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   max-width: none;
 }
 
 .dashboard-header__illustration {
-  width: auto;
   object-fit: contain;
 }
 
 .dashboard-header__animation {
-  width: 251px;
   overflow: visible;
 }
 
@@ -971,14 +982,21 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
 }
 
 .recognition-card {
-  padding: 0;
+  display: flex;
+  height: 100%;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 168px;
+  container-type: inline-size;
+  padding: 14px 16px 10px;
 }
 
 .recognition-banner {
   display: flex;
   align-items: center;
   gap: 12px;
-  min-height: 82px;
+  min-height: 112px;
   border: 1px solid rgba(var(--v-theme-warning), 0.52);
   border-radius: 6px;
   background: rgba(var(--v-theme-warning), 0.08);
@@ -1019,31 +1037,37 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
   transform: translateY(4px);
 }
 
-.recognition-banner-nav {
-  flex: 0 0 auto;
-}
-
-.recognition-nav {
-  min-width: 44px !important;
-  width: 44px;
-  height: 44px !important;
-  border: 1px solid rgba(var(--v-theme-on-surface), 0.14) !important;
-  border-radius: 6px;
-  background: rgb(var(--v-theme-surface));
-  color: rgb(var(--v-theme-on-surface)) !important;
-  transition: transform 140ms var(--dashboard-ease-out), border-color 160ms ease, background-color 160ms ease;
-}
-
 .recognition-progress {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 5px;
-  margin-block-start: 14px;
+  margin-block-start: 12px;
 }
 
 .appreciation-quote {
   max-width: 620px;
+}
+
+@container (max-width: 420px) {
+  .recognition-banner {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+    align-items: start;
+    gap: 10px 12px;
+    padding: 12px;
+  }
+
+  .recognition-rail {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .recognition-content {
+    grid-column: 2;
+    width: 100%;
+    min-height: 0;
+  }
 }
 
 .recognition-progress__item {
@@ -1059,7 +1083,6 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
   background: rgb(var(--v-theme-primary));
 }
 
-.recognition-nav:active,
 .action-button:active,
 .section-link:active,
 .action-link:active {
@@ -1595,15 +1618,20 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
     transform: translateY(-2px);
   }
 
-  .recognition-nav:hover {
-    background: rgba(var(--v-theme-primary), 0.08);
-  }
 }
 
 @media (max-width: 1100px) {
-  .dashboard-header__illustration,
-  .dashboard-header__animation {
-    right: 0;
+  .dashboard-header__composition,
+  .dashboard-header__welcome {
+    min-height: 200px;
+  }
+
+  .dashboard-header__welcome {
+    padding: 20px;
+  }
+
+  .dashboard-header__art {
+    width: min(46%, 270px);
   }
 }
 
@@ -1659,10 +1687,6 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
     padding-inline: 16px;
   }
 
-  .teacher-dashboard {
-    padding-block: 24px 20px;
-  }
-
   .card-heading,
   .section-heading,
   .schedule-card__header {
@@ -1676,46 +1700,51 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
     margin-inline: 0;
   }
 
-  .dashboard-header {
-    grid-template-columns: 1fr;
-    min-height: 0;
-    overflow: hidden;
+  .dashboard-header__composition {
+    min-height: 160px;
+  }
+
+  .dashboard-header__welcome {
+    height: auto;
+    min-height: 160px;
+    padding: 16px;
   }
 
   .dashboard-header__content {
-    padding: 12px 20px 8px;
+    max-width: 62%;
   }
 
   .dashboard-header__art {
-    min-height: 220px;
-  }
-
-  .dashboard-header__illustration,
-  .dashboard-header__animation {
-    top: auto;
-    bottom: 0;
-    right: 50%;
-    transform: translateX(50%);
+    right: 8px;
+    width: min(38%, 130px);
   }
 
   .recognition-card {
-    padding: 0;
+    height: auto;
+    min-height: 0;
+    padding: 12px;
   }
 
   .recognition-banner {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 16px;
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+    align-items: start;
+    gap: 10px 12px;
+    padding: 12px;
+  }
+
+  .recognition-rail {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .recognition-content {
+    grid-column: 2;
   }
 
   .recognition-content {
     width: 100%;
     min-height: 0;
-  }
-
-  .recognition-banner-nav {
-    display: none;
   }
 
   .summary-grid {
@@ -1733,7 +1762,6 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
   }
 
   .recognition-progress__item,
-  .recognition-nav,
   .summary-card,
   .dashboard-table-view :deep(.dashboard-table tbody tr) {
     transition: none;

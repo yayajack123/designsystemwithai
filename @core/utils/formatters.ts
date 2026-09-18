@@ -1,11 +1,11 @@
 import { isToday } from './helpers'
 
 export const avatarText = (value: string) => {
-  if (!value)
+  if (!value.trim())
     return ''
-  const nameArray = value.split(' ')
+  const nameArray = value.trim().split(/\s+/)
 
-  return nameArray.map(word => word.charAt(0).toUpperCase()).join('')
+  return nameArray.slice(0, 2).map(word => word.charAt(0).toUpperCase()).join('')
 }
 
 // TODO: Try to implement this: https://twitter.com/fireship_dev/status/1565424801216311297

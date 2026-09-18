@@ -36,6 +36,8 @@ import { NuxtModule, ModuleDependencyMeta } from '@nuxt/schema'
 
    sanctumBaseUrl: string,
 
+   authEnabled: boolean,
+
    device: {
       enabled: boolean,
 

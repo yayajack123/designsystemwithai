@@ -966,6 +966,7 @@ const _inlineRuntimeConfig = {
     "appBaseUrl": "http://localhost:3000",
     "apiBaseUrl": "https://be-example.timedoor-web.my.id/api/admin/v1",
     "sanctumBaseUrl": "https://be-example.timedoor-web.my.id/sanctum",
+    "authEnabled": false,
     "device": {
       "enabled": true,
       "defaultUserAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.39 Safari/537.36",

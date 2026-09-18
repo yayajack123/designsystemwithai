@@ -1,102 +1,80 @@
-# Build Prompt: Reports Page (Pending Daily Journal / Pending Report)
+# Reports Page Specification
 
-## Context
-Build the **Reports** page for [Project Name]. This page lives inside the existing app shell (sidebar + topbar already implemented — do not rebuild them, only route/highlight the "Reports" nav item as active).
+## Purpose
 
-**IMPORTANT: Use only existing design system tokens and components** (colors, typography scale, spacing, button/badge/input components). Do not introduce new hex values, font sizes, or one-off component styles. If a required component (e.g. status badge, tab, pagination) doesn't exist yet in the design system, flag it before building instead of silently creating a new pattern.
+Give teachers one place to complete lesson journals, prepare student reports, and confirm parent-teacher meetings (PTM). The Vercel TMS Revamp prototype and teacher feedback define the page structure; project tokens and components remain authoritative for implementation styling.
 
----
+## Page Header and Tabs
 
-## 1. Page Header
-- Section label: "Reports"
-- Title: `Reports` — use heading style (H4/H5 per existing scale)
-- Subtitle: "Pending daily journals and student reports" — body/secondary text style, muted color token
+- Page title: Reports.
+- Pending Daily Journal tab: one row for each student, book/session, and lesson.
+- Reports tab: report progress aggregated by student and book.
+- PTM tab: students with completed books who need parent-teacher meetings scheduled.
+- Each tab count comes from its current dataset; do not hardcode the badge.
+- PTM remains spelled PTM.
 
-## 2. Tabs
-Two tabs directly under the header:
-1. **Pending Daily Journal** — count badge `20` (red/danger badge), active state (green underline + green text/icon)
-2. **Pending Report** — count badge `15` (dark/neutral badge)
+## Pending Daily Journal
 
-- Active tab indicated by an underline in primary green + colored icon/text
-- Inactive tab: neutral gray text/icon
-- Icons precede each label (document-check icon for Daily Journal, chart/report icon for Pending Report) — use existing icon set (Tabler Icons, per current usage)
+One journal belongs to one lesson. If a student has several lessons awaiting journals, render one row per lesson; do not combine lessons into a single row or require a detail modal to distinguish them.
 
-## 3. Filter Bar
-Row layout, single line, space-between:
-- Left group:
-  - Search input with icon, placeholder "Search student"
-  - Dropdown select, placeholder "Class"
-  - Text link/button "Reset Filter" (green text, no border)
-- Right group:
-  - Icon-button toggle group (3 icons): list view (active/selected state), map/pin icon, grid icon
-  - These act as a segmented control — only one active at a time, active state gets a filled/light background
-
-## 4. Data Table
-
-**Columns:**
-| Column | Notes |
+| Column | Content |
 |---|---|
-| Student Name | Avatar (initials, colored circle) + name (bold) + student ID below in muted small text |
-| Book / Session | Plain text |
-| Lesson & Class | Two lines: lesson name as a **link** (green, underline) + class name below in muted text (may be "-" if empty) |
-| Date | Plain text, format `February 29, 2012` style |
-| Status | Badge component — see states below |
-| Action | Icon button(s) — see states below |
+| Student | Avatar initials, student name, student ID |
+| Book / Session | Book or session name |
+| Lesson | One lesson title |
+| Class | Class name or em dash |
+| Date | Localized date |
+| Status | Not Created or Pending |
+| Action | Create for Not Created; Edit and Send for Pending |
 
-**Row height:** comfortable/spacious row padding matching existing table component.
+## Reports
 
-**Status badge states:**
-- `Not Created` → gray/neutral badge
-- `Pending` → yellow/warning badge
+Rows represent a student and book/report cycle, not an individual lesson journal.
 
-**Action column states (conditional on status):**
-- `Not Created` → single edit/pencil icon button (outline style)
-- `Pending` → two icon buttons: edit icon (outline square) + play/arrow icon (triangle, indicates "start" or "review") — grouped side by side
+| Column | Content |
+|---|---|
+| Student | Avatar initials, student name, student ID |
+| Book / Session | Book or session name |
+| Lessons | Covered lesson range |
+| Class | Class name or em dash |
+| Progress | Completed daily journals / expected daily journals, labeled DJ |
+| Status | Not Created, Waiting for Daily Journal, or Created |
+| Action | Create Report, Create Daily Journal, or View, according to status |
 
-**Avatar:**
-- Circular, initials derived from student name, background color pulled from existing avatar color palette (rotate through design system's avatar/tag colors)
+Status/action mapping:
 
-## 5. Pagination Footer
-- Left: "Rows per page" label + dropdown (default `10`)
-- Right: "1–5 of 13" range text + prev/next chevron icon buttons (disabled state when at start/end)
+- Waiting for Daily Journal → Create Daily Journal.
+- Not Created → Create Report.
+- Created → View.
 
----
+Filters: student search, class, and status. Grouping modes: flat list, group by student, and group by class.
 
-## 6. Data Structure
-Model the table as data-driven, not hardcoded rows. Suggested shape:
+## PTM
 
-```ts
-interface ReportRow {
-  id: string;
-  studentName: string;
-  studentId: string;
-  avatarColor?: string; // optional override, else auto-assign
-  bookSession: string;
-  lessonName: string;
-  className?: string; // nullable, render "-" if empty
-  date: string; // ISO, format at render time
-  status: "not_created" | "pending";
-}
-```
+| Column | Content |
+|---|---|
+| Student | Avatar initials, student name, student ID |
+| Book | Completed book |
+| Reports | Completed report count / expected report count |
+| Status | Pending; Confirmed after the demo confirmation action |
+| Action | Overflow menu with Confirm PTM |
 
-Render 5 rows per page per the pagination control, using the 8 example rows shown as sample/mock data (Cristofer Mango, Jennifer Summers, Justin Richardson, Nicholas Tanner, Crystal Mays, Mary Garcia, Megan Roberts, Joseph Oliver — all "Python Game Dev" / "Lesson 4 - Canvas Setup").
+Filters: student search and class. Keep PTM as the exact tab label.
 
-## 7. States to Handle
-- Empty search result (no matching student)
-- Loading state for table (skeleton rows using existing skeleton/loading component)
-- Empty class dropdown vs. selected class (filter applied → "Reset Filter" becomes visually enabled)
+## Behavior and States
 
-## 8. Responsive Behavior
-- Desktop: full table as shown
-- Tablet: consider collapsing "Book / Session" into a secondary line under student name, or enabling horizontal scroll on the table container
-- Mobile: convert rows to stacked cards (student name + avatar as card header, remaining fields as label/value pairs, action buttons pinned to card footer)
+- Tab changes update table columns, dataset, subtitle where relevant, and filters.
+- Search matches student name, ID, book, lesson, and class fields present in the active dataset.
+- Changing a filter, tab, or grouping mode returns pagination to page one.
+- Empty results show a clear message and a filter-reset action when applicable.
+- Loading uses the existing Vuetify skeleton loader.
+- This page uses local mock data: action feedback must identify demo behavior and must not imply backend persistence.
+- Reports View opens a details dialog. PTM Confirm PTM changes only the local mock status.
 
-Flag which responsive strategy (scroll vs. stacked cards) if it's ambiguous — don't assume silently, ask before implementing.
+## Responsive and Design-System Rules
 
----
-
-## Before You Start
-Confirmed:
-- `Not Created` and `Pending` are the only two status states — build the badge and action-column logic as a strict two-state switch (no need for extensibility beyond these two).
-- The segmented view toggle (list/map/grid icons) only changes the table's **layout**, not the underlying data — same dataset, different visual arrangement per view.
-- Tab switching (Daily Journal ↔ Pending Report) swaps the table's dataset **and** column set — these two tabs represent different data entirely, not a filter on the same dataset. Build each tab with its own column config and data source.
+- Keep the table structure at all breakpoints; use horizontal scrolling on narrow viewports.
+- Do not convert rows into cards.
+- Use existing VDataTable, VCard, VTabs, VSelect, VTextField, VChip, VProgressLinear, VMenu, VDialog, and VSnackbar components.
+- Use Poppins, existing typography utilities, semantic theme colors, surface colors, and existing spacing/radius conventions from spec/design.md.
+- Preserve visible keyboard focus, accessible names for icon-only actions, and readable light/dark theme contrast.

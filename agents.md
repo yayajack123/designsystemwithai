@@ -69,6 +69,13 @@ The plan must cover at minimum:
 - Risks, dependencies, and decisions that require user input.
 - Validation plan.
 
+When implementation includes a table, the implementation plan must explicitly ask which responsive presentation is wanted:
+
+- **Mobile card:** use `UiTableView`'s optional `mobileCards` mode and an explicit `mobile-cards` slot when mobile needs different content grouping or action hierarchy.
+- **Scrollable table:** keep the default table presentation and use the existing horizontal-scroll behavior on narrow viewports.
+
+Do not choose between these modes silently. Explain the tradeoff in the plan and confirm the user's preference before implementation when the choice materially changes the layout.
+
 If the required reusable component does not exist, add a clear warning to the plan. Explain the required new component, why existing components cannot be used, and the scope impact.
 
 For small, isolated changes, a short plan is still recommended, but a separate planning document is not required unless requested by the user.
