@@ -216,7 +216,7 @@ const onSeeHistory = (student: StudentMember) => {
               <!-- Left: Avatar, Name & ID -->
               <div class="d-flex align-center gap-4 flex-shrink-0" style="width: 310px;">
                 <div class="student-avatar d-flex align-center justify-center text-body-1 flex-shrink-0">
-                  {{ student.initials }}
+                  {{ student.initials.slice(0, 2) }}
                 </div>
                 <div class="d-flex flex-column overflow-hidden">
                   <div class="d-flex align-baseline gap-2 overflow-hidden">

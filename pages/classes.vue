@@ -392,7 +392,7 @@ const toast = (color: string, text: string) => {
             <VTooltip activator="parent" location="top">
               {{ teacher.name }}
             </VTooltip>
-            <span class="text-caption font-weight-medium text-high-emphasis">{{ teacher.initials }}</span>
+            <span class="text-caption font-weight-medium text-high-emphasis">{{ teacher.initials.slice(0, 2) }}</span>
           </VAvatar>
         </div>
       </template>

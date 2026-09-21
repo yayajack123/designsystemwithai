@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { avatarText } from '@core/utils/formatters'
 import UiTableView from '@/components/ui/UiTableView.vue'
 
 definePageMeta({
@@ -196,15 +197,10 @@ const handleViewDetail = (item: StudentItem) => {
   router.push({ path: '/student-detail', query: { id: item.id } })
 }
 
-// Extract initials for avatars safely
-const getInitials = (name: string) => {
+const getAvatarText = (name: string) => {
   const cleanName = name.replace(/^(Mr\.|Ms\.|Mrs\.|Dr\.)\s+/i, '')
-  return cleanName
-    .split(' ')
-    .map(word => word.charAt(0))
-    .join('')
-    .toUpperCase()
-    .slice(0, 2)
+
+  return avatarText(cleanName)
 }
 </script>
 
@@ -257,7 +253,7 @@ const getInitials = (name: string) => {
             class="border border-white"
           >
             <span class="text-caption font-weight-medium text-high-emphasis">
-              {{ getInitials(item.name) }}
+              {{ getAvatarText(item.name) }}
             </span>
           </VAvatar>
           <div class="d-flex flex-column">

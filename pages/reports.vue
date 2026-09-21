@@ -6,12 +6,19 @@ definePageMeta({
 })
 
 type ReportsTab = 'daily-journal' | 'reports' | 'ptm'
-type JournalStatus = 'Not Created' | 'Pending'
+type JournalStatus = 'Not Created' | 'Pending' | 'Mixed'
+type LessonJournalStatus = Exclude<JournalStatus, 'Mixed'>
 type ReportStatus = 'Not Created' | 'Waiting for Daily Journal' | 'Created'
 type PtmStatus = 'Pending' | 'Confirmed'
 type RowStatus = JournalStatus | ReportStatus | PtmStatus
 type ViewType = 'flat' | 'student' | 'class'
 type ReportGroup = { key: string; order: 'asc' }
+
+interface DailyJournalLesson {
+  name: string
+  date?: string
+  status: LessonJournalStatus
+}
 
 interface ReportRow {
   id: string
@@ -19,14 +26,65 @@ interface ReportRow {
   studentId: string
   bookSession: string
   lessonName?: string
+  lessonNames?: string[]
+  lessonDetails?: DailyJournalLesson[]
   lessons?: string
   className?: string
+  classNames?: string[]
   date?: string
+  dateRangeStart?: string
+  dateRangeEnd?: string
+  ptmNotes?: string
+  estimatedPtmDate?: string
   dailyJournalsDone?: number
   dailyJournalsTotal?: number
   reportsDone?: number
   reportsTotal?: number
   status: RowStatus
+}
+
+const groupDailyJournalRows = (records: ReportRow[]): ReportRow[] => {
+  const groupedRecords = new Map<string, ReportRow[]>()
+
+  records.forEach(record => {
+    const key = JSON.stringify([record.studentId, record.bookSession])
+    const group = groupedRecords.get(key) || []
+
+    group.push(record)
+    groupedRecords.set(key, group)
+  })
+
+  return Array.from(groupedRecords.values()).map(group => {
+    const lessonDetails = group.flatMap(record => {
+      const names = record.lessonNames?.length
+        ? record.lessonNames
+        : record.lessonName
+          ? [record.lessonName]
+          : []
+      const status: LessonJournalStatus = record.status === 'Pending' ? 'Pending' : 'Not Created'
+
+      return names.map(name => ({ name, date: record.date, status }))
+    })
+    const dates = group.map(record => record.date).filter((date): date is string => Boolean(date)).sort()
+    const classNames = [...new Set(group
+      .map(record => record.className)
+      .filter((className): className is string => Boolean(className && className !== '-')))]
+    const journalStatuses = new Set(lessonDetails.map(lesson => lesson.status))
+    const firstRecord = group[0]
+
+    return {
+      ...firstRecord,
+      id: `daily-journal-${firstRecord.studentId}-${firstRecord.bookSession}`,
+      lessonNames: lessonDetails.map(lesson => lesson.name),
+      lessonDetails,
+      classNames,
+      className: classNames.length ? classNames.join(', ') : undefined,
+      date: dates[dates.length - 1],
+      dateRangeStart: dates[0],
+      dateRangeEnd: dates[dates.length - 1],
+      status: journalStatuses.size === 1 ? lessonDetails[0]?.status || 'Not Created' : 'Mixed',
+    }
+  })
 }
 
 const activeTab = ref<ReportsTab>('daily-journal')
@@ -41,10 +99,16 @@ const toastShow = ref(false)
 const toastText = ref('')
 const isReportDialogOpen = ref(false)
 const selectedReport = ref<ReportRow | null>(null)
+const isPtmDialogOpen = ref(false)
+const selectedPtm = ref<ReportRow | null>(null)
+const ptmNotes = ref('')
+const estimatedPtmDate = ref('')
+const isLessonsDialogOpen = ref(false)
+const selectedDailyJournal = ref<ReportRow | null>(null)
 let loadingTimer: ReturnType<typeof setTimeout> | undefined
 
-const dailyJournalData = ref<ReportRow[]>([
-  { id: 'dj-1', studentName: 'I Wayan Sahadewa Putra', studentId: 'STD-20260109-001', bookSession: 'Python Game Dev', lessonName: 'Lesson 7 – Add Another Sprite', className: 'DPS-Adaptive-8C', date: '2026-04-20', status: 'Not Created' },
+const dailyJournalRecords: ReportRow[] = [
+  { id: 'dj-1', studentName: 'I Wayan Sahadewa Putra', studentId: 'STD-20260109-001', bookSession: 'Python Game Dev', lessonName: 'Lesson 7 – Add Another Sprite', lessonNames: ['Lesson 7 – Add Another Sprite', 'Lesson 8 – Sprite Animation'], className: 'DPS-Adaptive-8C', date: '2026-04-20', status: 'Not Created' },
   { id: 'dj-2', studentName: 'Winston Arya Liaudo', studentId: 'STD-20260109-003', bookSession: 'Web Developer', lessonName: 'Lesson 7 – JS Basics', date: '2026-03-24', status: 'Not Created' },
   { id: 'dj-3', studentName: 'Winston Arya Liaudo', studentId: 'STD-20260109-003', bookSession: 'Web Developer', lessonName: 'Lesson 8 – JS Functions', date: '2026-04-07', status: 'Pending' },
   { id: 'dj-4', studentName: 'Winston Arya Liaudo', studentId: 'STD-20260109-003', bookSession: 'Web Developer', lessonName: 'Lesson 9 – CSS Flexbox', date: '2026-04-15', status: 'Not Created' },
@@ -56,11 +120,13 @@ const dailyJournalData = ref<ReportRow[]>([
   { id: 'dj-10', studentName: 'Sean Nehemiah Pranoto', studentId: 'STD-20260109-004', bookSession: 'Python Game Dev', lessonName: 'Lesson 6 – Sound Effects', date: '2026-05-11', status: 'Not Created' },
   { id: 'dj-11', studentName: 'Sean Nehemiah Pranoto', studentId: 'STD-20260109-004', bookSession: 'Python Game Dev', lessonName: 'Lesson 7 – Add Sprite', date: '2026-05-18', status: 'Not Created' },
   { id: 'dj-12', studentName: 'Sean Nehemiah Pranoto', studentId: 'STD-20260109-004', bookSession: 'Python Game Dev', lessonName: 'Lesson 8 – Collision', date: '2026-05-25', status: 'Not Created' },
-  { id: 'dj-13', studentName: 'Velcan Kido Andika', studentId: 'STD-20260109-005', bookSession: 'IoT Kids', lessonName: 'Lesson 6 – Sensors', date: '2026-04-16', status: 'Not Created' },
+  { id: 'dj-13', studentName: 'Velcan Kido Andika', studentId: 'STD-20260109-005', bookSession: 'IoT Kids', lessonName: 'Lesson 6 – Sensors', lessonNames: ['Lesson 6 – Sensors', 'Lesson 7 – Sensor Calibration', 'Lesson 8 – Smart Alerts'], date: '2026-04-16', status: 'Not Created' },
   { id: 'dj-14', studentName: 'Velcan Kido Andika', studentId: 'STD-20260109-005', bookSession: 'Python Game Dev', lessonName: 'Lesson 8 – Collision', date: '2026-02-28', status: 'Not Created' },
   { id: 'dj-15', studentName: 'Reinhart Yohanes Ernathan', studentId: 'STD-20260122-002', bookSession: 'IoT Kids', lessonName: 'Lesson 3 – LED Control', date: '2026-04-15', status: 'Not Created' },
-  { id: 'dj-16', studentName: 'Daffa Diandi Althaf', studentId: 'STD-20260119-001', bookSession: 'Web Developer', lessonName: 'Lesson 8 – Responsive Layout', date: '2026-04-12', status: 'Not Created' },
-])
+  { id: 'dj-16', studentName: 'Daffa Diandi Althaf', studentId: 'STD-20260119-001', bookSession: 'Web Developer', lessonName: 'Lesson 8 – Responsive Layout', lessonNames: ['Lesson 8 – Responsive Layout', 'Lesson 9 – CSS Grid', 'Lesson 10 – Web Accessibility', 'Lesson 11 – Final Project'], date: '2026-04-12', status: 'Not Created' },
+]
+
+const dailyJournalData = ref<ReportRow[]>(groupDailyJournalRows(dailyJournalRecords))
 
 const reportsData = ref<ReportRow[]>([
   { id: 'report-1', studentName: 'Putu Pradhira Armananda', studentId: 'STD-20260109-002', bookSession: 'Roblox Studio', lessons: 'Lessons 1–8', dailyJournalsDone: 8, dailyJournalsTotal: 8, status: 'Created' },
@@ -123,7 +189,7 @@ const tableHeaders = computed(() => {
   return [
     { title: 'STUDENT', key: 'student', sortable: false, minWidth: '240px' },
     { title: 'BOOK / SESSION', key: 'bookSession', sortable: false, minWidth: '180px' },
-    { title: 'LESSON', key: 'lessonName', sortable: false, minWidth: '260px' },
+    { title: 'LESSONS', key: 'lessonName', sortable: false, minWidth: '260px' },
     { title: 'CLASS', key: 'className', sortable: false, minWidth: '170px' },
     { title: 'DATE', key: 'date', sortable: false, minWidth: '150px' },
     { title: 'STATUS', key: 'status', sortable: false, minWidth: '160px' },
@@ -132,9 +198,13 @@ const tableHeaders = computed(() => {
 })
 
 const classOptions = computed(() => {
-  const classes = currentData.value
-    .map(item => item.className)
-    .filter((className): className is string => Boolean(className && className !== '-'))
+  const classes = currentData.value.flatMap(item =>
+    item.classNames?.length
+      ? item.classNames
+      : item.className && item.className !== '-'
+        ? [item.className]
+        : [],
+  )
 
   return ['All Classes', ...new Set(classes)]
 })
@@ -160,11 +230,15 @@ const filteredData = computed(() => {
       item.studentId,
       item.bookSession,
       item.lessonName,
+      ...(item.lessonNames || []),
       item.lessons,
       item.className,
+      ...(item.classNames || []),
     ]
     const matchesSearch = !query || searchableValues.some(value => value?.toLowerCase().includes(query))
-    const matchesClass = selectedClass.value === 'All Classes' || item.className === selectedClass.value
+    const matchesClass = selectedClass.value === 'All Classes'
+      || item.className === selectedClass.value
+      || Boolean(item.classNames?.includes(selectedClass.value))
     const matchesStatus = activeTab.value !== 'reports' || selectedStatus.value === 'All Status' || item.status === selectedStatus.value
 
     return matchesSearch && matchesClass && matchesStatus
@@ -199,8 +273,15 @@ const formatDate = (dateStr?: string) => {
   })
 }
 
+const formatDateRange = (item: ReportRow) => {
+  if (!item.dateRangeStart || !item.dateRangeEnd || item.dateRangeStart === item.dateRangeEnd)
+    return formatDate(item.date)
+
+  return `${formatDate(item.dateRangeStart)} – ${formatDate(item.dateRangeEnd)}`
+}
+
 const statusColor = (status: RowStatus) => {
-  if (status === 'Pending' || status === 'Waiting for Daily Journal') return 'warning'
+  if (status === 'Pending' || status === 'Mixed' || status === 'Waiting for Daily Journal') return 'warning'
   if (status === 'Created' || status === 'Confirmed') return 'success'
 
   return 'secondary'
@@ -224,10 +305,41 @@ const showToast = (message: string) => {
   toastShow.value = true
 }
 
+const getDailyJournalLessons = (item: ReportRow) => {
+  if (item.lessonNames?.length) return item.lessonNames
+
+  return item.lessonName ? [item.lessonName] : []
+}
+
+const getJournalStatusCounts = (item: ReportRow) => {
+  const counts = new Map<LessonJournalStatus, number>()
+
+  item.lessonDetails?.forEach(lesson => {
+    counts.set(lesson.status, (counts.get(lesson.status) || 0) + 1)
+  })
+
+  return Array.from(counts, ([status, count]) => ({ status, count }))
+}
+
+const hasJournalStatus = (item: ReportRow, status: LessonJournalStatus) =>
+  getJournalStatusCounts(item).some(summary => summary.status === status)
+
+const showDailyJournalLessons = (item: ReportRow) => {
+  selectedDailyJournal.value = item
+  isLessonsDialogOpen.value = true
+}
+
 const runJournalAction = (item: ReportRow, action: 'Create' | 'Edit' | 'Send') => {
   if (action === 'Create') {
-    item.status = 'Pending'
-    showToast('Daily Journal draft created in demo mode.')
+    const createdCount = item.lessonDetails?.filter(lesson => lesson.status === 'Not Created').length || 0
+
+    item.lessonDetails?.forEach(lesson => {
+      if (lesson.status === 'Not Created') lesson.status = 'Pending'
+    })
+    const journalStatuses = new Set(item.lessonDetails?.map(lesson => lesson.status) || [])
+
+    item.status = journalStatuses.size > 1 ? 'Mixed' : 'Pending'
+    showToast(`Daily Journal draft created for ${createdCount || 1} lessons in demo mode.`)
     return
   }
 
@@ -255,11 +367,24 @@ const runReportAction = (item: ReportRow) => {
   isReportDialogOpen.value = true
 }
 
-const confirmPtm = (item: ReportRow) => {
+const openConfirmPtm = (item: ReportRow) => {
   if (item.status !== 'Pending') return
 
+  selectedPtm.value = item
+  ptmNotes.value = ''
+  estimatedPtmDate.value = ''
+  isPtmDialogOpen.value = true
+}
+
+const confirmPtm = () => {
+  const item = selectedPtm.value
+  if (!item || item.status !== 'Pending' || !estimatedPtmDate.value) return
+
+  item.ptmNotes = ptmNotes.value.trim()
+  item.estimatedPtmDate = estimatedPtmDate.value
   item.status = 'Confirmed'
   showToast('PTM confirmed for ' + item.studentName + '.')
+  isPtmDialogOpen.value = false
 }
 
 watch([activeTab, searchQuery, selectedClass, selectedStatus, viewType], () => {
@@ -449,7 +574,22 @@ onBeforeUnmount(() => {
         </template>
 
         <template #item.lessonName="{ item }">
-          <span class="text-body-2 text-high-emphasis">{{ item.lessonName }}</span>
+          <div class="report-lessons-cell">
+            <span class="text-body-2 text-high-emphasis">
+              {{ getDailyJournalLessons(item).length > 1 ? `${getDailyJournalLessons(item).length} Lesson` : getDailyJournalLessons(item)[0] || '—' }}
+            </span>
+            <VBtn
+              v-if="getDailyJournalLessons(item).length > 1"
+              variant="text"
+              color="primary"
+              size="small"
+              density="compact"
+              class="px-0 font-weight-medium text-capitalize"
+              @click="showDailyJournalLessons(item)"
+            >
+              See all
+            </VBtn>
+          </div>
         </template>
 
         <template #item.lessons="{ item }">
@@ -461,7 +601,9 @@ onBeforeUnmount(() => {
         </template>
 
         <template #item.date="{ item }">
-          <span class="text-body-2 text-high-emphasis">{{ formatDate(item.date) }}</span>
+          <span class="text-body-2 text-high-emphasis">
+            {{ activeTab === 'daily-journal' ? formatDateRange(item) : formatDate(item.date) }}
+          </span>
         </template>
 
         <template #item.progress="{ item }">
@@ -495,7 +637,23 @@ onBeforeUnmount(() => {
         </template>
 
         <template #item.status="{ item }">
+          <div
+            v-if="activeTab === 'daily-journal' && (item.lessonDetails?.length || 0) > 1"
+            class="report-journal-statuses"
+          >
+            <VChip
+              v-for="summary in getJournalStatusCounts(item)"
+              :key="summary.status"
+              :color="statusColor(summary.status)"
+              variant="tonal"
+              size="small"
+              class="font-weight-medium"
+            >
+              {{ summary.count }} {{ summary.status }}
+            </VChip>
+          </div>
           <VChip
+            v-else
             :color="statusColor(item.status)"
             variant="tonal"
             size="small"
@@ -507,7 +665,7 @@ onBeforeUnmount(() => {
 
         <template #item.action="{ item }">
           <div v-if="activeTab === 'daily-journal'" class="report-actions">
-            <template v-if="item.status === 'Not Created'">
+            <template v-if="hasJournalStatus(item, 'Not Created')">
               <VBtn
                 color="primary"
                 variant="text"
@@ -517,7 +675,7 @@ onBeforeUnmount(() => {
                 Create
               </VBtn>
             </template>
-            <template v-else>
+            <template v-if="hasJournalStatus(item, 'Pending')">
               <VBtn
                 color="secondary"
                 variant="text"
@@ -583,7 +741,7 @@ onBeforeUnmount(() => {
               <VList density="compact" min-width="180">
                 <VListItem
                   :disabled="item.status !== 'Pending'"
-                  @click="confirmPtm(item)"
+                  @click="openConfirmPtm(item)"
                 >
                   <template #prepend>
                     <VIcon icon="ri-calendar-check-line" />
@@ -602,6 +760,84 @@ onBeforeUnmount(() => {
         </template>
       </VDataTable>
     </VCard>
+
+    <VDialog v-model="isPtmDialogOpen" max-width="520">
+      <VCard v-if="selectedPtm" class="ptm-confirm-dialog" elevation="0">
+        <VCardTitle class="d-flex align-start justify-space-between gap-4 pa-6 pb-2">
+          <span class="text-h5 text-high-emphasis">Confirm PTM</span>
+          <DialogCloseBtn aria-label="Close confirm PTM dialog" @click="isPtmDialogOpen = false" />
+        </VCardTitle>
+        <VCardText class="px-6 pt-3">
+          <div class="ptm-action-context mb-5 text-body-2 text-medium-emphasis">
+            {{ selectedPtm.studentName }} · {{ selectedPtm.bookSession }}
+          </div>
+          <VTextarea
+            v-model="ptmNotes"
+            label="PTM Notes"
+            placeholder="Catatan untuk PTM..."
+            rows="4"
+            variant="outlined"
+            autofocus
+          />
+          <div class="mt-4">
+            <label class="text-body-2 text-medium-emphasis font-weight-medium d-block mb-1">
+              Estimated PTM Date
+            </label>
+            <AppDateTimePicker
+              v-model="estimatedPtmDate"
+              placeholder="Select date"
+              append-inner-icon="ri-calendar-line"
+              density="compact"
+              hide-details
+              :config="{ dateFormat: 'F j, Y' }"
+            />
+          </div>
+        </VCardText>
+        <VCardActions class="px-6 pb-6 pt-0 justify-end gap-2">
+          <VBtn variant="text" color="secondary" @click="isPtmDialogOpen = false">Cancel</VBtn>
+          <VBtn color="primary" :disabled="!estimatedPtmDate" @click="confirmPtm">
+            Confirm
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+
+    <VDialog v-model="isLessonsDialogOpen" max-width="480">
+      <VCard v-if="selectedDailyJournal" class="report-detail-dialog">
+        <VCardTitle class="d-flex align-start justify-space-between gap-4 pa-6 pb-2">
+          <div>
+            <span class="text-h5 text-high-emphasis">Lessons</span>
+            <p class="text-body-2 text-medium-emphasis mb-0 mt-1">
+              {{ selectedDailyJournal.studentName }} · {{ selectedDailyJournal.bookSession }}
+            </p>
+          </div>
+          <DialogCloseBtn aria-label="Close lessons" @click="isLessonsDialogOpen = false" />
+        </VCardTitle>
+        <VCardText class="pt-4">
+          <VList density="compact" class="pa-0">
+            <VListItem
+              v-for="(lesson, index) in selectedDailyJournal.lessonDetails || []"
+              :key="`${selectedDailyJournal.id}-${index}`"
+              prepend-icon="ri-book-open-line"
+              :title="lesson.name"
+              :subtitle="formatDate(lesson.date)"
+              class="px-0"
+            >
+              <template #append>
+                <VChip :color="statusColor(lesson.status)" variant="tonal" size="small">
+                  {{ lesson.status }}
+                </VChip>
+              </template>
+            </VListItem>
+          </VList>
+        </VCardText>
+        <VCardActions class="px-6 pb-6 pt-0 justify-end">
+          <VBtn color="primary" @click="isLessonsDialogOpen = false">
+            Close
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
 
     <VDialog v-model="isReportDialogOpen" max-width="520">
       <VCard v-if="selectedReport" class="report-detail-dialog">
@@ -774,6 +1010,19 @@ onBeforeUnmount(() => {
   gap: 10px;
 }
 
+.report-lessons-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding-block: 4px;
+}
+
+.report-journal-statuses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
 .report-actions {
   display: flex;
   align-items: center;
@@ -797,6 +1046,17 @@ onBeforeUnmount(() => {
 .report-detail-dialog {
   border: 1px solid rgba(var(--v-theme-on-surface), 0.1);
   border-radius: 6px;
+}
+
+.ptm-confirm-dialog {
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.1);
+  border-radius: 6px;
+}
+
+.ptm-action-context {
+  border-radius: 6px;
+  background: rgba(var(--v-theme-on-surface), 0.035);
+  padding: 10px 12px;
 }
 
 .report-detail-list {

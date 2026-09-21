@@ -65,7 +65,7 @@ const copyUsername = async () => {
           class="student-avatar"
         >
           <span class="text-body-1 font-weight-regular text-high-emphasis">
-            {{ student.initials }}
+            {{ student.initials.slice(0, 2) }}
           </span>
         </VAvatar>
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { avatarText } from '@core/utils/formatters'
 import UiSectionHeader from '@/components/ui/UiSectionHeader.vue'
 import UiTableView from '@/components/ui/UiTableView.vue'
 import PresenceDialog from '@/components/dialogs/PresenceDialog.vue'
@@ -173,15 +174,6 @@ const headers = computed(() => [
 ])
 
 // ─────────────────────── Helpers ───────────────────────
-const getInitials = (name: string) => {
-  if (!name) return ''
-  const parts = name.split(' ')
-  if (parts.length >= 2) {
-    return (parts[0][0] + parts[1][0]).toUpperCase()
-  }
-  return name.slice(0, 2).toUpperCase()
-}
-
 const getBookBadgeColor = (status: 'Completed' | 'Idle' | 'Incomplete') => {
   if (status === 'Completed') return 'primary'
   if (status === 'Idle') return 'warning'
@@ -345,7 +337,7 @@ const handlePresenceSubmit = (payload: { students: any[], isStartClass: boolean 
         <template #item.name="{ item }">
           <div class="d-flex align-center py-2 gap-3">
             <VAvatar size="34" color="grey-100" class="text-subtitle-1 font-weight-medium text-high-emphasis border">
-              {{ getInitials(item.name) }}
+              {{ avatarText(item.name) }}
             </VAvatar>
             <div class="d-flex flex-column justify-center">
               <span class="text-body-1 font-weight-medium text-high-emphasis leading-normal">{{ item.name }}</span>
@@ -397,7 +389,7 @@ const handlePresenceSubmit = (payload: { students: any[], isStartClass: boolean 
       <template #item.studentName="{ item }">
         <div class="d-flex align-center gap-3 py-2">
           <VAvatar size="34" color="grey-100" class="text-body-1 font-weight-medium text-high-emphasis border">
-            {{ getInitials(item.name) }}
+            {{ avatarText(item.name) }}
           </VAvatar>
           <div class="d-flex flex-column justify-center">
             <span class="text-body-1 font-weight-medium text-high-emphasis leading-normal">{{ item.name }}</span>

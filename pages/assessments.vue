@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { avatarText } from '@core/utils/formatters'
 import UiSectionHeader from '@/components/ui/UiSectionHeader.vue'
 
 definePageMeta({
@@ -373,7 +374,7 @@ const groupedByStudent = computed(() => {
     if (!groups[key]) {
       groups[key] = {
         name: item.name,
-        initials: item.initials || item.name.split(' ').map((n: string) => n[0]).join('').toUpperCase(),
+        initials: item.initials ? item.initials.slice(0, 2) : avatarText(item.name),
         studentId: item.studentId,
         className: item.className && item.className !== '-' ? item.className : 'DPS-Adaptive-C',
         projects: []
@@ -761,7 +762,7 @@ onMounted(() => {
               class="me-3"
               color="grey-50"
             >
-              <span class="text-caption font-weight-medium">{{ item.initials }}</span>
+              <span class="text-caption font-weight-medium">{{ item.initials.slice(0, 2) }}</span>
             </VAvatar>
             <div class="d-flex flex-column">
               <span class="text-body-1 font-weight-medium text-high-emphasis">{{ item.name }}</span>
@@ -908,7 +909,7 @@ onMounted(() => {
                   class="border"
                   style="border-color: rgba(var(--v-theme-on-surface), 0.08) !important;"
                 >
-                  <span class="text-caption font-weight-medium text-high-emphasis">{{ student.initials }}</span>
+                  <span class="text-caption font-weight-medium text-high-emphasis">{{ student.initials.slice(0, 2) }}</span>
                 </VAvatar>
                 <span class="text-body-1 font-weight-medium text-high-emphasis">{{ student.name }}</span>
                 <span class="text-body-2 text-medium-emphasis">{{ student.studentId }}</span>
@@ -1115,7 +1116,7 @@ onMounted(() => {
                         size="40"
                         style="border-color: rgba(var(--v-theme-on-surface), 0.08) !important;"
                       >
-                        <span class="text-caption font-weight-medium text-high-emphasis">{{ item.initials }}</span>
+                        <span class="text-caption font-weight-medium text-high-emphasis">{{ item.initials.slice(0, 2) }}</span>
                       </VAvatar>
                       <div class="d-flex flex-column">
                         <span class="text-body-1 font-weight-medium text-high-emphasis">{{ item.name }}</span>

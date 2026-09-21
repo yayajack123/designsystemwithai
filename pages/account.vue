@@ -63,7 +63,7 @@ const copyTeacherId = async () => {
         class="teacher-avatar"
       >
         <span class="text-h6 font-weight-medium text-high-emphasis">
-          {{ teacher.initials }}
+          {{ teacher.initials.slice(0, 2) }}
         </span>
       </VAvatar>
 
@@ -383,7 +383,7 @@ const copyTeacherId = async () => {
                 color="#F0EFF0"
               >
                 <span class="text-h6 font-weight-medium text-high-emphasis">
-                  {{ teacher.initials }}
+                  {{ teacher.initials.slice(0, 2) }}
                 </span>
               </VAvatar>
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import teacherWelcomeIllustration from '@images/pages/teacher-welcome-illustration.png'
 import { DotLottieVue } from '@lottiefiles/dotlottie-vue'
+import { avatarText } from '@core/utils/formatters'
 import UiTableView from '@/components/ui/UiTableView.vue'
 
 definePageMeta({
@@ -131,15 +132,10 @@ const watchlistHeaders = [
   { title: 'ACTION', key: 'action', sortable: false, align: 'center', width: 120 },
 ]
 
-const getInitials = (name: string) => {
+const getAvatarText = (name: string) => {
   const cleanName = name.replace(/^(Mr\.|Ms\.|Mrs\.|Dr\.)\s+/i, '')
 
-  return cleanName
-    .split(' ')
-    .map(word => word.charAt(0))
-    .join('')
-    .toUpperCase()
-    .slice(0, 2)
+  return avatarText(cleanName)
 }
 
 const pendingTab = ref<PendingTab>('Journal')
@@ -321,109 +317,96 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
 
 <template>
   <section class="teacher-dashboard">
-    <header class="dashboard-header-wrap dashboard-reveal dashboard-reveal--1">
-      <h1 class="dashboard-page-title text-h5 text-medium-emphasis">
-        Good morning, Julie.
-      </h1>
-      <VRow class="dashboard-header">
-        <VCol cols="12" md="8">
-          <div class="dashboard-header__composition">
-            <VCard class="dashboard-card dashboard-header__welcome" elevation="0">
-              <div class="dashboard-header__content">
-                <h2 class="text-h4 text-high-emphasis mb-2">
-                  Here’s your teaching brief.
-                </h2>
-                <p class="text-body-1 text-medium-emphasis mb-0">
-                  Start with what needs your attention today.
-                </p>
-              </div>
-            </VCard>
-            <div class="dashboard-header__art" aria-hidden="true">
-              <ClientOnly>
-                <DotLottieVue
-                  src="/animations/dashboard-teacher-header.lottie"
-                  animation-id="icon"
-                  :autoplay="!prefersReducedMotion"
-                  :loop="!prefersReducedMotion"
-                  :layout="dashboardHeaderAnimationLayout"
-                  :render-config="dashboardHeaderAnimationRenderConfig"
-                  background-color="transparent"
-                  aria-hidden="true"
-                  class="dashboard-header__animation"
-                />
-                <template #fallback>
-                  <img
-                    :src="teacherWelcomeIllustration"
-                    alt=""
-                    class="dashboard-header__illustration"
-                  >
-                </template>
-              </ClientOnly>
-            </div>
-          </div>
-        </VCol>
-
-        <VCol cols="12" md="4">
-          <VCard
-            tag="section"
-            class="dashboard-card recognition-card"
-            elevation="0"
-            aria-label="Personal achievement"
-            @mouseenter="pauseAppreciationRotation"
-            @mouseleave="startAppreciationRotation"
-            @touchstart="pauseAppreciationRotation"
-            @touchend="startAppreciationRotation"
-          >
-            <div class="recognition-banner">
-              <div class="recognition-rail" aria-hidden="true">
-                <lord-icon
-                  v-if="!prefersReducedMotion"
-                  :key="activeAppreciation.lordIconSrc"
-                  :src="activeAppreciation.lordIconSrc"
-                  trigger="loop"
-                  loading="lazy"
-                  class="recognition-lord-icon current-color"
-                  aria-hidden="true"
-                />
-                <VIcon
-                  v-else
-                  :icon="activeAppreciation.fallbackIcon"
-                  size="20"
-                />
-              </div>
-              <div class="recognition-content">
-                <Transition name="appreciation-fade" mode="out-in">
-                  <div :key="activeAppreciation.title" class="appreciation-copy" aria-live="polite">
-                    <h2 class="text-h6 font-weight-medium text-high-emphasis mb-1">
-                      {{ activeAppreciation.title }}
-                    </h2>
-                    <p class="text-body-2 text-medium-emphasis mb-1 appreciation-quote">
-                      “{{ activeAppreciation.quote }}”
-                    </p>
-                    <div class="d-flex align-center gap-2 text-caption text-medium-emphasis">
-                      <VIcon icon="ri-checkbox-circle-line" size="15" color="secondary" />
-                      <span class="text-secondary">{{ activeAppreciation.detail }}</span>
-                    </div>
-                  </div>
-                </Transition>
-              </div>
-            </div>
-            <div class="recognition-progress" aria-label="Appreciation carousel position">
-              <span
-                v-for="(_, index) in appreciationItems"
-                :key="index"
-                class="recognition-progress__item"
-                :class="{ 'recognition-progress__item--active': index === currentAppreciation }"
-              />
-            </div>
-          </VCard>
-        </VCol>
-      </VRow>
-    </header>
-
     <VRow class="dashboard-layout">
       <VCol cols="12" md="8" lg="8" class="dashboard-main-column">
         <main class="dashboard-main">
+          <header class="dashboard-header-wrap dashboard-reveal dashboard-reveal--1">
+          <VCard class="dashboard-card dashboard-header__combined" elevation="0">
+            <div class="dashboard-header__intro">
+              <div class="dashboard-header__content">
+                <h1 class="dashboard-page-title text-h4 text-high-emphasis">
+                  Good morning, Julie.
+                </h1>
+                <p class="text-body-2 text-medium-emphasis mb-0">
+                  A quick view of your classes, student progress, and today’s priorities.
+                </p>
+              </div>
+              <div class="dashboard-header__art" aria-hidden="true">
+                <ClientOnly>
+                  <DotLottieVue
+                    src="/animations/dashboard-teacher-header.lottie"
+                    animation-id="icon"
+                    :autoplay="!prefersReducedMotion"
+                    :loop="!prefersReducedMotion"
+                    :layout="dashboardHeaderAnimationLayout"
+                    :render-config="dashboardHeaderAnimationRenderConfig"
+                    background-color="transparent"
+                    aria-hidden="true"
+                    class="dashboard-header__animation"
+                  />
+                  <template #fallback>
+                    <img
+                      :src="teacherWelcomeIllustration"
+                      alt=""
+                      class="dashboard-header__illustration"
+                    >
+                  </template>
+                </ClientOnly>
+              </div>
+            </div>
+            <section
+              class="recognition-card"
+              aria-label="Personal achievement"
+              @mouseenter="pauseAppreciationRotation"
+              @mouseleave="startAppreciationRotation"
+              @touchstart="pauseAppreciationRotation"
+              @touchend="startAppreciationRotation"
+            >
+              <div class="recognition-banner">
+                <div class="recognition-rail" aria-hidden="true">
+                  <lord-icon
+                    v-if="!prefersReducedMotion"
+                    :key="activeAppreciation.lordIconSrc"
+                    :src="activeAppreciation.lordIconSrc"
+                    trigger="loop"
+                    loading="lazy"
+                    class="recognition-lord-icon current-color"
+                    aria-hidden="true"
+                  />
+                  <VIcon
+                    v-else
+                    :icon="activeAppreciation.fallbackIcon"
+                    size="20"
+                  />
+                </div>
+                <div class="recognition-content">
+                  <Transition name="appreciation-fade" mode="out-in">
+                    <div :key="activeAppreciation.title" class="appreciation-copy" aria-live="polite">
+                      <h2 class="text-h6 font-weight-medium text-high-emphasis mb-1">
+                        {{ activeAppreciation.title }}
+                      </h2>
+                      <p class="text-body-2 text-medium-emphasis mb-1 appreciation-quote">
+                        “{{ activeAppreciation.quote }}”
+                      </p>
+                      <div class="d-flex align-center gap-2 text-caption text-medium-emphasis">
+                        <VIcon icon="ri-checkbox-circle-line" size="15" color="secondary" />
+                        <span class="text-secondary">{{ activeAppreciation.detail }}</span>
+                      </div>
+                    </div>
+                  </Transition>
+                </div>
+              </div>
+              <div class="recognition-progress" aria-label="Appreciation carousel position">
+                <span
+                  v-for="(_, index) in appreciationItems"
+                  :key="index"
+                  class="recognition-progress__item"
+                  :class="{ 'recognition-progress__item--active': index === currentAppreciation }"
+                />
+              </div>
+            </section>
+          </VCard>
+          </header>
         <section class="dashboard-section dashboard-reveal dashboard-reveal--2" aria-labelledby="summary-heading">
           <div class="section-heading">
             <div>
@@ -508,7 +491,7 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
                     <div class="student-cell watchlist-mobile-card__student">
                       <VAvatar size="34" color="grey-100" class="border">
                         <span class="text-caption font-weight-medium text-high-emphasis">
-                          {{ getInitials(item.name) }}
+                          {{ getAvatarText(item.name) }}
                         </span>
                       </VAvatar>
                       <div class="min-w-0">
@@ -570,7 +553,7 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
               <div class="student-cell">
                 <VAvatar size="34" color="grey-100" class="border">
                   <span class="text-caption font-weight-medium text-high-emphasis">
-                    {{ getInitials(item.name) }}
+                    {{ getAvatarText(item.name) }}
                   </span>
                 </VAvatar>
                 <div class="min-w-0">
@@ -884,28 +867,28 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
 }
 
 .dashboard-header-wrap {
-  margin-block-end: 20px;
+  min-width: 0;
 }
 
 .dashboard-page-title {
-  margin-block: 0 16px;
+  margin-block: 0 8px;
 }
 
-.dashboard-header__composition {
-  position: relative;
-  height: 100%;
-  min-height: 220px;
-  overflow: visible;
-}
-
-.dashboard-header__welcome {
+.dashboard-header__combined {
   display: flex;
-  align-items: center;
   height: 100%;
   min-width: 0;
-  min-height: 220px;
+  flex-direction: column;
   overflow: visible;
-  padding: 28px 32px;
+  padding: 20px 24px 16px;
+}
+
+.dashboard-header__intro {
+  position: relative;
+  display: flex;
+  min-height: 126px;
+  align-items: center;
+  overflow: visible;
 }
 
 .dashboard-header__content {
@@ -913,7 +896,7 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
   z-index: 2;
   display: flex;
   min-width: 0;
-  max-width: 46%;
+  max-width: 62%;
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
@@ -928,7 +911,7 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
   z-index: 1;
   right: 12px;
   bottom: 0;
-  width: min(40%, 300px);
+  width: min(36%, 190px);
   aspect-ratio: 558 / 496;
   overflow: visible;
   pointer-events: none;
@@ -983,13 +966,9 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
 
 .recognition-card {
   display: flex;
-  height: 100%;
   min-width: 0;
   flex-direction: column;
-  justify-content: center;
-  min-height: 168px;
   container-type: inline-size;
-  padding: 14px 16px 10px;
 }
 
 .recognition-banner {
@@ -1621,29 +1600,12 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
 }
 
 @media (max-width: 1100px) {
-  .dashboard-header__composition,
-  .dashboard-header__welcome {
-    min-height: 200px;
-  }
-
-  .dashboard-header__welcome {
-    padding: 20px;
+  .dashboard-header__intro {
+    min-height: 126px;
   }
 
   .dashboard-header__art {
-    width: min(46%, 270px);
-  }
-}
-
-@media (min-width: 761px) and (max-width: 959px) {
-  .dashboard-aside {
-    display: grid;
-    grid-template-columns: minmax(0, 1.4fr) minmax(240px, 1fr);
-    align-items: start;
-  }
-
-  .dashboard-aside-column {
-    order: -1;
+    width: min(36%, 190px);
   }
 }
 
@@ -1700,14 +1662,14 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
     margin-inline: 0;
   }
 
-  .dashboard-header__composition {
-    min-height: 160px;
+  .dashboard-header__combined {
+    height: auto;
+    min-height: 0;
+    padding: 16px;
   }
 
-  .dashboard-header__welcome {
-    height: auto;
-    min-height: 160px;
-    padding: 16px;
+  .dashboard-header__intro {
+    min-height: 126px;
   }
 
   .dashboard-header__content {
@@ -1716,13 +1678,11 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
 
   .dashboard-header__art {
     right: 8px;
-    width: min(38%, 130px);
+    width: min(54%, 160px);
   }
 
   .recognition-card {
-    height: auto;
     min-height: 0;
-    padding: 12px;
   }
 
   .recognition-banner {

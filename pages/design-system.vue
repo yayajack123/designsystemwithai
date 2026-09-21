@@ -892,7 +892,7 @@ const resetReviewFilters = () => {
                   class="me-3"
                   color="grey-50"
                 >
-                  <span class="text-caption font-weight-medium">{{ item.initials }}</span>
+                  <span class="text-caption font-weight-medium">{{ item.initials.slice(0, 2) }}</span>
                 </VAvatar>
                 <div class="d-flex flex-column">
                   <span class="text-body-1 font-weight-medium text-high-emphasis">{{ item.name }}</span>
@@ -1141,7 +1141,7 @@ const resetReviewFilters = () => {
                 class="me-3"
                 color="grey-50"
               >
-                <span class="text-caption font-weight-medium">{{ item.initials }}</span>
+                <span class="text-caption font-weight-medium">{{ item.initials.slice(0, 2) }}</span>
               </VAvatar>
               <div class="d-flex flex-column">
                 <span class="text-body-1 font-weight-medium text-high-emphasis">{{ item.name }}</span>
@@ -1196,7 +1196,7 @@ const resetReviewFilters = () => {
                 >
                   <VCard variant="outlined">
                     <VCardText class="d-flex align-center gap-3">
-                      <VAvatar color="primary-opacity-lighter" class="text-primary">{{ item.initials }}</VAvatar>
+                      <VAvatar color="primary-opacity-lighter" class="text-primary">{{ item.initials.slice(0, 2) }}</VAvatar>
                       <div>
                         <div class="font-weight-medium">{{ item.name }}</div>
                         <div class="text-caption">{{ item.book }}</div>
