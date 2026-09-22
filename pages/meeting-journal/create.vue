@@ -13,6 +13,18 @@ const router = useRouter()
 const classId = computed(() => (route.query.classId as string) || '1')
 const studentId = computed(() => (route.query.studentId as string) || 's1')
 
+type JournalReturnTarget = 'dashboard-teacher' | 'reports' | 'attendance-detail'
+
+const returnTo = computed<JournalReturnTarget>(() => {
+  const target = route.query.returnTo
+
+  if (target === 'dashboard-teacher' || target === 'reports' || target === 'attendance-detail') {
+    return target
+  }
+
+  return 'attendance-detail'
+})
+
 // ─────────────────────── Mock Data (aligned with attendance-detail.vue) ───────────────────────
 interface StudentDetail {
   id: string
@@ -162,10 +174,10 @@ const backRoute = computed(() => {
       }
     }
   }
-  return {
-    path: '/attendance-detail',
-    query: { id: classId.value }
-  }
+  if (returnTo.value === 'dashboard-teacher') return { path: '/dashboard-teacher' }
+  if (returnTo.value === 'reports') return { path: '/reports' }
+
+  return { path: '/attendance-detail', query: { id: classId.value } }
 })
 
 const projectName = ref('Project A')

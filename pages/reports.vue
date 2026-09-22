@@ -329,40 +329,11 @@ const showDailyJournalLessons = (item: ReportRow) => {
   isLessonsDialogOpen.value = true
 }
 
-const runJournalAction = (item: ReportRow, action: 'Create' | 'Edit' | 'Send') => {
-  if (action === 'Create') {
-    const createdCount = item.lessonDetails?.filter(lesson => lesson.status === 'Not Created').length || 0
-
-    item.lessonDetails?.forEach(lesson => {
-      if (lesson.status === 'Not Created') lesson.status = 'Pending'
-    })
-    const journalStatuses = new Set(item.lessonDetails?.map(lesson => lesson.status) || [])
-
-    item.status = journalStatuses.size > 1 ? 'Mixed' : 'Pending'
-    showToast(`Daily Journal draft created for ${createdCount || 1} lessons in demo mode.`)
-    return
-  }
-
-  showToast(action + ' action is a prototype only for ' + item.studentName + '.')
+const sendDailyJournal = (item: ReportRow) => {
+  showToast('Send action is a prototype only for ' + item.studentName + '.')
 }
 
-const runReportAction = (item: ReportRow) => {
-  if (item.status === 'Waiting for Daily Journal') {
-    activeTab.value = 'daily-journal'
-    searchQuery.value = item.studentName
-    selectedClass.value = 'All Classes'
-    selectedStatus.value = 'All Status'
-    viewType.value = 'flat'
-    showToast('Showing Daily Journals for ' + item.studentName + '.')
-    return
-  }
-
-  if (item.status === 'Not Created') {
-    item.status = 'Created'
-    showToast('Report marked as created in demo mode.')
-    return
-  }
-
+const viewReportDetails = (item: ReportRow) => {
   selectedReport.value = item
   isReportDialogOpen.value = true
 }
@@ -666,63 +637,107 @@ onBeforeUnmount(() => {
         <template #item.action="{ item }">
           <div v-if="activeTab === 'daily-journal'" class="report-actions">
             <template v-if="hasJournalStatus(item, 'Not Created')">
-              <VBtn
-                color="primary"
-                variant="text"
-                size="small"
-                @click="runJournalAction(item, 'Create')"
-              >
-                Create
-              </VBtn>
+              <VTooltip text="Create" location="top">
+                <template #activator="{ props }">
+                  <VBtn
+                    v-bind="props"
+                    icon="ri-pencil-line"
+                    color="primary"
+                    variant="outlined"
+                    size="small"
+                    class="action-btn"
+                    :aria-label="`Create journal for ${item.studentName}`"
+                    :to="{ path: '/meeting-journal/create', query: { returnTo: 'reports' } }"
+                  />
+                </template>
+              </VTooltip>
             </template>
             <template v-if="hasJournalStatus(item, 'Pending')">
-              <VBtn
-                color="secondary"
-                variant="text"
-                size="small"
-                @click="runJournalAction(item, 'Edit')"
-              >
-                Edit
-              </VBtn>
-              <VBtn
-                color="primary"
-                variant="text"
-                size="small"
-                @click="runJournalAction(item, 'Send')"
-              >
-                Send
-              </VBtn>
+              <VTooltip text="Edit" location="top">
+                <template #activator="{ props }">
+                  <VBtn
+                    v-bind="props"
+                    icon="ri-edit-box-line"
+                    color="primary"
+                    variant="outlined"
+                    size="small"
+                    class="action-btn"
+                    :aria-label="`Edit journal for ${item.studentName}`"
+                    :to="{ path: '/meeting-journal/create', query: { returnTo: 'reports' } }"
+                  />
+                </template>
+              </VTooltip>
+              <VTooltip text="Send" location="top">
+                <template #activator="{ props }">
+                  <VBtn
+                    v-bind="props"
+                    icon="ri-send-plane-line"
+                    color="primary"
+                    variant="outlined"
+                    size="small"
+                    class="action-btn"
+                    :aria-label="`Send journal for ${item.studentName}`"
+                    @click="sendDailyJournal(item)"
+                  />
+                </template>
+              </VTooltip>
             </template>
           </div>
 
           <div v-else-if="activeTab === 'reports'" class="report-actions">
             <VBtn
-              v-if="item.status === 'Waiting for Daily Journal'"
-              color="primary"
-              variant="text"
+              v-if="item.status === 'Created'"
+              icon
+              variant="outlined"
+              color="secondary"
+              rounded="pill"
               size="small"
-              @click="runReportAction(item)"
+              class="pending-menu-button"
+              :aria-label="`View report details for ${item.studentName}`"
+              @click="viewReportDetails(item)"
             >
-              Create Daily Journal
+              <VIcon icon="ri-eye-line" />
+              <VTooltip activator="parent" location="top">
+                View details
+              </VTooltip>
             </VBtn>
-            <VBtn
-              v-else-if="item.status === 'Not Created'"
-              color="primary"
-              variant="text"
-              size="small"
-              @click="runReportAction(item)"
-            >
-              Create Report
-            </VBtn>
-            <VBtn
-              v-else
-              color="primary"
-              variant="text"
-              size="small"
-              @click="runReportAction(item)"
-            >
-              View
-            </VBtn>
+
+            <VMenu v-else location="bottom end">
+              <template #activator="{ props: menuProps }">
+                <VBtn
+                  v-bind="menuProps"
+                  icon
+                  variant="outlined"
+                  color="secondary"
+                  rounded="pill"
+                  size="small"
+                  class="pending-menu-button"
+                  :aria-label="`More actions for ${item.studentName}`"
+                >
+                  <VIcon icon="ri-more-2-fill" />
+                  <VTooltip activator="parent" location="top">
+                    More actions
+                  </VTooltip>
+                </VBtn>
+              </template>
+              <VList density="compact" min-width="210">
+                <VListItem :to="{ path: '/meeting-journal/create', query: { returnTo: 'reports' } }">
+                  <template #prepend>
+                    <VIcon icon="ri-book-open-line" />
+                  </template>
+                  <VListItemTitle>Create Daily Journal</VListItemTitle>
+                </VListItem>
+                <VListItem
+                  :to="{ name: 'reports' }"
+                  :active="false"
+                >
+                  <template #prepend>
+                    <VIcon icon="ri-file-list-3-line" />
+                  </template>
+                  <VListItemTitle>Create Report</VListItemTitle>
+                </VListItem>
+              </VList>
+            </VMenu>
           </div>
 
           <div v-else class="report-actions report-actions--center">
@@ -1029,6 +1044,19 @@ onBeforeUnmount(() => {
   justify-content: flex-end;
   gap: 2px;
   white-space: nowrap;
+}
+
+.action-btn {
+  border-color: rgba(var(--v-theme-on-surface), 0.08) !important;
+  border-radius: 4px;
+
+  &:hover {
+    background-color: rgba(var(--v-theme-on-surface), 0.04);
+  }
+}
+
+.pending-menu-button {
+  min-width: 36px;
 }
 
 .report-actions--center {

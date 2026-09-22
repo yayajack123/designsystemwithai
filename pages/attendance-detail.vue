@@ -220,7 +220,8 @@ const handleActionClick = (item: StudentDetail) => {
       path: '/meeting-journal/create',
       query: {
         classId: classId.value,
-        studentId: item.id
+        studentId: item.id,
+        returnTo: 'attendance-detail'
       }
     })
   } else if (item.actionText === 'View') {

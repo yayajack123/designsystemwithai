@@ -46,11 +46,16 @@ interface WatchlistItem {
 interface PendingTask {
   id: string
   student: string
-  course: string
-  lesson: string
-  due: string
-  action: string
+  book: string
   category: PendingTab
+  meetingLesson?: string
+  dueDate?: string
+  progressDone?: number
+  progressTotal?: number
+  lesson?: string
+  date?: string
+  classId?: string
+  studentId?: string
 }
 
 interface ScheduleItem {
@@ -141,17 +146,17 @@ const getAvatarText = (name: string) => {
 const pendingTab = ref<PendingTab>('Journal')
 const pendingItems: Record<PendingTab, PendingTask[]> = {
   Journal: [
-    { id: 'task-1', student: 'Alice Johnson', course: 'Coding Xplorer', lesson: 'Mtg 12', due: 'Today · 16:00', action: 'Create', category: 'Journal' },
-    { id: 'task-2', student: 'Diana Prince', course: 'Coding Xplorer', lesson: 'Mtg 12', due: 'Today · 18:00', action: 'Create', category: 'Journal' },
-    { id: 'task-3', student: 'Fajar Ramadhan', course: 'Python Foundations', lesson: 'Mtg 11', due: 'Tomorrow', action: 'Create', category: 'Journal' },
+    { id: 'task-1', student: 'Alice Johnson', studentId: 's1', classId: '1', book: 'Coding Xplorer', meetingLesson: 'Meeting 12 - Lesson 12', dueDate: 'Today · 16:00', category: 'Journal' },
+    { id: 'task-2', student: 'Diana Prince', studentId: 's5', classId: '1', book: 'Coding Xplorer', meetingLesson: 'Meeting 12 - Lesson 12', dueDate: 'Today · 18:00', category: 'Journal' },
+    { id: 'task-3', student: 'Fajar Ramadhan', studentId: 's11', classId: '2', book: 'Python Foundations', meetingLesson: 'Meeting 11 - Lesson 11', dueDate: 'Tomorrow', category: 'Journal' },
   ],
   Reports: [
-    { id: 'task-4', student: 'Gita Permata', course: 'Web Design Basics', lesson: 'Mtg 8', due: 'Today · 17:00', action: 'Write report', category: 'Reports' },
-    { id: 'task-5', student: 'Bima Putra', course: 'Python Foundations', lesson: 'Mtg 8', due: 'Tomorrow', action: 'Write report', category: 'Reports' },
+    { id: 'task-4', student: 'Gita Permata', book: 'Web Design Basics', progressDone: 6, progressTotal: 8, category: 'Reports' },
+    { id: 'task-5', student: 'Bima Putra', book: 'Python Foundations', progressDone: 7, progressTotal: 8, category: 'Reports' },
   ],
   Projects: [
-    { id: 'task-6', student: 'Nadia Sari', course: 'Game Design', lesson: 'Project 2', due: 'Today · 19:00', action: 'Review', category: 'Projects' },
-    { id: 'task-7', student: 'Raka Aditya', course: 'Scratch Studio', lesson: 'Project 1', due: '12 Sep', action: 'Review', category: 'Projects' },
+    { id: 'task-6', student: 'Nadia Sari', book: 'Game Design', lesson: 'Lesson 8', date: 'Today · 19:00', category: 'Projects' },
+    { id: 'task-7', student: 'Raka Aditya', book: 'Scratch Studio', lesson: 'Lesson 4', date: '12 Sep', category: 'Projects' },
   ],
 }
 
@@ -162,13 +167,34 @@ const pendingTableTabs = computed(() => (Object.keys(pendingItems) as PendingTab
   value: tab,
   count: pendingItems[tab].length,
 })))
-const pendingHeaders = [
-  { title: 'STUDENT', key: 'student', sortable: false },
-  { title: 'COURSE', key: 'course', sortable: false },
-  { title: 'MTG / LESSON', key: 'lesson', sortable: false },
-  { title: 'DUE', key: 'due', sortable: false },
-  { title: 'ACTION', key: 'action', sortable: false, align: 'center', width: 140 },
-]
+const pendingHeaders = computed(() => {
+  if (pendingTab.value === 'Reports') {
+    return [
+      { title: 'STUDENT NAME', key: 'student', sortable: false },
+      { title: 'BOOK', key: 'book', sortable: false },
+      { title: 'PROGRESS', key: 'progress', sortable: false, minWidth: 180 },
+      { title: 'ACTION', key: 'action', sortable: false, align: 'center' as const, width: 88 },
+    ]
+  }
+
+  if (pendingTab.value === 'Projects') {
+    return [
+      { title: 'STUDENT NAME', key: 'student', sortable: false },
+      { title: 'BOOK', key: 'book', sortable: false },
+      { title: 'LESSON', key: 'lesson', sortable: false },
+      { title: 'DATE', key: 'date', sortable: false },
+      { title: 'ACTION', key: 'action', sortable: false, align: 'center' as const, width: 120 },
+    ]
+  }
+
+  return [
+    { title: 'STUDENT NAME', key: 'student', sortable: false },
+    { title: 'BOOK', key: 'book', sortable: false },
+    { title: 'MEETING - LESSON', key: 'meetingLesson', sortable: false },
+    { title: 'DUE DATE', key: 'dueDate', sortable: false },
+    { title: 'ACTION', key: 'action', sortable: false, align: 'center' as const, width: 120 },
+  ]
+})
 
 const scheduleItems: ScheduleItem[] = [
   { id: 'schedule-1', startsAt: '2026-09-11T09:00:00+08:00', endsAt: '2026-09-11T10:30:00+08:00', dateLabel: 'Tomorrow', timeLabel: '09:00–10:30', name: 'Regular Kids', type: 'Adaptive', students: 5, status: 'soon' },
@@ -277,7 +303,30 @@ const statusColor = (status: WatchlistStatus) => ({
   Closed: 'secondary',
 }[status])
 
-const getTaskRoute = (task: PendingTask) => task.category === 'Projects' ? { name: 'assessments' } : { name: 'reports' }
+type PendingAction = 'journal' | 'report'
+
+const getPendingActionRoute = (task: PendingTask, action?: PendingAction) => {
+  if (action === 'journal' || task.category === 'Journal') {
+    return {
+      name: 'meeting-journal-create',
+      query: {
+        classId: task.classId || '1',
+        studentId: task.studentId || 's1',
+        returnTo: 'dashboard-teacher',
+      },
+    }
+  }
+
+  if (task.category === 'Projects') return { name: 'assessments' }
+
+  return { name: 'reports' }
+}
+
+const getPendingProgressPercent = (task: PendingTask) => {
+  if (!task.progressTotal) return 0
+
+  return Math.round(((task.progressDone || 0) / task.progressTotal) * 100)
+}
 
 const isActionDialogOpen = ref(false)
 const activeWatchlistItem = ref<WatchlistItem | null>(null)
@@ -658,19 +707,58 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
                       <h3 class="text-body-1 font-weight-medium mb-1">
                         {{ item.student }}
                       </h3>
-                      <p class="text-caption text-medium-emphasis mb-0">
-                        {{ item.course }} · {{ item.lesson }}
-                      </p>
                     </div>
 
-                    <div class="pending-task-card__due">
-                      <span class="text-caption text-medium-emphasis">Due</span>
-                      <span class="due-label text-body-2 font-weight-medium">{{ item.due }}</span>
+                    <div
+                      v-if="pendingTab === 'Journal'"
+                      class="pending-task-card__due"
+                    >
+                      <span class="text-caption text-medium-emphasis">Due Date</span>
+                      <span class="due-label text-body-2 font-weight-medium">{{ item.dueDate }}</span>
+                    </div>
+                    <div
+                      v-else-if="pendingTab === 'Projects'"
+                      class="pending-task-card__due"
+                    >
+                      <span class="text-caption text-medium-emphasis">Date</span>
+                      <span class="text-body-2 font-weight-medium">{{ item.date }}</span>
+                    </div>
+                  </div>
+
+                  <div class="pending-task-card__details">
+                    <div>
+                      <span class="text-caption text-medium-emphasis">Book</span>
+                      <span class="text-body-2">{{ item.book }}</span>
+                    </div>
+                    <div v-if="pendingTab === 'Journal'">
+                      <span class="text-caption text-medium-emphasis">Meeting - Lesson</span>
+                      <span class="text-body-2">{{ item.meetingLesson }}</span>
+                    </div>
+                    <div v-else-if="pendingTab === 'Projects'">
+                      <span class="text-caption text-medium-emphasis">Lesson</span>
+                      <span class="text-body-2">{{ item.lesson }}</span>
+                    </div>
+                    <div v-else>
+                      <span class="text-caption text-medium-emphasis">Progress</span>
+                      <div class="pending-progress">
+                        <VProgressLinear
+                          :model-value="getPendingProgressPercent(item)"
+                          color="primary"
+                          height="6"
+                          rounded
+                          class="pending-progress__bar"
+                          aria-hidden="true"
+                        />
+                        <span class="text-body-2 font-weight-medium text-no-wrap">
+                          {{ item.progressDone }}/{{ item.progressTotal }}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
                   <VBtn
-                    :to="getTaskRoute(item)"
+                    v-if="pendingTab !== 'Reports'"
+                    :to="getPendingActionRoute(item)"
                     variant="outlined"
                     color="primary"
                     rounded="pill"
@@ -678,9 +766,49 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
                     size="small"
                     class="pending-task-card__action"
                   >
-                    {{ item.action }}
+                    {{ pendingTab === 'Journal' ? 'Create' : 'Review' }}
                     <VIcon end icon="ri-arrow-right-up-line" size="15" />
                   </VBtn>
+
+                  <div
+                    v-else
+                    class="pending-task-card__action-row"
+                  >
+                    <VMenu location="bottom end">
+                      <template #activator="{ props: menuProps }">
+                        <VBtn
+                          v-bind="menuProps"
+                          icon
+                          variant="outlined"
+                          color="secondary"
+                          rounded="pill"
+                          size="small"
+                          class="pending-menu-button"
+                          :aria-label="`More actions for ${item.student}`"
+                        >
+                          <VIcon icon="ri-more-2-fill" />
+                          <VTooltip activator="parent" location="top">
+                            More actions
+                          </VTooltip>
+                        </VBtn>
+                      </template>
+                      <VList density="compact" min-width="210">
+                        <VListItem :to="getPendingActionRoute(item, 'journal')">
+                          <template #prepend>
+                            <VIcon icon="ri-book-open-line" />
+                          </template>
+                          <VListItemTitle>Create Daily Journal</VListItemTitle>
+                        </VListItem>
+                        <VListItem :to="getPendingActionRoute(item, 'report')">
+                          <template #prepend>
+                            <VIcon icon="ri-file-list-3-line" />
+                          </template>
+                          <VListItemTitle>Create Report</VListItemTitle>
+                        </VListItem>
+                      </VList>
+                    </VMenu>
+                    <span class="text-caption text-medium-emphasis">Action</span>
+                  </div>
                 </article>
               </div>
 
@@ -696,23 +824,91 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
               <span class="student-name font-weight-medium">{{ item.student }}</span>
             </template>
 
-            <template #item.course="{ item }">
-              <span class="table-muted text-caption">{{ item.course }}</span>
+            <template #item.book="{ item }">
+              <span class="table-muted text-caption">{{ item.book }}</span>
+            </template>
+
+            <template #item.meetingLesson="{ item }">
+              <span class="table-muted text-caption">{{ item.meetingLesson }}</span>
+            </template>
+
+            <template #item.progress="{ item }">
+              <div class="pending-progress">
+                <VProgressLinear
+                  :model-value="getPendingProgressPercent(item)"
+                  color="primary"
+                  height="6"
+                  rounded
+                  class="pending-progress__bar"
+                  aria-hidden="true"
+                />
+                <span class="text-body-2 font-weight-medium text-no-wrap">
+                  {{ item.progressDone }}/{{ item.progressTotal }}
+                </span>
+              </div>
             </template>
 
             <template #item.lesson="{ item }">
               <span class="table-muted text-caption">{{ item.lesson }}</span>
             </template>
 
-            <template #item.due="{ item }">
-              <span class="due-label text-body-2 font-weight-medium">{{ item.due }}</span>
+            <template #item.date="{ item }">
+              <span class="text-body-2 text-high-emphasis">{{ item.date }}</span>
+            </template>
+
+            <template #item.dueDate="{ item }">
+              <span class="due-label text-body-2 font-weight-medium">{{ item.dueDate }}</span>
             </template>
 
             <template #item.action="{ item }">
-              <VBtn :to="getTaskRoute(item)" variant="text" color="primary" size="small" class="action-link">
-                {{ item.action }}
+              <VBtn
+                v-if="pendingTab !== 'Reports'"
+                :to="getPendingActionRoute(item)"
+                variant="text"
+                color="primary"
+                size="small"
+                class="action-link"
+              >
+                {{ pendingTab === 'Journal' ? 'Create' : 'Review' }}
                 <VIcon end icon="ri-arrow-right-up-line" size="15" />
               </VBtn>
+
+              <VMenu
+                v-else
+                location="bottom end"
+              >
+                <template #activator="{ props: menuProps }">
+                  <VBtn
+                    v-bind="menuProps"
+                    icon
+                    variant="outlined"
+                    color="secondary"
+                    rounded="pill"
+                    size="small"
+                    class="pending-menu-button"
+                    :aria-label="`More actions for ${item.student}`"
+                  >
+                    <VIcon icon="ri-more-2-fill" />
+                    <VTooltip activator="parent" location="top">
+                      More actions
+                    </VTooltip>
+                  </VBtn>
+                </template>
+                <VList density="compact" min-width="210">
+                  <VListItem :to="getPendingActionRoute(item, 'journal')">
+                    <template #prepend>
+                      <VIcon icon="ri-book-open-line" />
+                    </template>
+                    <VListItemTitle>Create Daily Journal</VListItemTitle>
+                  </VListItem>
+                  <VListItem :to="getPendingActionRoute(item, 'report')">
+                    <template #prepend>
+                      <VIcon icon="ri-file-list-3-line" />
+                    </template>
+                    <VListItemTitle>Create Report</VListItemTitle>
+                  </VListItem>
+                </VList>
+              </VMenu>
             </template>
 
             <template #no-data>
@@ -1279,6 +1475,22 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
   text-transform: none;
 }
 
+.pending-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 150px;
+}
+
+.pending-progress__bar {
+  flex: 1 1 auto;
+  min-width: 72px;
+}
+
+.pending-menu-button {
+  min-width: 36px;
+}
+
 .pending-mobile-list {
   padding: 0 16px 8px;
 }
@@ -1300,6 +1512,17 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
   min-width: 0;
 }
 
+.pending-task-card__details {
+  display: grid;
+  gap: 10px;
+  margin-block-start: 14px;
+}
+
+.pending-task-card__details > div {
+  display: grid;
+  gap: 2px;
+}
+
 .pending-task-card__due {
   display: flex;
   flex: 0 0 auto;
@@ -1307,6 +1530,14 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
   align-items: flex-end;
   gap: 2px;
   text-align: end;
+}
+
+.pending-task-card__action-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-block-start: 16px;
 }
 
 .pending-task-card__action {
