@@ -43,6 +43,14 @@ interface ReportRow {
   status: RowStatus
 }
 
+interface DailyJournalStudentGroup {
+  key: string
+  studentName: string
+  studentId: string
+  classNames: string[]
+  journals: ReportRow[]
+}
+
 const groupDailyJournalRows = (records: ReportRow[]): ReportRow[] => {
   const groupedRecords = new Map<string, ReportRow[]>()
 
@@ -87,7 +95,16 @@ const groupDailyJournalRows = (records: ReportRow[]): ReportRow[] => {
   })
 }
 
-const activeTab = ref<ReportsTab>('daily-journal')
+const route = useRoute()
+const getInitialReportsTab = (): ReportsTab => {
+  const queryTab = route.query.tab
+
+  if (queryTab === 'reports' || queryTab === 'ptm' || queryTab === 'daily-journal') return queryTab
+
+  return 'daily-journal'
+}
+
+const activeTab = ref<ReportsTab>(getInitialReportsTab())
 const searchQuery = ref('')
 const selectedClass = ref('All Classes')
 const selectedStatus = ref('All Status')
@@ -197,14 +214,16 @@ const tableHeaders = computed(() => {
   ]
 })
 
+const getReportClassNames = (item: ReportRow) => {
+  const classNames = item.classNames?.length
+    ? item.classNames
+    : item.className?.split(',') || []
+
+  return [...new Set(classNames.map(className => className.trim()).filter(className => className && className !== '-'))]
+}
+
 const classOptions = computed(() => {
-  const classes = currentData.value.flatMap(item =>
-    item.classNames?.length
-      ? item.classNames
-      : item.className && item.className !== '-'
-        ? [item.className]
-        : [],
-  )
+  const classes = currentData.value.flatMap(getReportClassNames)
 
   return ['All Classes', ...new Set(classes)]
 })
@@ -244,6 +263,60 @@ const filteredData = computed(() => {
     return matchesSearch && matchesClass && matchesStatus
   })
 })
+
+const groupedDailyJournalStudents = computed<DailyJournalStudentGroup[]>(() => {
+  const groups = new Map<string, DailyJournalStudentGroup>()
+
+  filteredData.value.forEach(item => {
+    const key = item.studentId
+    const existingGroup = groups.get(key)
+
+    if (existingGroup) {
+      existingGroup.journals.push(item)
+      existingGroup.classNames = [...new Set([...existingGroup.classNames, ...getReportClassNames(item)])]
+      return
+    }
+
+    groups.set(key, {
+      key,
+      studentName: item.studentName,
+      studentId: item.studentId,
+      classNames: getReportClassNames(item),
+      journals: [item],
+    })
+  })
+
+  return Array.from(groups.values())
+})
+
+const groupedDailyJournalStudentsCount = computed(() => groupedDailyJournalStudents.value.length)
+const groupedDailyJournalStartIndex = computed(() => (currentPage.value - 1) * itemsPerPage.value)
+const groupedDailyJournalStopIndex = computed(() => Math.min(
+  groupedDailyJournalStudentsCount.value,
+  groupedDailyJournalStartIndex.value + itemsPerPage.value,
+))
+const groupedDailyJournalPageCount = computed(() => Math.ceil(
+  groupedDailyJournalStudentsCount.value / itemsPerPage.value,
+))
+const paginatedDailyJournalStudents = computed(() => groupedDailyJournalStudents.value.slice(
+  groupedDailyJournalStartIndex.value,
+  groupedDailyJournalStopIndex.value,
+))
+
+const expandedStudents = ref<Record<string, boolean>>({})
+
+const isStudentExpanded = (studentId: string) => expandedStudents.value[studentId] !== false
+
+const toggleStudentExpand = (studentId: string) => {
+  expandedStudents.value[studentId] = !isStudentExpanded(studentId)
+}
+
+const handleStudentHeaderKeydown = (event: KeyboardEvent, studentId: string) => {
+  if (event.key !== 'Enter' && event.key !== ' ') return
+
+  event.preventDefault()
+  toggleStudentExpand(studentId)
+}
 
 const hasActiveFilter = computed(() =>
   Boolean(searchQuery.value) || selectedClass.value !== 'All Classes' || selectedStatus.value !== 'All Status',
@@ -368,6 +441,28 @@ watch(activeTab, () => {
   viewType.value = 'flat'
 })
 
+provide(Symbol.for('vuetify:data-table-pagination'), {
+  page: currentPage,
+  itemsPerPage,
+  startIndex: groupedDailyJournalStartIndex,
+  stopIndex: groupedDailyJournalStopIndex,
+  pageCount: groupedDailyJournalPageCount,
+  itemsLength: groupedDailyJournalStudentsCount,
+  nextPage: () => {
+    if (currentPage.value < groupedDailyJournalPageCount.value) currentPage.value++
+  },
+  prevPage: () => {
+    if (currentPage.value > 1) currentPage.value--
+  },
+  setPage: (value: number) => {
+    currentPage.value = value
+  },
+  setItemsPerPage: (value: number) => {
+    itemsPerPage.value = value
+    currentPage.value = 1
+  },
+})
+
 onMounted(() => {
   loadingTimer = setTimeout(() => {
     isLoading.value = false
@@ -412,7 +507,10 @@ onBeforeUnmount(() => {
       </VTab>
     </VTabs>
 
-    <VCard class="report-card">
+    <VCard
+      class="report-card"
+      :class="{ 'report-card--daily-journal': activeTab === 'daily-journal' }"
+    >
       <VCardText class="report-filter-bar">
         <div class="report-filter-fields">
           <VTextField
@@ -446,7 +544,7 @@ onBeforeUnmount(() => {
             variant="outlined"
           />
           <VBtn
-            v-if="hasActiveFilter"
+            v-if="activeTab === 'daily-journal' || hasActiveFilter"
             variant="text"
             color="primary"
             @click="resetFilters"
@@ -501,7 +599,7 @@ onBeforeUnmount(() => {
       >
         <VIcon icon="ri-file-search-line" size="42" color="secondary" class="mb-2" />
         <p class="text-body-1 text-medium-emphasis mb-2">
-          No matching {{ activeTab === 'ptm' ? 'PTM records' : 'reports' }} found.
+          No matching {{ activeTab === 'ptm' ? 'PTM records' : activeTab === 'daily-journal' ? 'daily journals' : 'reports' }} found.
         </p>
         <VBtn
           v-if="hasActiveFilter"
@@ -511,6 +609,182 @@ onBeforeUnmount(() => {
         >
           Clear filters
         </VBtn>
+      </div>
+
+      <div
+        v-else-if="activeTab === 'daily-journal' && viewType === 'student'"
+        class="daily-journal-student-view"
+      >
+        <div class="daily-journal-list-header">
+          <span class="text-body-1 font-weight-medium text-high-emphasis">Student List</span>
+          <span class="text-body-2 text-medium-emphasis">
+            {{ groupedDailyJournalStudentsCount }} students displayed
+          </span>
+        </div>
+
+        <div class="daily-journal-student-list">
+          <VCard
+            v-for="student in paginatedDailyJournalStudents"
+            :key="student.key"
+            class="daily-journal-student-card"
+            border
+            elevation="0"
+          >
+            <div
+              class="daily-journal-student-header"
+              role="button"
+              tabindex="0"
+              :aria-expanded="isStudentExpanded(student.key)"
+              :aria-label="`${isStudentExpanded(student.key) ? 'Collapse' : 'Expand'} journals for ${student.studentName}`"
+              @click="toggleStudentExpand(student.key)"
+              @keydown="handleStudentHeaderKeydown($event, student.key)"
+            >
+              <div class="daily-journal-student-identity">
+                <VAvatar
+                  size="34"
+                  color="grey-50"
+                  class="daily-journal-student-avatar"
+                >
+                  <span class="text-body-2 text-high-emphasis">{{ avatarText(student.studentName) }}</span>
+                </VAvatar>
+                <div class="daily-journal-student-copy">
+                  <span class="text-body-1 font-weight-medium text-high-emphasis">
+                    {{ student.studentName }}
+                  </span>
+                  <span class="text-body-2 text-medium-emphasis">{{ student.studentId }}</span>
+                  <span class="daily-journal-student-dot" aria-hidden="true" />
+                  <span class="text-body-2 text-medium-emphasis">
+                    {{ student.classNames.length ? student.classNames.join(', ') : '—' }}
+                  </span>
+                </div>
+              </div>
+              <VBtn
+                icon
+                variant="outlined"
+                color="secondary"
+                size="small"
+                class="daily-journal-expand-btn"
+                :aria-label="`${isStudentExpanded(student.key) ? 'Collapse' : 'Expand'} journals for ${student.studentName}`"
+                @click.stop="toggleStudentExpand(student.key)"
+              >
+                <VIcon :icon="isStudentExpanded(student.key) ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'" />
+              </VBtn>
+            </div>
+
+            <VExpandTransition>
+              <div v-show="isStudentExpanded(student.key)" class="daily-journal-student-body">
+                <div
+                  v-for="journal in student.journals"
+                  :key="journal.id"
+                  class="daily-journal-item"
+                >
+                  <div class="daily-journal-item-main">
+                    <VIcon icon="ri-book-2-line" color="primary" size="24" />
+                    <div class="daily-journal-item-copy">
+                      <span class="text-body-1 font-weight-medium text-high-emphasis">
+                        {{ journal.bookSession }}
+                      </span>
+                      <div class="daily-journal-item-lesson">
+                        <span class="text-body-2 text-medium-emphasis daily-journal-item-lesson-text">
+                          {{ getDailyJournalLessons(journal).length > 1 ? `${getDailyJournalLessons(journal).length} Lessons` : getDailyJournalLessons(journal)[0] || '—' }}
+                        </span>
+                        <VBtn
+                          v-if="getDailyJournalLessons(journal).length > 1"
+                          variant="text"
+                          color="primary"
+                          size="small"
+                          density="compact"
+                          class="daily-journal-see-all"
+                          @click="showDailyJournalLessons(journal)"
+                        >
+                          See all
+                        </VBtn>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="daily-journal-item-statuses">
+                    <template v-if="(journal.lessonDetails?.length || 0) > 1">
+                      <VChip
+                        v-for="summary in getJournalStatusCounts(journal)"
+                        :key="summary.status"
+                        :color="statusColor(summary.status)"
+                        variant="tonal"
+                        size="small"
+                        class="font-weight-medium"
+                      >
+                        {{ summary.count }} {{ summary.status }}
+                      </VChip>
+                    </template>
+                    <VChip
+                      v-else
+                      :color="statusColor(journal.status)"
+                      variant="tonal"
+                      size="small"
+                      class="font-weight-medium"
+                    >
+                      {{ journal.status }}
+                    </VChip>
+                  </div>
+
+                  <VDivider vertical class="daily-journal-item-divider" />
+
+                  <div class="daily-journal-item-date">
+                    <span class="text-body-2 text-medium-emphasis">Date</span>
+                    <span class="text-body-2 text-high-emphasis">{{ formatDateRange(journal) }}</span>
+                  </div>
+
+                  <VDivider vertical class="daily-journal-item-divider" />
+
+                  <div class="report-actions daily-journal-item-actions">
+                    <template v-if="hasJournalStatus(journal, 'Not Created')">
+                      <VBtn
+                        color="primary"
+                        variant="flat"
+                        rounded="pill"
+                        size="small"
+                        prepend-icon="ri-pencil-line"
+                        :aria-label="`Create journal for ${journal.studentName}`"
+                        :to="{ path: '/meeting-journal/create', query: { returnTo: 'reports' } }"
+                      >
+                        Create
+                      </VBtn>
+                    </template>
+                    <template v-if="hasJournalStatus(journal, 'Pending')">
+                      <VBtn
+                        color="primary"
+                        variant="flat"
+                        rounded="pill"
+                        size="small"
+                        prepend-icon="ri-send-plane-line"
+                        :aria-label="`Send journal for ${journal.studentName}`"
+                        @click="sendDailyJournal(journal)"
+                      >
+                        Send
+                      </VBtn>
+                      <VBtn
+                        color="primary"
+                        variant="outlined"
+                        rounded="pill"
+                        size="small"
+                        prepend-icon="ri-edit-box-line"
+                        :aria-label="`Edit journal for ${journal.studentName}`"
+                        :to="{ path: '/meeting-journal/create', query: { returnTo: 'reports' } }"
+                      >
+                        Edit
+                      </VBtn>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </VExpandTransition>
+          </VCard>
+        </div>
+
+        <VDataTableFooter
+          :items-per-page-options="[5, 10, 20]"
+          class="daily-journal-pagination"
+        />
       </div>
 
       <VDataTable
@@ -928,7 +1202,193 @@ onBeforeUnmount(() => {
 
 .report-card {
   border: 1px solid rgba(var(--v-theme-on-surface), 0.1);
-  border-radius: 6px;
+  border-radius: 12px;
+}
+
+.daily-journal-student-view {
+  width: 100%;
+  border-block-end: 1px solid rgba(var(--v-theme-on-surface), 0.12);
+  padding: 20px;
+}
+
+.daily-journal-list-header {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  margin-block-end: 20px;
+}
+
+.daily-journal-student-list {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.daily-journal-student-card {
+  width: 100%;
+  overflow: hidden;
+  border-color: rgba(var(--v-theme-on-surface), 0.12) !important;
+  border-radius: 12px !important;
+}
+
+.daily-journal-student-header {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 16px 24px;
+  background-color: rgb(var(--v-theme-surface));
+  border-block-end: 1px solid rgba(var(--v-theme-on-surface), 0.12);
+  cursor: pointer;
+  text-align: start;
+}
+
+.daily-journal-student-header:focus-visible {
+  outline: 2px solid rgb(var(--v-theme-primary));
+  outline-offset: -2px;
+}
+
+.daily-journal-student-identity {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.daily-journal-student-avatar {
+  flex: 0 0 auto;
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.08);
+}
+
+.daily-journal-student-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 12px;
+}
+
+.daily-journal-student-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background-color: rgba(var(--v-theme-on-surface), 0.12);
+}
+
+.daily-journal-expand-btn {
+  flex: 0 0 auto;
+  border-color: rgba(var(--v-theme-on-surface), 0.08) !important;
+}
+
+.daily-journal-student-body {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  background-color: rgb(var(--v-theme-background));
+}
+
+.daily-journal-item {
+  display: flex;
+  min-width: 0;
+  width: 100%;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 16px;
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
+  border-radius: 12px;
+  background-color: rgb(var(--v-theme-surface));
+}
+
+.daily-journal-item-main {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 0;
+  align-items: center;
+  gap: 16px;
+}
+
+.daily-journal-item-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.daily-journal-item-lesson {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.daily-journal-item-lesson-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.daily-journal-see-all {
+  flex: 0 0 auto;
+  padding-inline: 0 !important;
+  text-transform: none;
+}
+
+.daily-journal-item-statuses {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.daily-journal-item-divider {
+  height: 28px;
+  flex: 0 0 auto;
+}
+
+.daily-journal-item-date {
+  display: flex;
+  min-width: 180px;
+  flex: 0 0 180px;
+  flex-direction: column;
+}
+
+.daily-journal-item-actions {
+  flex: 0 0 auto;
+  gap: 8px;
+}
+
+.daily-journal-item-actions :deep(.v-btn) {
+  min-height: 36px;
+  padding-inline: 18px;
+  box-shadow: 0 2px 4px rgba(var(--v-theme-on-surface), 0.16);
+  text-transform: none;
+}
+
+.daily-journal-item-actions :deep(.v-btn--variant-outlined) {
+  box-shadow: none;
+}
+
+.daily-journal-pagination {
+  margin-block-start: 12px;
+}
+
+.report-card--daily-journal .report-filter-field {
+  flex-basis: 204px;
+  max-width: 204px;
+}
+
+.daily-journal-student-avatar {
+  background-color: rgba(var(--v-theme-on-surface), 0.06) !important;
+  color: rgba(var(--v-theme-on-surface), 0.9) !important;
 }
 
 .report-filter-bar {
@@ -1150,6 +1610,25 @@ onBeforeUnmount(() => {
     align-items: stretch;
   }
 
+  .daily-journal-student-header {
+    padding-inline: 16px;
+  }
+
+  .daily-journal-item {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .daily-journal-item-main {
+    min-width: min(100%, 220px);
+    flex-basis: 100%;
+  }
+
+  .daily-journal-item-date {
+    min-width: 0;
+    flex-basis: auto;
+  }
+
 }
 
 @media (max-width: 600px) {
@@ -1168,6 +1647,50 @@ onBeforeUnmount(() => {
 
   .report-filter-fields :deep(.v-btn) {
     align-self: flex-start;
+  }
+
+  .daily-journal-student-view {
+    padding: 16px;
+  }
+
+  .daily-journal-student-header {
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .daily-journal-student-copy {
+    align-items: flex-start;
+    flex-direction: column;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .daily-journal-student-dot {
+    display: none;
+  }
+
+  .daily-journal-item {
+    padding: 16px;
+  }
+
+  .daily-journal-item-statuses,
+  .daily-journal-item-date,
+  .daily-journal-item-actions {
+    margin-inline-start: 40px;
+  }
+
+  .daily-journal-item-statuses,
+  .daily-journal-item-date,
+  .daily-journal-item-actions {
+    flex-basis: calc(100% - 40px);
+  }
+
+  .daily-journal-item-divider {
+    display: none;
+  }
+
+  .daily-journal-item-actions {
+    justify-content: flex-start;
   }
 
   .report-detail-list > div {

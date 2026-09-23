@@ -12,6 +12,7 @@ type WatchlistType = 'Attendance' | 'Productivity' | 'Quiz'
 type RiskLevel = 'Green' | 'Yellow' | 'Red'
 type WatchlistStatus = 'Open' | 'In Progress' | 'Resolved' | 'Failed' | 'No Action' | 'Closed'
 type PendingTab = 'Journal' | 'Reports' | 'Projects'
+type PendingStatus = 'Not Created' | 'Waiting for Daily Journal' | 'Created'
 type ScheduleStatus = 'ready' | 'soon' | 'live'
 
 interface AppreciationItem {
@@ -56,6 +57,7 @@ interface PendingTask {
   date?: string
   classId?: string
   studentId?: string
+  status?: PendingStatus
 }
 
 interface ScheduleItem {
@@ -74,7 +76,6 @@ interface SelfLearningItem {
   id: string
   title: string
   estimate: string
-  deadline?: string
 }
 
 const appreciationItems: AppreciationItem[] = [
@@ -144,35 +145,68 @@ const getAvatarText = (name: string) => {
 }
 
 const pendingTab = ref<PendingTab>('Journal')
+const pendingLoadMoreAmount = 20
+const pendingInitialVisibleCount = 5
+const pendingStudents = [
+  'Alice Johnson',
+  'Diana Prince',
+  'Fajar Ramadhan',
+  'Gita Permata',
+  'Bima Putra',
+  'Nadia Sari',
+  'Raka Aditya',
+]
+const pendingBooks = ['Coding Xplorer', 'Python Foundations', 'Web Design Basics', 'Game Design', 'Scratch Studio']
+
 const pendingItems: Record<PendingTab, PendingTask[]> = {
-  Journal: [
-    { id: 'task-1', student: 'Alice Johnson', studentId: 's1', classId: '1', book: 'Coding Xplorer', meetingLesson: 'Meeting 12 - Lesson 12', dueDate: 'Today · 16:00', category: 'Journal' },
-    { id: 'task-2', student: 'Diana Prince', studentId: 's5', classId: '1', book: 'Coding Xplorer', meetingLesson: 'Meeting 12 - Lesson 12', dueDate: 'Today · 18:00', category: 'Journal' },
-    { id: 'task-3', student: 'Fajar Ramadhan', studentId: 's11', classId: '2', book: 'Python Foundations', meetingLesson: 'Meeting 11 - Lesson 11', dueDate: 'Tomorrow', category: 'Journal' },
-  ],
-  Reports: [
-    { id: 'task-4', student: 'Gita Permata', book: 'Web Design Basics', progressDone: 6, progressTotal: 8, category: 'Reports' },
-    { id: 'task-5', student: 'Bima Putra', book: 'Python Foundations', progressDone: 7, progressTotal: 8, category: 'Reports' },
-  ],
-  Projects: [
-    { id: 'task-6', student: 'Nadia Sari', book: 'Game Design', lesson: 'Lesson 8', date: 'Today · 19:00', category: 'Projects' },
-    { id: 'task-7', student: 'Raka Aditya', book: 'Scratch Studio', lesson: 'Lesson 4', date: '12 Sep', category: 'Projects' },
-  ],
+  Journal: Array.from({ length: 70 }, (_, index) => ({
+    id: `journal-${index + 1}`,
+    student: pendingStudents[index % pendingStudents.length],
+    studentId: `s${index + 1}`,
+    classId: `${(index % 3) + 1}`,
+    book: pendingBooks[index % pendingBooks.length],
+    meetingLesson: `Meeting ${12 - (index % 4)} - Lesson ${12 - (index % 4)}`,
+    dueDate: index === 0 ? 'Today · 16:00' : index === 1 ? 'Today · 18:00' : index < 5 ? 'Tomorrow' : `${13 + (index % 4)} Sep`,
+    category: 'Journal',
+  })),
+  Reports: Array.from({ length: 12 }, (_, index) => ({
+    id: `report-${index + 1}`,
+    student: pendingStudents[(index + 3) % pendingStudents.length],
+    book: pendingBooks[(index + 2) % pendingBooks.length],
+    progressDone: Math.max(1, 8 - (index % 4)),
+    progressTotal: 8,
+    status: (['Waiting for Daily Journal', 'Not Created', 'Created'] as PendingStatus[])[index % 3],
+    category: 'Reports',
+  })),
+  Projects: Array.from({ length: 8 }, (_, index) => ({
+    id: `project-${index + 1}`,
+    student: pendingStudents[(index + 5) % pendingStudents.length],
+    book: pendingBooks[(index + 3) % pendingBooks.length],
+    lesson: `Lesson ${8 - (index % 5)}`,
+    date: index === 0 ? 'Today · 19:00' : index === 1 ? '12 Sep' : `${13 + (index % 4)} Sep`,
+    category: 'Projects',
+  })),
 }
 
-const activePendingItems = computed(() => pendingItems[pendingTab.value])
+const activePendingItems = computed(() => pendingItems[pendingTab.value].slice(0, pendingInitialVisibleCount))
 const pendingTotal = computed(() => Object.values(pendingItems).flat().length)
+const activePendingTotal = computed(() => pendingItems[pendingTab.value].length)
+const activePendingRemaining = computed(() => Math.max(0, activePendingTotal.value - activePendingItems.value.length))
+const pendingMoreCount = computed(() => Math.min(pendingLoadMoreAmount, activePendingRemaining.value))
+const hasMorePendingItems = computed(() => activePendingRemaining.value > 0)
 const pendingTableTabs = computed(() => (Object.keys(pendingItems) as PendingTab[]).map(tab => ({
   label: tab,
   value: tab,
   count: pendingItems[tab].length,
 })))
+
 const pendingHeaders = computed(() => {
   if (pendingTab.value === 'Reports') {
     return [
       { title: 'STUDENT NAME', key: 'student', sortable: false },
       { title: 'BOOK', key: 'book', sortable: false },
       { title: 'PROGRESS', key: 'progress', sortable: false, minWidth: 180 },
+      { title: 'STATUS', key: 'status', sortable: false, minWidth: 180 },
       { title: 'ACTION', key: 'action', sortable: false, align: 'center' as const, width: 88 },
     ]
   }
@@ -204,12 +238,21 @@ const scheduleItems: ScheduleItem[] = [
 
 const selfLearningItems: SelfLearningItem[] = [
   { id: 'learning-1', title: 'Check LMS reflection notes', estimate: '10 min' },
-  { id: 'learning-2', title: 'Review Python Game Dev Lesson 7 material', estimate: '15 min', deadline: 'Today' },
-  { id: 'learning-3', title: 'Prepare for Tech Explorer class tomorrow', estimate: '20 min', deadline: 'Tomorrow' },
+  { id: 'learning-2', title: 'Review Python Game Dev Lesson 7 material', estimate: '15 min' },
+  { id: 'learning-3', title: 'Prepare for Tech Explorer class tomorrow', estimate: '20 min' },
 ]
 
 const currentTime = ref<number | null>(null)
 let countdownTimer: ReturnType<typeof setInterval> | undefined
+
+const nearestScheduleId = computed(() => {
+  const now = currentTime.value ?? Date.now()
+  const upcoming = scheduleItems
+    .filter(item => new Date(item.endsAt).getTime() > now)
+    .sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime())
+
+  return upcoming[0]?.id ?? scheduleItems[0]?.id
+})
 
 const getCountdown = (item: ScheduleItem) => {
   if (!currentTime.value) return item.status === 'soon' ? 'In 45 min' : item.dateLabel
@@ -326,6 +369,19 @@ const getPendingProgressPercent = (task: PendingTask) => {
   if (!task.progressTotal) return 0
 
   return Math.round(((task.progressDone || 0) / task.progressTotal) * 100)
+}
+
+const pendingStatusColor = (status?: PendingStatus) => ({
+  'Not Created': 'secondary',
+  'Waiting for Daily Journal': 'warning',
+  Created: 'success',
+}[status || 'Not Created'])
+
+const getPendingViewAllRoute = (tab: PendingTab) => {
+  if (tab === 'Journal') return { name: 'reports', query: { tab: 'daily-journal' } }
+  if (tab === 'Reports') return { name: 'reports', query: { tab: 'reports' } }
+
+  return { name: 'assessments' }
 }
 
 const isActionDialogOpen = ref(false)
@@ -679,16 +735,6 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
                     {{ pendingTotal }} items are waiting across your workflows
                   </p>
                 </div>
-                <VBtn
-                  variant="text"
-                  color="primary"
-                  size="small"
-                  class="section-link"
-                  :to="{ name: 'reports' }"
-                >
-                  View all
-                  <VIcon end icon="ri-arrow-right-line" size="16" />
-                </VBtn>
               </div>
             </template>
 
@@ -753,6 +799,17 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
                           {{ item.progressDone }}/{{ item.progressTotal }}
                         </span>
                       </div>
+                    </div>
+                    <div v-if="pendingTab === 'Reports'">
+                      <span class="text-caption text-medium-emphasis">Status</span>
+                      <VChip
+                        :color="pendingStatusColor(item.status)"
+                        variant="tonal"
+                        size="small"
+                        class="pending-status-chip"
+                      >
+                        {{ item.status }}
+                      </VChip>
                     </div>
                   </div>
 
@@ -848,6 +905,17 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
               </div>
             </template>
 
+            <template #item.status="{ item }">
+              <VChip
+                :color="pendingStatusColor(item.status)"
+                variant="tonal"
+                size="small"
+                class="pending-status-chip"
+              >
+                {{ item.status }}
+              </VChip>
+            </template>
+
             <template #item.lesson="{ item }">
               <span class="table-muted text-caption">{{ item.lesson }}</span>
             </template>
@@ -917,6 +985,43 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
               </div>
             </template>
           </UiTableView>
+
+          <div
+            v-if="hasMorePendingItems"
+            class="pending-more-section"
+            aria-live="polite"
+          >
+            <div class="pending-more-copy">
+              <span class="text-body-2 text-high-emphasis">
+                {{ activePendingRemaining }} more {{ pendingTab }} tasks
+              </span>
+              <span class="text-caption text-medium-emphasis">
+                Showing {{ activePendingItems.length }} of {{ activePendingTotal }}
+              </span>
+            </div>
+            <VBtn
+              variant="outlined"
+              color="primary"
+              rounded="pill"
+              size="small"
+              class="pending-more-button"
+              :to="getPendingViewAllRoute(pendingTab)"
+              :aria-label="`See ${pendingMoreCount} more ${pendingTab} tasks`"
+            >
+              See +{{ pendingMoreCount }} More
+              <VIcon end icon="ri-arrow-right-up-line" size="15" />
+            </VBtn>
+          </div>
+
+          <div
+            v-else-if="activePendingTotal > 0"
+            class="pending-more-section pending-more-section--complete"
+            aria-live="polite"
+          >
+            <span class="text-caption text-medium-emphasis">
+              All {{ pendingTab }} tasks are shown
+            </span>
+          </div>
         </section>
         </main>
       </VCol>
@@ -946,7 +1051,10 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
                   </div>
                   <span
                     class="schedule-status"
-                    :class="`schedule-status--${item.status}`"
+                    :class="[
+                      `schedule-status--${item.status}`,
+                      { 'schedule-status--nearest': item.id === nearestScheduleId },
+                    ]"
                     :aria-label="`Schedule status: ${item.status}`"
                   >
                     <span class="status-dot" />
@@ -978,7 +1086,7 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
               <div class="learning-item__content">
                 <span class="learning-item__title text-body-2 font-weight-medium">{{ item.title }}</span>
                 <span class="learning-item__meta text-caption">
-                  Estimation: {{ item.estimate }}<template v-if="item.deadline"> · Deadline: {{ item.deadline }}</template>
+                  Estimation: {{ item.estimate }}
                 </span>
               </div>
               <VBtn
@@ -1487,8 +1595,42 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
   min-width: 72px;
 }
 
+.pending-status-chip {
+  max-width: 100%;
+  white-space: normal;
+}
+
 .pending-menu-button {
   min-width: 36px;
+}
+
+.pending-more-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid var(--dashboard-line);
+  border-block-start: 0;
+  border-radius: 0 0 6px 6px;
+  background: rgb(var(--v-theme-surface));
+  padding: 14px 20px 16px;
+}
+
+.pending-more-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pending-more-button {
+  flex: 0 0 auto;
+  min-height: 36px;
+  text-transform: none;
+}
+
+.pending-more-section--complete {
+  justify-content: center;
 }
 
 .pending-mobile-list {
@@ -1682,6 +1824,7 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
 }
 
 .schedule-status {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1693,6 +1836,29 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
 .schedule-status--ready { color: rgb(var(--v-theme-success)); background: rgba(var(--v-theme-success), 0.12); }
 .schedule-status--soon { color: rgb(var(--v-theme-warning)); background: rgba(var(--v-theme-warning), 0.14); }
 .schedule-status--live { color: rgb(var(--v-theme-error)); background: rgba(var(--v-theme-error), 0.12); }
+
+.schedule-status--nearest::after {
+  position: absolute;
+  inset: 2px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  content: '';
+  pointer-events: none;
+  animation: schedule-status-pulse 1.8s linear infinite;
+}
+
+@keyframes schedule-status-pulse {
+  0% {
+    opacity: 0.65;
+    transform: scale(1);
+  }
+
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(1.45);
+  }
+}
 
 .schedule-view-all {
   box-sizing: border-box;
@@ -1893,6 +2059,15 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
     margin-inline: 0;
   }
 
+  .pending-more-section {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .pending-more-button {
+    width: 100%;
+  }
+
   .dashboard-header__combined {
     height: auto;
     min-height: 0;
@@ -1956,6 +2131,12 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
   .summary-card,
   .dashboard-table-view :deep(.dashboard-table tbody tr) {
     transition: none;
+  }
+
+  .schedule-status--nearest::after {
+    animation: none;
+    opacity: 0.45;
+    transform: none;
   }
 
   .appreciation-fade-enter-active,
