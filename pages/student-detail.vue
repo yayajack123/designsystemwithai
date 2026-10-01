@@ -3,7 +3,7 @@ import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import UiTableView from '@/components/ui/UiTableView.vue'
 import { studentRecords } from '@/data/students'
-import { booksForStudent, type BookStatus } from '@/data/studentBooks'
+import { booksForStudent, type BookStatus, type StudentBook } from '@/data/studentBooks'
 import { sessionsForStudent, sessionBook, formatSessionDate } from '@/data/studentSessions'
 import { historiesForSession } from '@/data/studentHistory'
 import { avatarText } from '@core/utils/formatters'
@@ -33,19 +33,33 @@ const sessionPageCount = computed(() => Math.ceil(allSessions.value.length / ses
 watch(() => route.query.id, () => { sessionPage.value = 1 })
 const bookSearch = ref('')
 const bookStatus = ref<'all' | BookStatus>('all')
+const bookSession = ref('all')
 const bookHeaders = [
   { title: 'Book', key: 'title' },
   { title: 'Session', key: 'session' },
   { title: 'Status', key: 'status' },
   { title: 'Last updated', key: 'updatedAt' },
+  { title: 'Action', key: 'action', sortable: false },
 ]
 const selectedStudent = computed(() => studentRecords.find(item => item.id === route.query.id))
 const allBooks = computed(() => booksForStudent(selectedStudent.value?.id || ''))
+const bookSessionOptions = computed(() => [
+  { title: 'All sessions', value: 'all' },
+  ...allSessions.value.map(session => ({ title: `Session ${session.number} · ${session.code}`, value: session.id })),
+])
 const filteredBooks = computed(() => allBooks.value.filter(book =>
   (bookStatus.value === 'all' || book.status === bookStatus.value)
-  && book.title.toLowerCase().includes(bookSearch.value.trim().toLowerCase()),
+  && (bookSession.value === 'all' || book.sessionId === bookSession.value)
+  && book.title.toLowerCase().includes((bookSearch.value || '').trim().toLowerCase()),
 ))
-const resetBookFilters = () => { bookSearch.value = ''; bookStatus.value = 'all' }
+const resetBookFilters = () => { bookSearch.value = ''; bookStatus.value = 'all'; bookSession.value = 'all' }
+watch(() => route.query.id, resetBookFilters)
+const bookDetailsRoute = (book: StudentBook) => {
+  const history = historiesForSession(book.studentId, book.sessionId).find(item => item.bookId === book.id)
+  return history
+    ? { path: `/students/${book.studentId}/sessions/${book.sessionId}/history/${history.id}`, query: { tab: 'learning-progress' } }
+    : { path: `/students/${book.studentId}/sessions/${book.sessionId}`, query: { tab: 'history' } }
+}
 const bookStatusColor = (status: BookStatus) => status === 'Completed' ? 'success' : status === 'Incomplete' ? 'warning' : 'secondary'
 
 // Student details data model
@@ -405,6 +419,15 @@ const copySessionCode = async (code: string) => {
             class="book-filter"
           />
           <VSelect
+            v-model="bookSession"
+            label="Session"
+            :items="bookSessionOptions"
+            density="compact"
+            variant="outlined"
+            hide-details
+            class="book-filter"
+          />
+          <VSelect
             v-model="bookStatus"
             label="Status"
             :items="[
@@ -428,6 +451,11 @@ const copySessionCode = async (code: string) => {
         <template #item.updatedAt="{ item }">
           {{ item.updatedAt }}
         </template>
+        <template #item.action="{ item }">
+          <VBtn color="primary" variant="text" rounded="pill" :to="bookDetailsRoute(item)">
+            View details
+          </VBtn>
+        </template>
         <template #no-data>
           <div class="pa-8 text-center text-body-2 text-medium-emphasis">
             {{ allBooks.length ? 'No books match these filters.' : 'No book history for this student yet.' }}
@@ -441,6 +469,9 @@ const copySessionCode = async (code: string) => {
                 <VChip :color="bookStatusColor(book.status)" variant="tonal" size="small">{{ book.status }}</VChip>
               </div>
               <p class="text-body-2 text-medium-emphasis mb-0">{{ book.session }} · Updated {{ book.updatedAt }}</p>
+              <VBtn color="primary" variant="text" rounded="pill" class="mt-2" :to="bookDetailsRoute(book)">
+                View details
+              </VBtn>
             </VCard>
           </div>
           <p v-else class="pa-8 text-center text-body-2 text-medium-emphasis mb-0">
