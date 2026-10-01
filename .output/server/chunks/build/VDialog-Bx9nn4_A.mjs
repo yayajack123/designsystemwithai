@@ -1,5 +1,5 @@
 import { ref, watch, nextTick, mergeProps, createVNode } from 'vue';
-import { u as useScopeId, V as VOverlay, d as makeVOverlayProps } from './VOverlay-2hsH7Y4R.mjs';
+import { u as useScopeId, V as VOverlay, b as makeVOverlayProps } from './VOverlay-2hsH7Y4R.mjs';
 import { f as forwardRefs } from './forwardRefs-CtuH3aYe.mjs';
 import { q as genericComponent, C as useProxiedModel, G as useRender, H as VDefaultsProvider, I as propsFactory } from './server.mjs';
 import { V as VDialogTransition } from './dialog-transition-BWrfOTuu.mjs';

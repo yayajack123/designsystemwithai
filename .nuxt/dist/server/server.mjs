@@ -697,213 +697,237 @@ function getRouteRules(arg) {
     return {};
   }
 }
-const __nuxt_page_meta$m = {
+const __nuxt_page_meta$p = {
   sidebarRoute: "role"
 };
-const __nuxt_page_meta$l = {
+const __nuxt_page_meta$o = {
   sidebarRoute: "user"
 };
-const __nuxt_page_meta$k = {
+const __nuxt_page_meta$n = {
   sidebarRoute: "event"
 };
-const __nuxt_page_meta$j = {
+const __nuxt_page_meta$m = {
   sidebarRoute: "index"
 };
-const __nuxt_page_meta$i = {
+const __nuxt_page_meta$l = {
   layout: "blank"
 };
-const __nuxt_page_meta$h = {
+const __nuxt_page_meta$k = {
   sidebarRoute: "course"
 };
-const __nuxt_page_meta$g = {
+const __nuxt_page_meta$j = {
   sidebarRoute: "themes"
 };
-const __nuxt_page_meta$f = {
+const __nuxt_page_meta$i = {
   sidebarRoute: "account"
 };
-const __nuxt_page_meta$e = {
+const __nuxt_page_meta$h = {
   sidebarRoute: "classes"
 };
-const __nuxt_page_meta$d = {
+const __nuxt_page_meta$g = {
   sidebarRoute: "reports"
 };
-const __nuxt_page_meta$c = {
+const __nuxt_page_meta$f = {
   sidebarRoute: "schedule"
 };
-const __nuxt_page_meta$b = {
+const __nuxt_page_meta$e = {
   sidebarRoute: "students"
 };
-const __nuxt_page_meta$a = {
+const __nuxt_page_meta$d = {
   sidebarRoute: "attendance"
 };
-const __nuxt_page_meta$9 = {
+const __nuxt_page_meta$c = {
   sidebarRoute: "permission"
 };
-const __nuxt_page_meta$8 = {
+const __nuxt_page_meta$b = {
   sidebarRoute: "assessments"
 };
-const __nuxt_page_meta$7 = {
+const __nuxt_page_meta$a = {
   sidebarRoute: "design-system"
 };
-const __nuxt_page_meta$6 = {
+const __nuxt_page_meta$9 = {
   sidebarRoute: "my-attendance"
 };
-const __nuxt_page_meta$5 = {
+const __nuxt_page_meta$8 = {
   sidebarRoute: "students"
 };
-const __nuxt_page_meta$4 = {
+const __nuxt_page_meta$7 = {
   sidebarRoute: "user-variant-2"
 };
-const __nuxt_page_meta$3 = {
+const __nuxt_page_meta$6 = {
   sidebarRoute: "account-settings"
 };
-const __nuxt_page_meta$2 = {
+const __nuxt_page_meta$5 = {
   sidebarRoute: "attendance"
 };
-const __nuxt_page_meta$1 = {
+const __nuxt_page_meta$4 = {
   sidebarRoute: "dashboard-teacher"
 };
-const __nuxt_page_meta = {
+const __nuxt_page_meta$3 = {
   sidebarRoute: "attendance"
 };
+const __nuxt_page_meta$2 = {
+  path: "/students/:studentId/sessions/:sessionId",
+  sidebarRoute: "students"
+};
+const __nuxt_page_meta$1 = { path: "/students/:studentId/sessions/:sessionId/history/:historyId/meetings/:meetingId", sidebarRoute: "students" };
+const __nuxt_page_meta = { path: "/students/:studentId/sessions/:sessionId/history/:historyId", sidebarRoute: "students" };
 const _routes = [
   {
     name: "role",
     path: "/role",
-    meta: __nuxt_page_meta$m || {},
+    meta: __nuxt_page_meta$p || {},
     component: () => import("./_nuxt/role-T4F3dgE1.js")
   },
   {
     name: "user",
     path: "/user",
-    meta: __nuxt_page_meta$l || {},
-    component: () => import("./_nuxt/user-BWQyFvxw.js")
+    meta: __nuxt_page_meta$o || {},
+    component: () => import("./_nuxt/user-CU79mPLT.js")
   },
   {
     name: "event",
     path: "/event",
-    meta: __nuxt_page_meta$k || {},
+    meta: __nuxt_page_meta$n || {},
     component: () => import("./_nuxt/event-DohQUpjv.js")
   },
   {
     name: "index",
     path: "/",
-    meta: { ...__nuxt_page_meta$j || {}, ...{ "middleware": ["auth"] } },
+    meta: { ...__nuxt_page_meta$m || {}, ...{ "middleware": ["auth"] } },
     component: () => import("./_nuxt/index-BNdw8GP5.js")
   },
   {
     name: "login",
     path: "/login",
-    meta: { ...__nuxt_page_meta$i || {}, ...{ "middleware": ["guest"] } },
-    component: () => import("./_nuxt/login-Bh83GhET.js")
+    meta: { ...__nuxt_page_meta$l || {}, ...{ "middleware": ["guest"] } },
+    component: () => import("./_nuxt/login-Djm9EfMC.js")
   },
   {
     name: "course",
     path: "/course",
-    meta: __nuxt_page_meta$h || {},
-    component: () => import("./_nuxt/course-CfY-2k6g.js")
+    meta: __nuxt_page_meta$k || {},
+    component: () => import("./_nuxt/course-BFwhrM_U.js")
   },
   {
     name: "themes",
     path: "/themes",
-    meta: __nuxt_page_meta$g || {},
-    component: () => import("./_nuxt/themes-kkacYF-B.js")
+    meta: __nuxt_page_meta$j || {},
+    component: () => import("./_nuxt/themes-COPnd0aM.js")
   },
   {
     name: "account",
     path: "/account",
-    meta: __nuxt_page_meta$f || {},
-    component: () => import("./_nuxt/account-OqqTiYsb.js")
+    meta: __nuxt_page_meta$i || {},
+    component: () => import("./_nuxt/account-ByZtrUVo.js")
   },
   {
     name: "classes",
     path: "/classes",
-    meta: __nuxt_page_meta$e || {},
-    component: () => import("./_nuxt/classes-CsbkUU-d.js")
+    meta: __nuxt_page_meta$h || {},
+    component: () => import("./_nuxt/classes-CY67ZziI.js")
   },
   {
     name: "reports",
     path: "/reports",
-    meta: __nuxt_page_meta$d || {},
-    component: () => import("./_nuxt/reports-CgOIUvgQ.js")
+    meta: __nuxt_page_meta$g || {},
+    component: () => import("./_nuxt/reports-CrWIVBP0.js")
   },
   {
     name: "schedule",
     path: "/schedule",
-    meta: __nuxt_page_meta$c || {},
-    component: () => import("./_nuxt/schedule-QKMqV2qI.js")
+    meta: __nuxt_page_meta$f || {},
+    component: () => import("./_nuxt/schedule-RkLFPJLd.js")
   },
   {
     name: "students",
     path: "/students",
-    meta: __nuxt_page_meta$b || {},
-    component: () => import("./_nuxt/students-DBPsr1ZY.js")
+    meta: __nuxt_page_meta$e || {},
+    component: () => import("./_nuxt/students-CyplFrId.js")
   },
   {
     name: "attendance",
     path: "/attendance",
-    meta: __nuxt_page_meta$a || {},
-    component: () => import("./_nuxt/attendance-DlV_jNzJ.js")
+    meta: __nuxt_page_meta$d || {},
+    component: () => import("./_nuxt/attendance-M7eE3ia7.js")
   },
   {
     name: "permission",
     path: "/permission",
-    meta: __nuxt_page_meta$9 || {},
+    meta: __nuxt_page_meta$c || {},
     component: () => import("./_nuxt/permission-Ah7eKXZK.js")
   },
   {
     name: "assessments",
     path: "/assessments",
-    meta: __nuxt_page_meta$8 || {},
-    component: () => import("./_nuxt/assessments-Bez0YIyz.js")
+    meta: __nuxt_page_meta$b || {},
+    component: () => import("./_nuxt/assessments-D2GB8Zj5.js")
   },
   {
     name: "design-system",
     path: "/design-system",
-    meta: __nuxt_page_meta$7 || {},
-    component: () => import("./_nuxt/design-system-B_-dtbCj.js")
+    meta: __nuxt_page_meta$a || {},
+    component: () => import("./_nuxt/design-system-Buy5bJh6.js")
   },
   {
     name: "my-attendance",
     path: "/my-attendance",
-    meta: __nuxt_page_meta$6 || {},
-    component: () => import("./_nuxt/my-attendance-D5BBhCSd.js")
+    meta: __nuxt_page_meta$9 || {},
+    component: () => import("./_nuxt/my-attendance-BnA8wPh2.js")
   },
   {
     name: "student-detail",
     path: "/student-detail",
-    meta: __nuxt_page_meta$5 || {},
-    component: () => import("./_nuxt/student-detail-DP2jl_y7.js")
+    meta: __nuxt_page_meta$8 || {},
+    component: () => import("./_nuxt/student-detail-BdWkPjYP.js")
   },
   {
     name: "user-variant-2",
     path: "/user-variant-2",
-    meta: __nuxt_page_meta$4 || {},
-    component: () => import("./_nuxt/user-variant-2-B150fDp5.js")
+    meta: __nuxt_page_meta$7 || {},
+    component: () => import("./_nuxt/user-variant-2-CfrW42mh.js")
   },
   {
     name: "account-settings",
     path: "/account-settings",
-    meta: { ...__nuxt_page_meta$3 || {}, ...{ "middleware": ["auth"] } },
-    component: () => import("./_nuxt/account-settings-C6raqi2z.js")
+    meta: { ...__nuxt_page_meta$6 || {}, ...{ "middleware": ["auth"] } },
+    component: () => import("./_nuxt/account-settings-CQM-76mX.js")
   },
   {
     name: "attendance-detail",
     path: "/attendance-detail",
-    meta: __nuxt_page_meta$2 || {},
-    component: () => import("./_nuxt/attendance-detail-BViSPU8A.js")
+    meta: __nuxt_page_meta$5 || {},
+    component: () => import("./_nuxt/attendance-detail-XZUtTSXI.js")
   },
   {
     name: "dashboard-teacher",
     path: "/dashboard-teacher",
-    meta: __nuxt_page_meta$1 || {},
-    component: () => import("./_nuxt/dashboard-teacher-Dwrf-6mW.js")
+    meta: __nuxt_page_meta$4 || {},
+    component: () => import("./_nuxt/dashboard-teacher-d4xkbYTd.js")
   },
   {
     name: "meeting-journal-create",
     path: "/meeting-journal/create",
+    meta: __nuxt_page_meta$3 || {},
+    component: () => import("./_nuxt/create-Blj6Epc7.js")
+  },
+  {
+    name: "student-session-detail",
+    path: "/students/:studentId/sessions/:sessionId",
+    meta: __nuxt_page_meta$2 || {},
+    component: () => import("./_nuxt/student-session-detail-CsqKmmRv.js")
+  },
+  {
+    name: "student-meeting-journal",
+    path: "/students/:studentId/sessions/:sessionId/history/:historyId/meetings/:meetingId",
+    meta: __nuxt_page_meta$1 || {},
+    component: () => import("./_nuxt/student-meeting-journal-6aNh7d9M.js")
+  },
+  {
+    name: "student-session-history",
+    path: "/students/:studentId/sessions/:sessionId/history/:historyId",
     meta: __nuxt_page_meta || {},
-    component: () => import("./_nuxt/create-6mRKpt2H.js")
+    component: () => import("./_nuxt/student-session-history-BscN8JRd.js")
   }
 ];
 const _wrapInTransition = (props, children) => {
@@ -1419,6 +1443,9 @@ const useAuthStore = defineStore("auth", () => {
   };
 });
 const permission_45global = /* @__PURE__ */ defineNuxtRouteMiddleware((to) => {
+  const config = /* @__PURE__ */ useRuntimeConfig();
+  if (!config.public.authEnabled)
+    return;
   const { userPermission } = storeToRefs(useAuthStore());
   const currentRoute = route.find((r) => r.name === to.name);
   if (currentRoute && !userPermission.value.includes(currentRoute.permission)) {
@@ -1436,8 +1463,8 @@ const globalMiddleware = [
   manifest_45route_45rule
 ];
 const namedMiddleware = {
-  auth: () => import("./_nuxt/auth-CKN1qGO9.js"),
-  guest: () => import("./_nuxt/guest-BBrVS7GU.js")
+  auth: () => import("./_nuxt/auth-CKmO2y9h.js"),
+  guest: () => import("./_nuxt/guest-FDTWKmOh.js")
 };
 Object.assign(/* @__PURE__ */ Object.create(null), {});
 const pageIslandRoutes = Object.assign(/* @__PURE__ */ Object.create(null), {});
@@ -13489,6 +13516,9 @@ const api_jy9dy79pM_nYQuRKPrcfNg56p_gKkzw9SekUTZgAenc = /* @__PURE__ */ defineNu
 });
 const check_auth_server_v0t2ZW34WeUf3_7aCPjxqPNV2_viFEgX53FPbGYh_LE = /* @__PURE__ */ defineNuxtPlugin(async ({ $pinia }) => {
   let __temp, __restore;
+  const config = /* @__PURE__ */ useRuntimeConfig();
+  if (!config.public.authEnabled)
+    return;
   const authStore = useAuthStore($pinia);
   const XSRF_TOKEN = useCookie("XSRF-TOKEN");
   const clientCookies = useRequestHeaders(["cookie", "origin"]);
@@ -13581,16 +13611,16 @@ const plugins = [
   ssg_detect_IpHCGcQQ_IR5Rl99qyukWoMA9fJGfuTYyoksTzy81cs
 ];
 const layouts = {
-  blank: defineAsyncComponent(() => import("./_nuxt/blank-BbJMoXd6.js").then((m) => m.default || m)),
-  "components-default-layout-with-horizontal-nav": defineAsyncComponent(() => import("./_nuxt/DefaultLayoutWithHorizontalNav-Bsibo2Di.js").then((m) => m.default || m)),
-  "components-default-layout-with-vertical-nav": defineAsyncComponent(() => import("./_nuxt/DefaultLayoutWithVerticalNav-C7p9J0zF.js").then((m) => m.default || m)),
+  blank: defineAsyncComponent(() => import("./_nuxt/blank-BWxpe40X.js").then((m) => m.default || m)),
+  "components-default-layout-with-horizontal-nav": defineAsyncComponent(() => import("./_nuxt/DefaultLayoutWithHorizontalNav-iyycNR3O.js").then((m) => m.default || m)),
+  "components-default-layout-with-vertical-nav": defineAsyncComponent(() => import("./_nuxt/DefaultLayoutWithVerticalNav-DuKB13JT.js").then((m) => m.default || m)),
   "components-footer": defineAsyncComponent(() => import("./_nuxt/Footer-CgBf2AWj.js").then((m) => m.default || m)),
-  "components-nav-bar-notifications": defineAsyncComponent(() => import("./_nuxt/NavBarNotifications-D_taL_u2.js").then((m) => m.default || m)),
-  "components-nav-search-bar": defineAsyncComponent(() => import("./_nuxt/NavSearchBar-BsB7NHiv.js").then((m) => m.default || m)),
+  "components-nav-bar-notifications": defineAsyncComponent(() => import("./_nuxt/NavBarNotifications-Csuw2j6p.js").then((m) => m.default || m)),
+  "components-nav-search-bar": defineAsyncComponent(() => import("./_nuxt/NavSearchBar-CcWVBuF_.js").then((m) => m.default || m)),
   "components-navbar-shortcuts": defineAsyncComponent(() => import("./_nuxt/NavbarShortcuts-Di0wExRN.js").then((m) => m.default || m)),
-  "components-navbar-theme-switcher": defineAsyncComponent(() => import("./_nuxt/NavbarThemeSwitcher-C6RXK2Po.js").then((m) => m.default || m)),
-  "components-user-profile": defineAsyncComponent(() => import("./_nuxt/UserProfile-MZ4PJGmH.js").then((m) => m.default || m)),
-  default: defineAsyncComponent(() => import("./_nuxt/default-BpPs59f9.js").then((m) => m.default || m))
+  "components-navbar-theme-switcher": defineAsyncComponent(() => import("./_nuxt/NavbarThemeSwitcher-Dioc8vVv.js").then((m) => m.default || m)),
+  "components-user-profile": defineAsyncComponent(() => import("./_nuxt/UserProfile-D4g6A-Py.js").then((m) => m.default || m)),
+  default: defineAsyncComponent(() => import("./_nuxt/default-DaXWFMbq.js").then((m) => m.default || m))
 };
 const routeRulesMatcher = _routeRulesMatcher;
 const LayoutLoader = defineComponent$1({
@@ -14473,15 +14503,15 @@ export {
   refElement as b2,
   VProgressLinear as b3,
   useLayout as b4,
-  useConfigStore as b5,
-  useFocus as b6,
-  useTheme as b7,
-  IN_BROWSER as b8,
-  __nuxt_component_0$1 as b9,
-  defineNuxtRouteMiddleware as ba,
-  storeToRefs as bb,
-  AppContentLayoutNav as bc,
-  useRoute$1 as bd,
+  useRoute$1 as b5,
+  useConfigStore as b6,
+  useFocus as b7,
+  useTheme as b8,
+  IN_BROWSER as b9,
+  __nuxt_component_0$1 as ba,
+  defineNuxtRouteMiddleware as bb,
+  storeToRefs as bc,
+  AppContentLayoutNav as bd,
   useLayoutConfigStore as be,
   isNavGroupActive as bf,
   layoutConfig as bg,

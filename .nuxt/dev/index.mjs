@@ -962,7 +962,7 @@ const _inlineRuntimeConfig = {
     }
   },
   "public": {
-    "appEnv": "development",
+    "appEnv": "production",
     "appBaseUrl": "http://localhost:3000",
     "apiBaseUrl": "https://be-example.timedoor-web.my.id/api/admin/v1",
     "sanctumBaseUrl": "https://be-example.timedoor-web.my.id/sanctum",
@@ -1009,7 +1009,7 @@ const _inlineRuntimeConfig = {
     }
   },
   "basicAuth": {
-    "enabled": true,
+    "enabled": false,
     "users": [
       {
         "username": "timedoor",

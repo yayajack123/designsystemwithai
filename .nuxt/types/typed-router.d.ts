@@ -163,6 +163,27 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    'student-session-detail': RouteRecordInfo<
+      'student-session-detail',
+      '/students/:studentId/sessions/:sessionId',
+      { studentId: ParamValue<true>, sessionId: ParamValue<true> },
+      { studentId: ParamValue<false>, sessionId: ParamValue<false> },
+      | never
+    >,
+    'student-session-history': RouteRecordInfo<
+      'student-session-history',
+      '/students/:studentId/sessions/:sessionId/history/:historyId',
+      { studentId: ParamValue<true>, sessionId: ParamValue<true>, historyId: ParamValue<true> },
+      { studentId: ParamValue<false>, sessionId: ParamValue<false>, historyId: ParamValue<false> },
+      | never
+    >,
+    'student-meeting-journal': RouteRecordInfo<
+      'student-meeting-journal',
+      '/students/:studentId/sessions/:sessionId/history/:historyId/meetings/:meetingId',
+      { studentId: ParamValue<true>, sessionId: ParamValue<true>, historyId: ParamValue<true>, meetingId: ParamValue<true> },
+      { studentId: ParamValue<false>, sessionId: ParamValue<false>, historyId: ParamValue<false>, meetingId: ParamValue<false> },
+      | never
+    >,
     'themes': RouteRecordInfo<
       'themes',
       '/themes',
@@ -314,6 +335,24 @@ declare module 'vue-router/auto-routes' {
     'pages/students.vue': {
       routes:
         | 'students'
+      views:
+        | never
+    }
+    'pages/student-session-detail.vue': {
+      routes:
+        | 'student-session-detail'
+      views:
+        | never
+    }
+    'pages/student-session-history.vue': {
+      routes:
+        | 'student-session-history'
+      views:
+        | never
+    }
+    'pages/student-meeting-journal.vue': {
+      routes:
+        | 'student-meeting-journal'
       views:
         | never
     }

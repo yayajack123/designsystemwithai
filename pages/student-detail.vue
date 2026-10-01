@@ -1,41 +1,79 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, computed, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import UiTableView from '@/components/ui/UiTableView.vue'
+import { studentRecords } from '@/data/students'
+import { booksForStudent, type BookStatus } from '@/data/studentBooks'
+import { sessionsForStudent, sessionBook, formatSessionDate } from '@/data/studentSessions'
+import { historiesForSession } from '@/data/studentHistory'
+import { avatarText } from '@core/utils/formatters'
 
 definePageMeta({
   sidebarRoute: 'students',
 })
 
 const route = useRoute()
-const activeTab = ref<'details' | 'session'>('details')
+const router = useRouter()
+type StudentTab = 'details' | 'session' | 'books'
+const validTab = (value: unknown): StudentTab => value === 'books' || value === 'session' ? value : 'details'
+const activeTab = ref<StudentTab>(validTab(route.query.tab))
+watch(() => route.query.tab, value => { activeTab.value = validTab(value) })
+const selectTab = (tab: StudentTab) => router.replace({ query: { ...route.query, tab } })
 const snackbar = ref(false)
 const snackbarText = ref('')
+const snackbarColor = ref<'success' | 'error'>('success')
+const sessionPage = ref(1)
+const sessionsPerPage = 10
+const allSessions = computed(() => sessionsForStudent(selectedStudent.value?.id || ''))
+const visibleSessions = computed(() => allSessions.value.slice(
+  (sessionPage.value - 1) * sessionsPerPage,
+  sessionPage.value * sessionsPerPage,
+))
+const sessionPageCount = computed(() => Math.ceil(allSessions.value.length / sessionsPerPage))
+watch(() => route.query.id, () => { sessionPage.value = 1 })
+const bookSearch = ref('')
+const bookStatus = ref<'all' | BookStatus>('all')
+const bookHeaders = [
+  { title: 'Book', key: 'title' },
+  { title: 'Session', key: 'session' },
+  { title: 'Status', key: 'status' },
+  { title: 'Last updated', key: 'updatedAt' },
+]
+const selectedStudent = computed(() => studentRecords.find(item => item.id === route.query.id))
+const allBooks = computed(() => booksForStudent(selectedStudent.value?.id || ''))
+const filteredBooks = computed(() => allBooks.value.filter(book =>
+  (bookStatus.value === 'all' || book.status === bookStatus.value)
+  && book.title.toLowerCase().includes(bookSearch.value.trim().toLowerCase()),
+))
+const resetBookFilters = () => { bookSearch.value = ''; bookStatus.value = 'all' }
+const bookStatusColor = (status: BookStatus) => status === 'Completed' ? 'success' : status === 'Incomplete' ? 'warning' : 'secondary'
 
 // Student details data model
-const student = ref({
-  id: (route.query.id as string) || '1',
-  name: 'Cristofer mango',
-  initials: 'JS',
-  countryFlag: '🇮🇩',
-  countryName: 'Indonesia',
-  username: 'PH20220102001',
-  branch: 'Philipine ASIA',
-  fullname: 'Cristofer mango',
-  nickname: 'Cristofer',
-  birthday: 'January 28, 2022',
-  age: '11',
-  gender: 'Male',
-  phoneNumber: '08918298392',
+const student = computed(() => ({
+  id: selectedStudent.value?.id || '',
+  name: selectedStudent.value?.name || 'Student unavailable',
+  initials: avatarText(selectedStudent.value?.name || 'Student'),
+  countryFlag: selectedStudent.value?.id === '1' ? '🇮🇩' : '',
+  countryName: selectedStudent.value?.id === '1' ? 'Indonesia' : '',
+  username: selectedStudent.value?.studentId || '-',
+  branch: selectedStudent.value?.id === '1' ? 'Philipine ASIA' : '-',
+  fullname: selectedStudent.value?.name || 'Student unavailable',
+  nickname: selectedStudent.value?.name.split(' ')[0] || '-',
+  birthday: selectedStudent.value?.id === '1' ? 'January 28, 2022' : '-',
+  age: selectedStudent.value?.id === '1' ? '11' : '-',
+  gender: selectedStudent.value?.id === '1' ? 'Male' : '-',
+  phoneNumber: selectedStudent.value?.id === '1' ? '08918298392' : '-',
   school: '-',
-  status: 'Active',
-  startDate: 'Oct 11, 2023',
-  course: 'Beginner Intermediete'
-})
+  status: selectedStudent.value?.id === '1' ? 'Active' : '-',
+  startDate: selectedStudent.value?.id === '1' ? 'Oct 11, 2023' : '-',
+  course: selectedStudent.value?.course || '-',
+}))
 
 const copyUsername = async () => {
   try {
     await navigator.clipboard.writeText(student.value.username)
     snackbarText.value = 'Username copied to clipboard!'
+    snackbarColor.value = 'success'
     snackbar.value = true
   } catch (err) {
     // Fallback if clipboard API fails
@@ -43,10 +81,26 @@ const copyUsername = async () => {
     snackbar.value = true
   }
 }
+
+const copySessionCode = async (code: string) => {
+  try {
+    await navigator.clipboard.writeText(code)
+    snackbarText.value = 'Session ID copied.'
+    snackbarColor.value = 'success'
+  } catch {
+    snackbarText.value = 'Could not copy session ID.'
+    snackbarColor.value = 'error'
+  }
+  snackbar.value = true
+}
 </script>
 
 <template>
   <div class="student-detail-page">
+    <VAlert v-if="!selectedStudent" type="warning" variant="tonal" class="mb-6">
+      Student not found. Return to Students and select a valid profile.
+    </VAlert>
+    <template v-else>
     <!-- Header Section -->
     <div class="d-flex align-center gap-4 mb-4">
       <VBtn
@@ -86,16 +140,23 @@ const copyUsername = async () => {
         <button
           class="custom-tab-btn"
           :class="{ active: activeTab === 'details' }"
-          @click="activeTab = 'details'"
+          @click="selectTab('details')"
         >
           Student Details
         </button>
         <button
           class="custom-tab-btn"
           :class="{ active: activeTab === 'session' }"
-          @click="activeTab = 'session'"
+          @click="selectTab('session')"
         >
           Session
+        </button>
+        <button
+          class="custom-tab-btn"
+          :class="{ active: activeTab === 'books' }"
+          @click="selectTab('books')"
+        >
+          Books
         </button>
       </div>
     </div>
@@ -318,39 +379,287 @@ const copyUsername = async () => {
       </VRow>
     </div>
 
-    <!-- Session Tab Placeholder Content -->
-    <div v-else-if="activeTab === 'session'">
-      <VCard
-        variant="outlined"
-        class="detail-card pa-6"
+    <div v-else-if="activeTab === 'books'">
+      <div class="mb-4">
+        <h2 class="text-h5 font-weight-medium text-high-emphasis mb-1">Books</h2>
+        <p class="text-body-2 text-medium-emphasis mb-0">Book history across all sessions for {{ student.fullname }}.</p>
+      </div>
+      <UiTableView
+        title=""
+        :headers="bookHeaders"
+        :items="filteredBooks"
+        :mobile-cards="true"
+        :items-per-page="-1"
+        :hide-pagination="true"
+        @reset-filters="resetBookFilters"
       >
-        <div class="text-center py-8">
-          <VIcon icon="ri-calendar-event-line" size="48" color="medium-emphasis" class="mb-3" />
-          <h3 class="text-h6 font-weight-medium text-high-emphasis mb-1">
-            Student Sessions
-          </h3>
-          <p class="text-body-2 text-medium-emphasis mb-0">
-            Session history for {{ student.fullname }} will appear here.
+        <template #filters>
+          <VTextField
+            v-model="bookSearch"
+            label="Search books"
+            prepend-inner-icon="ri-search-line"
+            density="compact"
+            variant="outlined"
+            hide-details
+            clearable
+            class="book-filter"
+          />
+          <VSelect
+            v-model="bookStatus"
+            label="Status"
+            :items="[
+              { title: 'All statuses', value: 'all' },
+              { title: 'Completed', value: 'Completed' },
+              { title: 'Incomplete', value: 'Incomplete' },
+              { title: 'Idle', value: 'Idle' },
+            ]"
+            density="compact"
+            variant="outlined"
+            hide-details
+            class="book-filter"
+          />
+        </template>
+        <template #item.title="{ item }">
+          <span class="font-weight-medium text-high-emphasis">{{ item.title }}</span>
+        </template>
+        <template #item.status="{ item }">
+          <VChip :color="bookStatusColor(item.status)" variant="tonal" size="small">{{ item.status }}</VChip>
+        </template>
+        <template #item.updatedAt="{ item }">
+          {{ item.updatedAt }}
+        </template>
+        <template #no-data>
+          <div class="pa-8 text-center text-body-2 text-medium-emphasis">
+            {{ allBooks.length ? 'No books match these filters.' : 'No book history for this student yet.' }}
+          </div>
+        </template>
+        <template #mobile-cards="{ items }">
+          <div v-if="items.length" class="pa-4 d-flex flex-column gap-3">
+            <VCard v-for="book in items" :key="book.id" variant="outlined" class="pa-4">
+              <div class="d-flex align-start justify-space-between gap-3 mb-2">
+                <h3 class="text-body-1 font-weight-medium text-high-emphasis mb-0">{{ book.title }}</h3>
+                <VChip :color="bookStatusColor(book.status)" variant="tonal" size="small">{{ book.status }}</VChip>
+              </div>
+              <p class="text-body-2 text-medium-emphasis mb-0">{{ book.session }} · Updated {{ book.updatedAt }}</p>
+            </VCard>
+          </div>
+          <p v-else class="pa-8 text-center text-body-2 text-medium-emphasis mb-0">
+            {{ allBooks.length ? 'No books match these filters.' : 'No book history for this student yet.' }}
           </p>
-        </div>
+        </template>
+      </UiTableView>
+    </div>
+
+    <!-- Session cards -->
+    <div v-else-if="activeTab === 'session'">
+      <div class="mb-4">
+        <h2 class="text-h5 font-weight-medium text-high-emphasis mb-1">{{ student.fullname }}'s learning sessions</h2>
+        <p class="text-body-2 text-medium-emphasis mb-0">Review each session's book, schedule, and remaining meetings.</p>
+      </div>
+
+      <VCard v-if="!allSessions.length" variant="outlined" class="pa-8 text-center">
+        <VIcon icon="ri-calendar-event-line" size="40" color="secondary" class="mb-3" />
+        <h3 class="text-h6 text-high-emphasis mb-1">No sessions yet</h3>
+        <p class="text-body-2 text-medium-emphasis mb-0">Sessions for this student will appear here.</p>
       </VCard>
+
+      <div v-else class="d-flex flex-column gap-4">
+        <VCard
+          v-for="session in visibleSessions"
+          :key="session.id"
+          variant="outlined"
+          class="session-card pa-5"
+        >
+          <div class="d-flex align-center flex-wrap gap-3">
+            <VAvatar color="primary" variant="tonal" rounded="lg" size="40">
+              <VIcon icon="ri-user-line" size="20" />
+            </VAvatar>
+            <div class="session-heading d-flex align-center flex-wrap gap-x-4 gap-y-1">
+              <div class="d-flex align-center flex-wrap gap-2">
+                <h3 class="text-h6 font-weight-medium text-high-emphasis mb-0">Session {{ session.number }}</h3>
+                <VChip :color="session.status === 'Active' ? 'success' : 'secondary'" variant="tonal" size="small">
+                  {{ session.status }}
+                </VChip>
+              </div>
+              <div class="d-flex align-center gap-1">
+                <span class="text-body-2 text-medium-emphasis">{{ session.code }}</span>
+                <VBtn
+                  icon="ri-file-copy-line"
+                  variant="text"
+                  color="primary"
+                  rounded="pill"
+                  size="x-small"
+                  :aria-label="`Copy session ID ${session.code}`"
+                  @click="copySessionCode(session.code)"
+                />
+              </div>
+            </div>
+          </div>
+
+          <VDivider class="my-4" />
+
+          <div class="session-main d-grid gap-4">
+            <div class="d-flex align-start gap-3">
+              <VAvatar color="primary" variant="tonal" rounded="lg" size="40">
+                <VIcon icon="ri-bookmark-line" size="20" />
+              </VAvatar>
+              <span class="text-body-1 font-weight-medium text-high-emphasis pt-2">{{ session.productName }}</span>
+            </div>
+            <div class="session-main-details d-flex flex-column gap-3">
+              <div>
+                <div class="text-body-2 font-weight-medium text-high-emphasis">Class type</div>
+                <div class="text-body-2 text-medium-emphasis">{{ session.classType }}</div>
+              </div>
+              <div>
+                <div class="text-body-2 font-weight-medium text-high-emphasis">Book</div>
+                <div class="text-body-2 text-medium-emphasis">{{ sessionBook(session)?.title || '—' }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="session.className || session.teacherName || session.schedule" class="session-context mt-5 pa-3">
+            <div v-if="session.className" class="session-context-item">
+              <span class="session-context-icon"><VIcon icon="ri-building-line" color="primary" size="20" /></span>
+              <div><div class="text-caption text-medium-emphasis">Class</div><div class="text-body-2 font-weight-medium text-high-emphasis">{{ session.className }}</div></div>
+            </div>
+            <div v-if="session.teacherName" class="session-context-item">
+              <span class="session-context-icon"><VIcon icon="ri-user-follow-line" color="primary" size="20" /></span>
+              <div><div class="text-caption text-medium-emphasis">Teacher</div><div class="text-body-2 font-weight-medium text-high-emphasis">{{ session.teacherName }}</div></div>
+            </div>
+            <div v-if="session.schedule" class="session-context-item">
+              <span class="session-context-icon"><VIcon icon="ri-calendar-2-line" color="primary" size="20" /></span>
+              <div><div class="text-caption text-medium-emphasis">Schedule</div><div class="text-body-2 font-weight-medium text-high-emphasis">{{ session.schedule }}</div></div>
+            </div>
+          </div>
+
+          <VDivider class="my-4" />
+          <div class="d-flex align-center justify-space-between flex-wrap gap-3">
+            <div class="d-flex align-center flex-wrap gap-2 text-body-2">
+              <span class="text-medium-emphasis">Quota: <strong class="text-high-emphasis">{{ session.quota }} meetings</strong></span>
+              <VChip color="warning" variant="outlined" size="small">Expires {{ formatSessionDate(session.expiresAt) }}</VChip>
+            </div>
+            <div class="d-flex align-center justify-end flex-wrap gap-2 ms-auto">
+              <VBtn
+                v-if="historiesForSession(student.id, session.id).length"
+                color="primary"
+                variant="text"
+                rounded="pill"
+                :to="{ path: `/students/${student.id}/sessions/${session.id}/history/${historiesForSession(student.id, session.id)[0].id}`, query: { tab: 'meeting-history' } }"
+              >
+                Meeting History
+              </VBtn>
+              <VBtn
+                color="primary"
+                variant="outlined"
+                rounded="pill"
+                :to="`/students/${student.id}/sessions/${session.id}`"
+              >
+                See Details
+              </VBtn>
+            </div>
+          </div>
+        </VCard>
+
+        <div v-if="sessionPageCount > 1" class="d-flex justify-end">
+          <VPagination v-model="sessionPage" :length="sessionPageCount" density="compact" aria-label="Session pages" />
+        </div>
+      </div>
     </div>
 
     <!-- Toast Notification -->
     <VSnackbar
       v-model="snackbar"
       timeout="2000"
-      color="success"
+      :color="snackbarColor"
       location="bottom right"
     >
       {{ snackbarText }}
     </VSnackbar>
+    </template>
   </div>
 </template>
 
 <style lang="scss" scoped>
 .student-detail-page {
   font-family: 'Poppins', sans-serif;
+}
+
+.book-filter {
+  flex: 1 1 220px;
+  max-width: 280px;
+}
+
+.session-card {
+  border-radius: 12px;
+  background-color: rgb(var(--v-theme-surface));
+}
+
+.session-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 1fr);
+}
+
+.session-main-details {
+  border-inline-start: 1px solid rgba(var(--v-theme-on-surface), 0.12);
+  padding-inline-start: 16px;
+}
+
+.session-context {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
+  border-radius: 8px;
+  background-color: rgba(var(--v-theme-on-surface), 0.03);
+}
+
+.session-context-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+
+  + .session-context-item {
+    border-inline-start: 1px solid rgba(var(--v-theme-on-surface), 0.12);
+    padding-inline-start: 16px;
+  }
+}
+
+.session-context-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 40px;
+  block-size: 40px;
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
+  border-radius: 6px;
+  background-color: rgb(var(--v-theme-surface));
+}
+
+@media (max-width: 760px) {
+  .session-main,
+  .session-context {
+    grid-template-columns: 1fr;
+  }
+
+  .session-main-details {
+    border-inline-start: 0;
+    border-top: 1px solid rgba(var(--v-theme-on-surface), 0.12);
+    padding-inline-start: 0;
+    padding-top: 16px;
+  }
+
+  .session-context-item + .session-context-item {
+    border-inline-start: 0;
+    padding-inline-start: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .book-filter {
+    max-width: none;
+    width: 100%;
+  }
 }
 
 .back-btn {
@@ -363,20 +672,20 @@ const copyUsername = async () => {
 }
 
 .student-name {
-  color: rgba(46, 38, 61, 0.9);
+  color: rgb(var(--v-theme-on-surface));
   letter-spacing: -0.36px;
   line-height: 28px;
 }
 
 .student-country {
-  color: rgba(46, 38, 61, 0.55);
+  color: rgba(var(--v-theme-on-surface), 0.6);
   letter-spacing: -0.26px;
   line-height: 20px;
 }
 
 .custom-tabs-container {
   .border-b {
-    border-bottom: 1px solid rgba(46, 38, 61, 0.12);
+    border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.12);
   }
 
   .custom-tab-btn {
@@ -385,23 +694,28 @@ const copyUsername = async () => {
     font-weight: 500;
     line-height: 22px;
     letter-spacing: -0.3px;
-    color: rgba(46, 38, 61, 0.9);
+    color: rgba(var(--v-theme-on-surface), 0.9);
     background: transparent;
     border: none;
     border-bottom: 2px solid transparent;
     cursor: pointer;
 
     &.active {
-      color: #10AF13;
-      border-bottom-color: #10AF13;
+      color: rgb(var(--v-theme-primary));
+      border-bottom-color: rgb(var(--v-theme-primary));
+    }
+
+    &:focus-visible {
+      outline: 2px solid rgb(var(--v-theme-primary));
+      outline-offset: -2px;
     }
   }
 }
 
 .detail-card {
-  border: 1px solid rgba(46, 38, 61, 0.12) !important;
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.12) !important;
   border-radius: 12px !important;
-  background-color: #FFFFFF;
+  background-color: rgb(var(--v-theme-surface));
   box-shadow: none !important;
 }
 

@@ -3,6 +3,8 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { avatarText } from '@core/utils/formatters'
 import UiTableView from '@/components/ui/UiTableView.vue'
+import { studentRecords, type StudentRecord } from '@/data/students'
+import { sessionsForStudent } from '@/data/studentSessions'
 
 definePageMeta({
   sidebarRoute: 'students',
@@ -25,149 +27,15 @@ const headers = computed(() => [
   { title: 'STUDENT NAME', key: 'student', sortable: true },
   { title: 'COURSE', key: 'course', sortable: true },
   { title: 'SESSION', key: 'session', sortable: true },
-  { title: 'ACTION', key: 'action', sortable: false, align: 'center', width: 120 },
+  { title: 'ACTION', key: 'action', sortable: false, align: 'center', width: 220 },
 ])
 
-// Interfaces
-interface StudentItem {
-  id: string
-  name: string
-  studentId: string
-  course: string
-  session: string
-  tab: 'my-student' | 'homeroom-student' | 'replacement-student' | 'events-student'
-}
-
-// Mock Data
-const students = ref<StudentItem[]>([
-  // My Student tab (10 rows for pagination testing)
-  {
-    id: '1',
-    name: 'Cristofer Mango',
-    studentId: 'STD-20091032-001',
-    course: 'Python Game Dev',
-    session: '1 Active',
-    tab: 'my-student'
-  },
-  {
-    id: '2',
-    name: 'Jennifer Summers',
-    studentId: 'STD-20091032-001',
-    course: 'Web Developer',
-    session: '1 Active',
-    tab: 'my-student'
-  },
-  {
-    id: '3',
-    name: 'Mr. Justin Richardson',
-    studentId: 'STD-20091032-001',
-    course: 'IoT Kids',
-    session: '1 Active',
-    tab: 'my-student'
-  },
-  {
-    id: '4',
-    name: 'Nicholas Tanner',
-    studentId: 'STD-20091032-001',
-    course: 'Web Developer',
-    session: '1 Active',
-    tab: 'my-student'
-  },
-  {
-    id: '5',
-    name: 'Crystal Mays',
-    studentId: 'STD-20091032-001',
-    course: 'Web Developer',
-    session: '1 Active',
-    tab: 'my-student'
-  },
-  {
-    id: '6',
-    name: 'Alexander Hamilton',
-    studentId: 'STD-20091032-002',
-    course: 'Python Game Dev',
-    session: '2 Active',
-    tab: 'my-student'
-  },
-  {
-    id: '7',
-    name: 'Eliza Schuyler',
-    studentId: 'STD-20091032-003',
-    course: 'IoT Kids',
-    session: '1 Active',
-    tab: 'my-student'
-  },
-  {
-    id: '8',
-    name: 'Angelica Schuyler',
-    studentId: 'STD-20091032-004',
-    course: 'Web Developer',
-    session: '1 Active',
-    tab: 'my-student'
-  },
-  {
-    id: '9',
-    name: 'Peggy Schuyler',
-    studentId: 'STD-20091032-005',
-    course: 'Python Game Dev',
-    session: '1 Active',
-    tab: 'my-student'
-  },
-  {
-    id: '10',
-    name: 'Aaron Burr',
-    studentId: 'STD-20091032-006',
-    course: 'Web Developer',
-    session: '2 Active',
-    tab: 'my-student'
-  },
-
-  // Homeroom Student tab
-  {
-    id: '11',
-    name: 'Thomas Jefferson',
-    studentId: 'STD-20091032-007',
-    course: 'Python Game Dev',
-    session: '1 Active',
-    tab: 'homeroom-student'
-  },
-  {
-    id: '12',
-    name: 'James Madison',
-    studentId: 'STD-20091032-008',
-    course: 'IoT Kids',
-    session: '1 Active',
-    tab: 'homeroom-student'
-  },
-  {
-    id: '13',
-    name: 'George Washington',
-    studentId: 'STD-20091032-009',
-    course: 'Web Developer',
-    session: '2 Active',
-    tab: 'homeroom-student'
-  },
-
-  // Replacement Student tab (exactly 1 row to match the count 1)
-  {
-    id: '14',
-    name: 'Marquis de Lafayette',
-    studentId: 'STD-20091032-010',
-    course: 'Python Game Dev',
-    session: '1 Active',
-    tab: 'replacement-student'
-  },
-
-  // Event’s Student tab
-  {
-    id: '15',
-    name: 'Hercules Mulligan',
-    studentId: 'STD-20091032-011',
-    course: 'IoT Kids',
-    session: '3 Active',
-    tab: 'events-student'
-  }
-])
+const students = computed<StudentRecord[]>(() => studentRecords.map(student => {
+  const activeCount = sessionsForStudent(student.id).filter(session => session.status === 'Active').length
+  return { ...student, session: activeCount ? `${activeCount} Active` : 'No active session' }
+}))
+const showDetailDialog = ref(false)
+const selectedStudent = ref<StudentRecord | null>(null)
 
 // Filter logic
 const filteredItems = computed(() => {
@@ -193,8 +61,12 @@ const resetFilters = () => {
 
 const router = useRouter()
 
-const handleViewDetail = (item: StudentItem) => {
+const handleViewDetail = (item: StudentRecord) => {
   router.push({ path: '/student-detail', query: { id: item.id } })
+}
+
+const handleViewBooks = (item: StudentRecord) => {
+  router.push({ path: '/student-detail', query: { id: item.id, tab: 'books' } })
 }
 
 const getAvatarText = (name: string) => {
@@ -275,6 +147,15 @@ const getAvatarText = (name: string) => {
 
       <!-- Custom column: Action -->
       <template #item.action="{ item }">
+        <VBtn
+          variant="text"
+          color="primary"
+          size="small"
+          class="me-2"
+          @click="handleViewBooks(item)"
+        >
+          View books
+        </VBtn>
         <VTooltip
           text="View Details"
           location="top"

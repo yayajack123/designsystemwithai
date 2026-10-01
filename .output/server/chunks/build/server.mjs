@@ -1,4 +1,4 @@
-import process from 'node:process';globalThis._importMeta_=globalThis._importMeta_||{url:"file:///_entry.js",env:process.env};import { resolveDynamicComponent, computed, toRef, isRef, ref, toRaw, inject as inject$1, provide, shallowRef, nextTick, unref, toRefs, withDirectives, createVNode, Text, Fragment, reactive, watch, warn as warn$1, watchEffect, h, mergeProps, getCurrentInstance as getCurrentInstance$1, readonly, isVNode as isVNode$1, Comment, Transition, defineComponent as defineComponent$1, cloneVNode, createElementBlock, isReactive, hasInjectionContext, onScopeDispose, capitalize as capitalize$1, getCurrentScope, onMounted, customRef, effectScope, markRaw, defineAsyncComponent, shallowReactive, Suspense, useSSRContext, createApp, createCommentVNode, withCtx, createTextVNode, openBlock, createBlock, onErrorCaptured, onServerPrefetch, isReadonly, isShallow, toValue as toValue$1, createElementVNode } from 'vue';
+import process from 'node:process';globalThis._importMeta_=globalThis._importMeta_||{url:"file:///_entry.js",env:process.env};import { resolveDynamicComponent, computed, toRef, isRef, ref, toRaw, inject as inject$1, provide, shallowRef, nextTick, unref, toRefs, withDirectives, createVNode, Text, Fragment, reactive, watch, warn as warn$1, watchEffect, h, mergeProps, getCurrentInstance as getCurrentInstance$1, readonly, isVNode as isVNode$1, Comment, Transition, hasInjectionContext, defineComponent as defineComponent$1, cloneVNode, createElementBlock, isReactive, onScopeDispose, capitalize as capitalize$1, getCurrentScope, onMounted, customRef, effectScope, markRaw, defineAsyncComponent, shallowReactive, Suspense, useSSRContext, createApp, createCommentVNode, withCtx, createTextVNode, openBlock, createBlock, onErrorCaptured, onServerPrefetch, isReadonly, isShallow, toValue as toValue$1, createElementVNode } from 'vue';
 import http from 'node:http';
 import https from 'node:https';
 import { w as withBase, m as withQuery$1, n as destr, o as i, s, q as l, r as klona, t as getRequestHeader, v as isEqual$2, x as sanitizeStatusCode, y as setCookie, z as getCookie, A as deleteCookie, B as getContext, C as baseURL, D as defu, E as createHooks, f as createError$1, F as executeAsync, G as getRequestHeaders, H as getRequestProtocol } from '../nitro/nitro.mjs';
@@ -1052,213 +1052,237 @@ function getRouteRules(arg) {
     return {};
   }
 }
-const __nuxt_page_meta$m = {
+const __nuxt_page_meta$p = {
   sidebarRoute: "role"
 };
-const __nuxt_page_meta$l = {
+const __nuxt_page_meta$o = {
   sidebarRoute: "user"
 };
-const __nuxt_page_meta$k = {
+const __nuxt_page_meta$n = {
   sidebarRoute: "event"
 };
-const __nuxt_page_meta$j = {
+const __nuxt_page_meta$m = {
   sidebarRoute: "index"
 };
-const __nuxt_page_meta$i = {
+const __nuxt_page_meta$l = {
   layout: "blank"
 };
-const __nuxt_page_meta$h = {
+const __nuxt_page_meta$k = {
   sidebarRoute: "course"
 };
-const __nuxt_page_meta$g = {
+const __nuxt_page_meta$j = {
   sidebarRoute: "themes"
 };
-const __nuxt_page_meta$f = {
+const __nuxt_page_meta$i = {
   sidebarRoute: "account"
 };
-const __nuxt_page_meta$e = {
+const __nuxt_page_meta$h = {
   sidebarRoute: "classes"
 };
-const __nuxt_page_meta$d = {
+const __nuxt_page_meta$g = {
   sidebarRoute: "reports"
 };
-const __nuxt_page_meta$c = {
+const __nuxt_page_meta$f = {
   sidebarRoute: "schedule"
 };
-const __nuxt_page_meta$b = {
+const __nuxt_page_meta$e = {
   sidebarRoute: "students"
 };
-const __nuxt_page_meta$a = {
+const __nuxt_page_meta$d = {
   sidebarRoute: "attendance"
 };
-const __nuxt_page_meta$9 = {
+const __nuxt_page_meta$c = {
   sidebarRoute: "permission"
 };
-const __nuxt_page_meta$8 = {
+const __nuxt_page_meta$b = {
   sidebarRoute: "assessments"
 };
-const __nuxt_page_meta$7 = {
+const __nuxt_page_meta$a = {
   sidebarRoute: "design-system"
 };
-const __nuxt_page_meta$6 = {
+const __nuxt_page_meta$9 = {
   sidebarRoute: "my-attendance"
 };
-const __nuxt_page_meta$5 = {
+const __nuxt_page_meta$8 = {
   sidebarRoute: "students"
 };
-const __nuxt_page_meta$4 = {
+const __nuxt_page_meta$7 = {
   sidebarRoute: "user-variant-2"
 };
-const __nuxt_page_meta$3 = {
+const __nuxt_page_meta$6 = {
   sidebarRoute: "account-settings"
 };
-const __nuxt_page_meta$2 = {
+const __nuxt_page_meta$5 = {
   sidebarRoute: "attendance"
 };
-const __nuxt_page_meta$1 = {
+const __nuxt_page_meta$4 = {
   sidebarRoute: "dashboard-teacher"
 };
-const __nuxt_page_meta = {
+const __nuxt_page_meta$3 = {
   sidebarRoute: "attendance"
 };
+const __nuxt_page_meta$2 = {
+  path: "/students/:studentId/sessions/:sessionId",
+  sidebarRoute: "students"
+};
+const __nuxt_page_meta$1 = { path: "/students/:studentId/sessions/:sessionId/history/:historyId/meetings/:meetingId", sidebarRoute: "students" };
+const __nuxt_page_meta = { path: "/students/:studentId/sessions/:sessionId/history/:historyId", sidebarRoute: "students" };
 const _routes = [
   {
     name: "role",
     path: "/role",
-    meta: __nuxt_page_meta$m || {},
+    meta: __nuxt_page_meta$p || {},
     component: () => import('./role-T4F3dgE1.mjs')
   },
   {
     name: "user",
     path: "/user",
-    meta: __nuxt_page_meta$l || {},
-    component: () => import('./user-BWQyFvxw.mjs')
+    meta: __nuxt_page_meta$o || {},
+    component: () => import('./user-CU79mPLT.mjs')
   },
   {
     name: "event",
     path: "/event",
-    meta: __nuxt_page_meta$k || {},
+    meta: __nuxt_page_meta$n || {},
     component: () => import('./event-DohQUpjv.mjs')
   },
   {
     name: "index",
     path: "/",
-    meta: { ...__nuxt_page_meta$j || {}, ...{ "middleware": ["auth"] } },
+    meta: { ...__nuxt_page_meta$m || {}, ...{ "middleware": ["auth"] } },
     component: () => import('./index-BNdw8GP5.mjs')
   },
   {
     name: "login",
     path: "/login",
-    meta: { ...__nuxt_page_meta$i || {}, ...{ "middleware": ["guest"] } },
-    component: () => import('./login-Bh83GhET.mjs')
+    meta: { ...__nuxt_page_meta$l || {}, ...{ "middleware": ["guest"] } },
+    component: () => import('./login-Djm9EfMC.mjs')
   },
   {
     name: "course",
     path: "/course",
-    meta: __nuxt_page_meta$h || {},
-    component: () => import('./course-CfY-2k6g.mjs')
+    meta: __nuxt_page_meta$k || {},
+    component: () => import('./course-BFwhrM_U.mjs')
   },
   {
     name: "themes",
     path: "/themes",
-    meta: __nuxt_page_meta$g || {},
-    component: () => import('./themes-kkacYF-B.mjs')
+    meta: __nuxt_page_meta$j || {},
+    component: () => import('./themes-COPnd0aM.mjs')
   },
   {
     name: "account",
     path: "/account",
-    meta: __nuxt_page_meta$f || {},
-    component: () => import('./account-OqqTiYsb.mjs')
+    meta: __nuxt_page_meta$i || {},
+    component: () => import('./account-ByZtrUVo.mjs')
   },
   {
     name: "classes",
     path: "/classes",
-    meta: __nuxt_page_meta$e || {},
-    component: () => import('./classes-CsbkUU-d.mjs')
+    meta: __nuxt_page_meta$h || {},
+    component: () => import('./classes-CY67ZziI.mjs')
   },
   {
     name: "reports",
     path: "/reports",
-    meta: __nuxt_page_meta$d || {},
-    component: () => import('./reports-CgOIUvgQ.mjs')
+    meta: __nuxt_page_meta$g || {},
+    component: () => import('./reports-CrWIVBP0.mjs')
   },
   {
     name: "schedule",
     path: "/schedule",
-    meta: __nuxt_page_meta$c || {},
-    component: () => import('./schedule-QKMqV2qI.mjs')
+    meta: __nuxt_page_meta$f || {},
+    component: () => import('./schedule-RkLFPJLd.mjs')
   },
   {
     name: "students",
     path: "/students",
-    meta: __nuxt_page_meta$b || {},
-    component: () => import('./students-DBPsr1ZY.mjs')
+    meta: __nuxt_page_meta$e || {},
+    component: () => import('./students-CyplFrId.mjs')
   },
   {
     name: "attendance",
     path: "/attendance",
-    meta: __nuxt_page_meta$a || {},
-    component: () => import('./attendance-DlV_jNzJ.mjs')
+    meta: __nuxt_page_meta$d || {},
+    component: () => import('./attendance-M7eE3ia7.mjs')
   },
   {
     name: "permission",
     path: "/permission",
-    meta: __nuxt_page_meta$9 || {},
+    meta: __nuxt_page_meta$c || {},
     component: () => import('./permission-Ah7eKXZK.mjs')
   },
   {
     name: "assessments",
     path: "/assessments",
-    meta: __nuxt_page_meta$8 || {},
-    component: () => import('./assessments-Bez0YIyz.mjs')
+    meta: __nuxt_page_meta$b || {},
+    component: () => import('./assessments-D2GB8Zj5.mjs')
   },
   {
     name: "design-system",
     path: "/design-system",
-    meta: __nuxt_page_meta$7 || {},
-    component: () => import('./design-system-B_-dtbCj.mjs')
+    meta: __nuxt_page_meta$a || {},
+    component: () => import('./design-system-Buy5bJh6.mjs')
   },
   {
     name: "my-attendance",
     path: "/my-attendance",
-    meta: __nuxt_page_meta$6 || {},
-    component: () => import('./my-attendance-D5BBhCSd.mjs')
+    meta: __nuxt_page_meta$9 || {},
+    component: () => import('./my-attendance-BnA8wPh2.mjs')
   },
   {
     name: "student-detail",
     path: "/student-detail",
-    meta: __nuxt_page_meta$5 || {},
-    component: () => import('./student-detail-DP2jl_y7.mjs')
+    meta: __nuxt_page_meta$8 || {},
+    component: () => import('./student-detail-BdWkPjYP.mjs')
   },
   {
     name: "user-variant-2",
     path: "/user-variant-2",
-    meta: __nuxt_page_meta$4 || {},
-    component: () => import('./user-variant-2-B150fDp5.mjs')
+    meta: __nuxt_page_meta$7 || {},
+    component: () => import('./user-variant-2-CfrW42mh.mjs')
   },
   {
     name: "account-settings",
     path: "/account-settings",
-    meta: { ...__nuxt_page_meta$3 || {}, ...{ "middleware": ["auth"] } },
-    component: () => import('./account-settings-C6raqi2z.mjs')
+    meta: { ...__nuxt_page_meta$6 || {}, ...{ "middleware": ["auth"] } },
+    component: () => import('./account-settings-CQM-76mX.mjs')
   },
   {
     name: "attendance-detail",
     path: "/attendance-detail",
-    meta: __nuxt_page_meta$2 || {},
-    component: () => import('./attendance-detail-BViSPU8A.mjs')
+    meta: __nuxt_page_meta$5 || {},
+    component: () => import('./attendance-detail-XZUtTSXI.mjs')
   },
   {
     name: "dashboard-teacher",
     path: "/dashboard-teacher",
-    meta: __nuxt_page_meta$1 || {},
-    component: () => import('./dashboard-teacher-Dwrf-6mW.mjs')
+    meta: __nuxt_page_meta$4 || {},
+    component: () => import('./dashboard-teacher-d4xkbYTd.mjs')
   },
   {
     name: "meeting-journal-create",
     path: "/meeting-journal/create",
+    meta: __nuxt_page_meta$3 || {},
+    component: () => import('./create-Blj6Epc7.mjs')
+  },
+  {
+    name: "student-session-detail",
+    path: "/students/:studentId/sessions/:sessionId",
+    meta: __nuxt_page_meta$2 || {},
+    component: () => import('./student-session-detail-CsqKmmRv.mjs')
+  },
+  {
+    name: "student-meeting-journal",
+    path: "/students/:studentId/sessions/:sessionId/history/:historyId/meetings/:meetingId",
+    meta: __nuxt_page_meta$1 || {},
+    component: () => import('./student-meeting-journal-6aNh7d9M.mjs')
+  },
+  {
+    name: "student-session-history",
+    path: "/students/:studentId/sessions/:sessionId/history/:historyId",
     meta: __nuxt_page_meta || {},
-    component: () => import('./create-6mRKpt2H.mjs')
+    component: () => import('./student-session-history-BscN8JRd.mjs')
   }
 ];
 const _wrapInTransition = (props, children) => {
@@ -1774,6 +1798,9 @@ const useAuthStore = defineStore("auth", () => {
   };
 });
 const permission_45global = /* @__PURE__ */ defineNuxtRouteMiddleware((to) => {
+  const config = /* @__PURE__ */ useRuntimeConfig();
+  if (!config.public.authEnabled)
+    return;
   const { userPermission } = storeToRefs(useAuthStore());
   const currentRoute = route.find((r) => r.name === to.name);
   if (currentRoute && !userPermission.value.includes(currentRoute.permission)) {
@@ -1791,8 +1818,8 @@ const globalMiddleware = [
   manifest_45route_45rule
 ];
 const namedMiddleware = {
-  auth: () => import('./auth-CKN1qGO9.mjs'),
-  guest: () => import('./guest-BBrVS7GU.mjs')
+  auth: () => import('./auth-CKmO2y9h.mjs'),
+  guest: () => import('./guest-FDTWKmOh.mjs')
 };
 Object.assign(/* @__PURE__ */ Object.create(null), {});
 const pageIslandRoutes = Object.assign(/* @__PURE__ */ Object.create(null), {});
@@ -13783,6 +13810,9 @@ const api_jy9dy79pM_nYQuRKPrcfNg56p_gKkzw9SekUTZgAenc = /* @__PURE__ */ defineNu
 });
 const check_auth_server_v0t2ZW34WeUf3_7aCPjxqPNV2_viFEgX53FPbGYh_LE = /* @__PURE__ */ defineNuxtPlugin(async ({ $pinia }) => {
   let __temp, __restore;
+  const config = /* @__PURE__ */ useRuntimeConfig();
+  if (!config.public.authEnabled)
+    return;
   const authStore = useAuthStore($pinia);
   const XSRF_TOKEN = useCookie("XSRF-TOKEN");
   const clientCookies = useRequestHeaders(["cookie", "origin"]);
@@ -13875,16 +13905,16 @@ const plugins = [
   ssg_detect_IpHCGcQQ_IR5Rl99qyukWoMA9fJGfuTYyoksTzy81cs
 ];
 const layouts = {
-  blank: defineAsyncComponent(() => import('./blank-BbJMoXd6.mjs').then((m) => m.default || m)),
-  "components-default-layout-with-horizontal-nav": defineAsyncComponent(() => import('./DefaultLayoutWithHorizontalNav-Bsibo2Di.mjs').then((m) => m.default || m)),
-  "components-default-layout-with-vertical-nav": defineAsyncComponent(() => import('./DefaultLayoutWithVerticalNav-C7p9J0zF.mjs').then((m) => m.default || m)),
+  blank: defineAsyncComponent(() => import('./blank-BWxpe40X.mjs').then((m) => m.default || m)),
+  "components-default-layout-with-horizontal-nav": defineAsyncComponent(() => import('./DefaultLayoutWithHorizontalNav-iyycNR3O.mjs').then((m) => m.default || m)),
+  "components-default-layout-with-vertical-nav": defineAsyncComponent(() => import('./DefaultLayoutWithVerticalNav-DuKB13JT.mjs').then((m) => m.default || m)),
   "components-footer": defineAsyncComponent(() => import('./Footer-CgBf2AWj.mjs').then((m) => m.default || m)),
-  "components-nav-bar-notifications": defineAsyncComponent(() => import('./NavBarNotifications-D_taL_u2.mjs').then((m) => m.default || m)),
-  "components-nav-search-bar": defineAsyncComponent(() => import('./NavSearchBar-BsB7NHiv.mjs').then((m) => m.default || m)),
+  "components-nav-bar-notifications": defineAsyncComponent(() => import('./NavBarNotifications-Csuw2j6p.mjs').then((m) => m.default || m)),
+  "components-nav-search-bar": defineAsyncComponent(() => import('./NavSearchBar-CcWVBuF_.mjs').then((m) => m.default || m)),
   "components-navbar-shortcuts": defineAsyncComponent(() => import('./NavbarShortcuts-Di0wExRN.mjs').then((m) => m.default || m)),
-  "components-navbar-theme-switcher": defineAsyncComponent(() => import('./NavbarThemeSwitcher-C6RXK2Po.mjs').then((m) => m.default || m)),
-  "components-user-profile": defineAsyncComponent(() => import('./UserProfile-MZ4PJGmH.mjs').then((m) => m.default || m)),
-  default: defineAsyncComponent(() => import('./default-BpPs59f9.mjs').then((m) => m.default || m))
+  "components-navbar-theme-switcher": defineAsyncComponent(() => import('./NavbarThemeSwitcher-Dioc8vVv.mjs').then((m) => m.default || m)),
+  "components-user-profile": defineAsyncComponent(() => import('./UserProfile-D4g6A-Py.mjs').then((m) => m.default || m)),
+  default: defineAsyncComponent(() => import('./default-DaXWFMbq.mjs').then((m) => m.default || m))
 };
 const routeRulesMatcher = _routeRulesMatcher;
 const LayoutLoader = defineComponent$1({
@@ -14668,4 +14698,4 @@ let entry;
 }
 const entry_default = ((ssrContext) => entry(ssrContext));
 
-export { useLink as $, useRounded as A, useRouter as B, useProxiedModel as C, toPhysical as D, useLayoutItem as E, provideDefaults as F, useRender as G, VDefaultsProvider as H, propsFactory as I, makeThemeProps as J, makeTagProps as K, makeRoundedProps as L, makeLayoutItemProps as M, makeElevationProps as N, makeDisplayProps as O, makeComponentProps as P, makeBorderProps as Q, IconValue as R, makeDensityProps as S, Ripple as T, useVariant as U, VBtn as V, useDensity as W, useDimension as X, useLoader as Y, useLocation as Z, usePosition as _, VIcon as a, keys as a$, LoaderSlot as a0, genOverlays as a1, makeVariantProps as a2, makeRouterProps as a3, makePositionProps as a4, makeLocationProps as a5, makeLoaderProps as a6, makeDimensionProps as a7, breakpoints as a8, EventProp as a9, useSize as aA, makeSizeProps as aB, useGroup as aC, useGoTo as aD, makeGroupProps as aE, useGroupItem as aF, makeGroupItemProps as aG, noop$1 as aH, defineFunctionalComponent as aI, consoleError as aJ, getObjectValueByPath as aK, isEmpty as aL, createRange as aM, keyValues as aN, destructComputed as aO, parseAnchor as aP, flipSide as aQ, flipAlign as aR, flipCorner as aS, getAxis as aT, defer as aU, templateRef as aV, useAuthStore as aW, themeConfig as aX, _export_sfc as aY, VBtnToggle as aZ, makeVBtnProps as a_, useLocale as aa, wrapInArray as ab, useTextColor as ac, getCurrentInstanceName as ad, consoleWarn as ae, getUid as af, getCurrentInstance as ag, only as ah, isOn as ai, pick as aj, filterInputAttrs as ak, callEvent as al, useResizeObserver as am, clamp as an, debounce as ao, ensureValidVNode as ap, matchesSelector as aq, omit as ar, getPropertyFromItem as as, isClickInsideElement as at, focusableChildren as au, focusChild as av, getNextElement as aw, defineComponent as ax, deprecate as ay, deepEqual as az, VProgressCircular as b, isObject$1 as b0, VuetifyLayoutKey as b1, refElement as b2, VProgressLinear as b3, useLayout as b4, useConfigStore as b5, useFocus as b6, useTheme as b7, IN_BROWSER as b8, __nuxt_component_0$1 as b9, defineNuxtRouteMiddleware as ba, storeToRefs as bb, AppContentLayoutNav as bc, useRoute$1 as bd, useLayoutConfigStore as be, isNavGroupActive as bf, layoutConfig as bg, getDynamicI18nProps as bh, getComputedNavLinkToProp as bi, isNavLinkActive as bj, until as bk, useEventListener as bl, useCookie as bm, useI18n as bn, pickWithRest as bo, useElementHover as bp, injectionKeyIsVerticalNavHovered as bq, openGroups as br, useWindowSize as bs, useToggle as bt, syncRef as bu, withQuery as bv, switchToVerticalNavOnLtOverlayNavBreakpoint as bw, useMagicKeys as bx, useRouter$1 as c, resolveRouteObject$1 as d, entry_default as default, encodeRoutePath as e, useRuntimeConfig as f, withoutTrailingSlash as g, hasProtocol as h, isScriptProtocol as i, joinURL as j, nuxtLinkDefaults as k, watchDebounced as l, convertToUnit as m, navigateTo as n, useToggleScope as o, parseQuery as p, genericComponent as q, refDebounced as r, useRtl as s, provideTheme as t, useNuxtApp as u, useBorder as v, withTrailingSlash as w, useBackgroundColor as x, useElevation as y, useDisplay as z };
+export { useLink as $, useRounded as A, useRouter as B, useProxiedModel as C, toPhysical as D, useLayoutItem as E, provideDefaults as F, useRender as G, VDefaultsProvider as H, propsFactory as I, makeThemeProps as J, makeTagProps as K, makeRoundedProps as L, makeLayoutItemProps as M, makeElevationProps as N, makeDisplayProps as O, makeComponentProps as P, makeBorderProps as Q, IconValue as R, makeDensityProps as S, Ripple as T, useVariant as U, VBtn as V, useDensity as W, useDimension as X, useLoader as Y, useLocation as Z, usePosition as _, VIcon as a, keys as a$, LoaderSlot as a0, genOverlays as a1, makeVariantProps as a2, makeRouterProps as a3, makePositionProps as a4, makeLocationProps as a5, makeLoaderProps as a6, makeDimensionProps as a7, breakpoints as a8, EventProp as a9, useSize as aA, makeSizeProps as aB, useGroup as aC, useGoTo as aD, makeGroupProps as aE, useGroupItem as aF, makeGroupItemProps as aG, noop$1 as aH, defineFunctionalComponent as aI, consoleError as aJ, getObjectValueByPath as aK, isEmpty as aL, createRange as aM, keyValues as aN, destructComputed as aO, parseAnchor as aP, flipSide as aQ, flipAlign as aR, flipCorner as aS, getAxis as aT, defer as aU, templateRef as aV, useAuthStore as aW, themeConfig as aX, _export_sfc as aY, VBtnToggle as aZ, makeVBtnProps as a_, useLocale as aa, wrapInArray as ab, useTextColor as ac, getCurrentInstanceName as ad, consoleWarn as ae, getUid as af, getCurrentInstance as ag, only as ah, isOn as ai, pick as aj, filterInputAttrs as ak, callEvent as al, useResizeObserver as am, clamp as an, debounce as ao, ensureValidVNode as ap, matchesSelector as aq, omit as ar, getPropertyFromItem as as, isClickInsideElement as at, focusableChildren as au, focusChild as av, getNextElement as aw, defineComponent as ax, deprecate as ay, deepEqual as az, VProgressCircular as b, isObject$1 as b0, VuetifyLayoutKey as b1, refElement as b2, VProgressLinear as b3, useLayout as b4, useRoute$1 as b5, useConfigStore as b6, useFocus as b7, useTheme as b8, IN_BROWSER as b9, __nuxt_component_0$1 as ba, defineNuxtRouteMiddleware as bb, storeToRefs as bc, AppContentLayoutNav as bd, useLayoutConfigStore as be, isNavGroupActive as bf, layoutConfig as bg, getDynamicI18nProps as bh, getComputedNavLinkToProp as bi, isNavLinkActive as bj, until as bk, useEventListener as bl, useCookie as bm, useI18n as bn, pickWithRest as bo, useElementHover as bp, injectionKeyIsVerticalNavHovered as bq, openGroups as br, useWindowSize as bs, useToggle as bt, syncRef as bu, withQuery as bv, switchToVerticalNavOnLtOverlayNavBreakpoint as bw, useMagicKeys as bx, useRouter$1 as c, resolveRouteObject$1 as d, entry_default as default, encodeRoutePath as e, useRuntimeConfig as f, withoutTrailingSlash as g, hasProtocol as h, isScriptProtocol as i, joinURL as j, nuxtLinkDefaults as k, watchDebounced as l, convertToUnit as m, navigateTo as n, useToggleScope as o, parseQuery as p, genericComponent as q, refDebounced as r, useRtl as s, provideTheme as t, useNuxtApp as u, useBorder as v, withTrailingSlash as w, useBackgroundColor as x, useElevation as y, useDisplay as z };

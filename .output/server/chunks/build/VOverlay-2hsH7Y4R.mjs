@@ -1165,4 +1165,4 @@ const VOverlay = genericComponent()({
   }
 });
 
-export { VOverlay as V, useDelay as a, useLazy as b, makeLazyProps as c, makeVOverlayProps as d, VMenuSymbol as e, makeDelayProps as m, useScopeId as u };
+export { VOverlay as V, useDelay as a, makeVOverlayProps as b, VMenuSymbol as c, useLazy as d, makeLazyProps as e, makeDelayProps as m, useScopeId as u };

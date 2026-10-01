@@ -1,5 +1,5 @@
 import { ref, shallowRef, inject, watchEffect, watch, computed, createVNode, mergeProps, onScopeDispose, nextTick } from 'vue';
-import { u as useScopeId, V as VOverlay, d as makeVOverlayProps } from './VOverlay-2hsH7Y4R.mjs';
+import { u as useScopeId, V as VOverlay, b as makeVOverlayProps } from './VOverlay-2hsH7Y4R.mjs';
 import { f as forwardRefs } from './forwardRefs-CtuH3aYe.mjs';
 import { q as genericComponent, C as useProxiedModel, _ as usePosition, t as provideTheme, U as useVariant, A as useRounded, b1 as VuetifyLayoutKey, o as useToggleScope, b4 as useLayout, b2 as refElement, G as useRender, a1 as genOverlays, b3 as VProgressLinear, H as VDefaultsProvider, I as propsFactory, ar as omit, J as makeThemeProps, a2 as makeVariantProps, L as makeRoundedProps, a4 as makePositionProps, a5 as makeLocationProps } from './server.mjs';
 

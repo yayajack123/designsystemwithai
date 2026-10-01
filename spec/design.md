@@ -159,6 +159,13 @@ Grey tokens are utilized for semantic text weights, borders, dividers, and vario
 
 ## 4. Figma-to-Project Component Mapping
 
+### Student session and meeting history
+
+- Session detail uses `VTabs` for Information and Session history. Its information layout uses `VRow`/`VCol` and `VCard`; session history uses `UiTableView` with `mobileCards` and an explicit mobile slot.
+- Book history uses `VTabs` for Learning progress, Meeting history, and Report. Learning chapters and lesson objectives use `VExpansionPanels`. Meeting and report lists use `UiTableView` with explicit mobile cards.
+- Meeting journal uses `VCard`, `VExpansionPanels`, and an HTML `MeetingJournalReportPreview`. The preview uses the same journal data as the detail view and semantic theme colors, including `surface`, `on-surface`, `primary`, `success`, and `secondary`.
+- These pages use Poppins via existing typography tokens (`text-h5`, `text-h6`, `text-body-1`, `text-body-2`), 24px Vuetify grid gutters, and pill shaped `VBtn` actions. No new color or typography tokens are introduced.
+
 This section establishes the mapping between Figma design components and the Vuetify/custom components implemented in the project.
 
 ### Agent Workflow: Figma-to-Code Execution

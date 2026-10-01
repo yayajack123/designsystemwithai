@@ -1,7 +1,7 @@
 import { computed, toRef, createVNode, Fragment, mergeProps, ref, inject, shallowRef, watch, provide, withDirectives, resolveDirective, vShow, nextTick } from 'vue';
 import { q as genericComponent, C as useProxiedModel, W as useDensity, x as useBackgroundColor, F as provideDefaults, G as useRender, m as convertToUnit, ac as useTextColor, V as VBtn, X as useDimension, y as useElevation, t as provideTheme, aa as useLocale, ab as wrapInArray, b0 as isObject$1, I as propsFactory, K as makeTagProps, S as makeDensityProps, ar as omit, a_ as makeVBtnProps, J as makeThemeProps, N as makeElevationProps, a7 as makeDimensionProps, s as useRtl, aC as useGroup, aF as useGroupItem, a$ as keys, P as makeComponentProps, aG as makeGroupItemProps } from './server.mjs';
 import { f as forwardRefs, a as animate, s as standardEasing } from './forwardRefs-CtuH3aYe.mjs';
-import { u as useScopeId, b as useLazy, c as makeLazyProps } from './VOverlay-2hsH7Y4R.mjs';
+import { u as useScopeId, d as useLazy, e as makeLazyProps } from './VOverlay-2hsH7Y4R.mjs';
 import { u as useSsrBoot } from './VList-MvyrR4cM.mjs';
 import { M as MaybeTransition } from './VAvatar-Bov4ZLUZ.mjs';
 import { a as VSlideGroup, m as makeVSlideGroupProps } from './VChip-DklVb85L.mjs';

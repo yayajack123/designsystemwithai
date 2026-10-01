@@ -1,5 +1,5 @@
 import { computed, ref, mergeProps, createVNode } from 'vue';
-import { u as useScopeId, V as VOverlay, d as makeVOverlayProps } from './VOverlay-2hsH7Y4R.mjs';
+import { u as useScopeId, V as VOverlay, b as makeVOverlayProps } from './VOverlay-2hsH7Y4R.mjs';
 import { f as forwardRefs } from './forwardRefs-CtuH3aYe.mjs';
 import { q as genericComponent, C as useProxiedModel, af as getUid, G as useRender, I as propsFactory, ar as omit } from './server.mjs';
 

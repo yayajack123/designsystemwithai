@@ -48,6 +48,7 @@ interface _GlobalComponents {
   AppPricing: typeof import("../../components/AppPricing.vue")['default']
   AppSearchHeader: typeof import("../../components/AppSearchHeader.vue")['default']
   ErrorHeader: typeof import("../../components/ErrorHeader.vue")['default']
+  MeetingJournalReportPreview: typeof import("../../components/MeetingJournalReportPreview.vue")['default']
   VueApexCharts: typeof import("../../components/VueApexCharts.client.vue")['default']
   AddAuthenticatorAppDialog: typeof import("../../components/dialogs/AddAuthenticatorAppDialog.vue")['default']
   AddEditAddressDialog: typeof import("../../components/dialogs/AddEditAddressDialog.vue")['default']
@@ -138,6 +139,7 @@ interface _GlobalComponents {
   LazyAppPricing: LazyComponent<typeof import("../../components/AppPricing.vue")['default']>
   LazyAppSearchHeader: LazyComponent<typeof import("../../components/AppSearchHeader.vue")['default']>
   LazyErrorHeader: LazyComponent<typeof import("../../components/ErrorHeader.vue")['default']>
+  LazyMeetingJournalReportPreview: LazyComponent<typeof import("../../components/MeetingJournalReportPreview.vue")['default']>
   LazyVueApexCharts: LazyComponent<typeof import("../../components/VueApexCharts.client.vue")['default']>
   LazyAddAuthenticatorAppDialog: LazyComponent<typeof import("../../components/dialogs/AddAuthenticatorAppDialog.vue")['default']>
   LazyAddEditAddressDialog: LazyComponent<typeof import("../../components/dialogs/AddEditAddressDialog.vue")['default']>

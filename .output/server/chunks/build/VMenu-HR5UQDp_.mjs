@@ -1,5 +1,5 @@
 import { computed, ref, inject, shallowRef, provide, watch, mergeProps, createVNode, nextTick } from 'vue';
-import { u as useScopeId, e as VMenuSymbol, V as VOverlay, d as makeVOverlayProps } from './VOverlay-2hsH7Y4R.mjs';
+import { u as useScopeId, c as VMenuSymbol, V as VOverlay, b as makeVOverlayProps } from './VOverlay-2hsH7Y4R.mjs';
 import { f as forwardRefs } from './forwardRefs-CtuH3aYe.mjs';
 import { q as genericComponent, C as useProxiedModel, af as getUid, at as isClickInsideElement, G as useRender, H as VDefaultsProvider, au as focusableChildren, av as focusChild, aw as getNextElement, I as propsFactory, ar as omit } from './server.mjs';
 import { V as VDialogTransition } from './dialog-transition-BWrfOTuu.mjs';

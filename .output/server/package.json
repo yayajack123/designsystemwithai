@@ -11,6 +11,8 @@
     "@floating-ui/core": "1.7.0",
     "@floating-ui/dom": "1.6.7",
     "@floating-ui/utils": "0.2.9",
+    "@lottiefiles/dotlottie-vue": "0.11.27",
+    "@lottiefiles/dotlottie-web": "0.80.0",
     "@ucast/core": "1.10.2",
     "@ucast/js": "3.0.4",
     "@ucast/mongo": "2.4.3",

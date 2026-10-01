@@ -5,6 +5,7 @@ import { avatarText } from '@core/utils/formatters'
 import UiSectionHeader from '@/components/ui/UiSectionHeader.vue'
 import UiTableView from '@/components/ui/UiTableView.vue'
 import PresenceDialog from '@/components/dialogs/PresenceDialog.vue'
+import { findStudentByName } from '@/data/students'
 
 definePageMeta({
   sidebarRoute: 'attendance',
@@ -104,6 +105,10 @@ const mockClasses = ref<ClassSession[]>([
 const route = useRoute()
 const router = useRouter()
 const classId = computed(() => (route.query.id as string) || '1')
+const openStudentBooks = (name: string) => {
+  const student = findStudentByName(name)
+  if (student) router.push({ path: '/student-detail', query: { id: student.id, tab: 'books' } })
+}
 
 // Active class session lookup with fallback
 const classSession = computed(() => {
@@ -409,6 +414,16 @@ const handlePresenceSubmit = (payload: { students: any[], isStartClass: boolean 
           <VChip :color="getBookBadgeColor(item.bookStatus)" variant="tonal" size="small" class="font-weight-medium text-caption">
             {{ item.bookStatus }}
           </VChip>
+          <VBtn
+            v-if="findStudentByName(item.name)"
+            variant="text"
+            color="primary"
+            size="small"
+            class="px-0"
+            @click="openStudentBooks(item.name)"
+          >
+            View all books
+          </VBtn>
         </div>
       </template>
 
