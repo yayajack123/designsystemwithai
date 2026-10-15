@@ -65,25 +65,22 @@ Vuetify applies these typography settings automatically across components:
 
 This section details the color tokens, primitive palettes, opacity levels, and active light/dark Vuetify theme colors configured in [theme.ts](../plugins/vuetify/theme.ts).
 
-### Primitive Primary Colors
+### Brand Primary Colors
 
-The primary brand colors are configured as a green-based palette. These primitive colors serve as the foundation for the primary brand mappings across the application.
+The starter uses green as its default brand. Each deployment can set `NUXT_PUBLIC_BRAND_PRIMARY`; the application derives light and dark variants and selects readable foreground text. Use semantic `primary` tokens in components so each deployment receives its brand automatically.
 
-| Primitive Color Token | Light Theme Hex Value | Dark Theme Hex Value | Description / Typical Use Case |
-| :--- | :--- | :--- | :--- |
-| `primary-100` | `#DBFDDB` | `#DBFDDB` | Softest green, used for extremely light background tints |
-| `primary-200` | `#B8FAB8` | `#B8FAB8` | Very light green accent tint |
-| `primary-300` | `#81F483` | `#81F483` | Light green tint |
-| `primary-400` | `#43E545` | `#43E545` | Light brand green |
-| `primary-500` (Main) | `#10AF13` | `#10AF13` | **Primary Brand Color**, active selections, primary indicators |
-| `primary-600` (Dark) | `#108513` | `#108513` | Primary hover states, active button states |
-| `primary-700` | `#126915` | `#126915` | Dark green brand variant |
-| `primary-800` | `#115614` | `#115614` | Deeper green brand variant |
-| `primary-900` | `#033006` | `#10AF13` | Deepest background green tint (Light) / Active fallback (Dark) |
+| Brand Color Token | Default Hex Value | Description / Typical Use Case |
+| :--- | :--- | :--- |
+| `primary-light` | `#43E545` | Lighter brand tint, derived from deployment primary |
+| `primary` / `primary-main` | `#10AF13` | Main brand color, active selections, primary indicators |
+| `primary-dark` / `primary-darken-1` | `#108513` | Hover and active button states, derived from deployment primary |
+| `on-primary` | `#2E263D` | Default foreground; selected for readable contrast |
+
+Legacy numbered shades remain in the default green palette for the design-system showcase. Product components should use semantic brand tokens instead. See the root [README](../README.md) and [.env.example](../.env.example) for per-deployment branding setup.
 
 ### Reference & Opacity Tokens
 
-These tokens are generated using transparency (alpha channels) applied on the primary brand color (`#10AF13`). They are used for state overlays, backdrop effects, and subtle highlights.
+These tokens use transparency (alpha channels) on the configured primary brand color. They are used for state overlays, backdrop effects, and subtle highlights.
 
 | Token Name | Hex Code (with Alpha) | Equivalent Opacity | Description / Typical Use Case |
 | :--- | :--- | :--- | :--- |
@@ -260,6 +257,10 @@ Below details what specific color and typography tokens are configured on these 
 
 - **Typography:** `VListItemTitle` uses `body-1` (15px). `VListItemSubtitle` uses `body-2` (13px) or `caption` (13px with wider spacing).
 - **Colors:** Active list item uses `primary` text/bg overlay. Muted list items use `text-secondary` or `disabled` color.
+
+#### Sidebar Navigation Active State
+
+- The active navigation link uses the configured brand gradient with white text and icons. Keep the active foreground white even when `on-primary` selects a dark foreground for primary buttons.
 
 #### Tables & Data Representation (`UiTableView`, `VDataTable`, `VDataTableServer`)
 

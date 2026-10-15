@@ -38,6 +38,57 @@ export const darkPrimaryLight = darkPrimary400
 export const staticPrimaryColor = lightPrimaryMain
 export const staticPrimaryDarkenColor = lightPrimaryDark
 
+const normalizeHexColor = (value: string, fallback = staticPrimaryColor) => {
+  const normalized = value.trim().replace(/^#/, '')
+  const expanded = normalized.length === 3
+    ? normalized.split('').map(character => `${character}${character}`).join('')
+    : normalized
+
+  return /^[\da-f]{6}$/i.test(expanded) ? `#${expanded}` : fallback
+}
+
+const mixHexColors = (color: string, target: string, amount: number) => {
+  const sourceHex = normalizeHexColor(color).slice(1)
+  const targetHex = normalizeHexColor(target).slice(1)
+  const channels = [0, 2, 4].map(index => {
+    const source = Number.parseInt(sourceHex.slice(index, index + 2), 16)
+    const destination = Number.parseInt(targetHex.slice(index, index + 2), 16)
+
+    return Math.round(source + (destination - source) * amount)
+      .toString(16)
+      .padStart(2, '0')
+  })
+
+  return `#${channels.join('')}`
+}
+
+const getReadableTextColor = (color: string) => {
+  const channels = normalizeHexColor(color).slice(1).match(/.{2}/g)!.map(channel => Number.parseInt(channel, 16) / 255)
+  const luminance = channels
+    .map(channel => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4)
+    .reduce((total, channel, index) => total + channel * [0.2126, 0.7152, 0.0722][index], 0)
+
+  return luminance > 0.179 ? '#2E263D' : '#FFFFFF'
+}
+
+export const getBrandThemeColors = (value: string) => {
+  const primary = normalizeHexColor(value)
+  const light = mixHexColors(primary, '#FFFFFF', 0.24)
+  const dark = mixHexColors(primary, '#000000', 0.24)
+
+  return {
+    primary,
+    'on-primary': getReadableTextColor(primary),
+    'primary-darken-1': dark,
+    'primary-light': light,
+    'primary-main': primary,
+    'primary-dark': dark,
+    'primary-400': light,
+    'primary-500': primary,
+    'primary-600': dark,
+  }
+}
+
 export const themes: Record<string, ThemeDefinition> = {
   light: {
     dark: false,

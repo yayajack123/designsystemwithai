@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import UiTableView from '@/components/ui/UiTableView.vue'
+import { useTheme } from 'vuetify'
 
 definePageMeta({
   sidebarRoute: 'design-system',
@@ -26,25 +27,24 @@ const typographyTokens = [
 ]
 
 // ─────────Color palette from theme─────────
-const primaryPalette = [
-  { token: 'primary-100', light: '#DBFDDB', dark: '#DBFDDB', desc: 'Softest green tint' },
-  { token: 'primary-200', light: '#B8FAB8', dark: '#B8FAB8', desc: 'Very light accent' },
-  { token: 'primary-300', light: '#81F483', dark: '#81F483', desc: 'Light green tint' },
-  { token: 'primary-400', light: '#43E545', dark: '#43E545', desc: 'Light brand green' },
-  { token: 'primary-500', light: '#10AF13', dark: '#10AF13', desc: 'Brand primary' },
-  { token: 'primary-600', light: '#108513', dark: '#108513', desc: 'Hover / active' },
-  { token: 'primary-700', light: '#126915', dark: '#126915', desc: 'Dark green' },
-  { token: 'primary-800', light: '#115614', dark: '#115614', desc: 'Deeper green' },
-  { token: 'primary-900', light: '#033006', dark: '#10AF13', desc: 'Deepest green' },
-]
+const vuetifyTheme = useTheme()
+const primaryPalette = computed(() => [
+  { token: 'primary-light', light: vuetifyTheme.themes.value.light.colors['primary-light'], desc: 'Brand tint' },
+  { token: 'primary-main', light: vuetifyTheme.themes.value.light.colors.primary, desc: 'Brand primary' },
+  { token: 'primary-dark', light: vuetifyTheme.themes.value.light.colors['primary-dark'], desc: 'Hover / active' },
+])
 
-const opacityTokens = [
-  { token: 'primary-opacity-lighter', value: '#10AF1314', opacity: '8%', desc: 'Subtle hover overlays' },
-  { token: 'primary-opacity-light', value: '#10AF1329', opacity: '16%', desc: 'Focus states' },
-  { token: 'primary-opacity-main', value: '#10AF133D', opacity: '24%', desc: 'Active selection bg' },
-  { token: 'primary-opacity-dark', value: '#10AF1352', opacity: '32%', desc: 'High contrast selection' },
-  { token: 'primary-opacity-darker', value: '#10AF1361', opacity: '38%', desc: 'Strongest overlay' },
-]
+const opacityTokens = computed(() => {
+  const primary = vuetifyTheme.themes.value.light.colors.primary
+
+  return [
+    { token: 'primary-opacity-lighter', value: `${primary}14`, opacity: '8%', desc: 'Subtle hover overlays' },
+    { token: 'primary-opacity-light', value: `${primary}29`, opacity: '16%', desc: 'Focus states' },
+    { token: 'primary-opacity-main', value: `${primary}3D`, opacity: '24%', desc: 'Active selection bg' },
+    { token: 'primary-opacity-dark', value: `${primary}52`, opacity: '32%', desc: 'High contrast selection' },
+    { token: 'primary-opacity-darker', value: `${primary}61`, opacity: '38%', desc: 'Strongest overlay' },
+  ]
+})
 
 const semanticColors = [
   { token: 'success', light: '#56CA00', dark: '#56CA00', desc: 'Success indicators' },
@@ -326,7 +326,7 @@ const resetReviewFilters = () => {
           Brand Primary Palette
         </h5>
         <p class="text-body-1 text-medium-emphasis mb-5">
-          Green-based palette centered on <code class="code-inline">#10AF13</code>.
+          Brand palette from <code class="code-inline">NUXT_PUBLIC_BRAND_PRIMARY</code>.
         </p>
 
         <!-- Primary Palette Swatches -->

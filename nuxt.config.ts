@@ -6,14 +6,7 @@ import svgLoader from 'vite-svg-loader'
 export default defineNuxtConfig({
   app: {
     head: {
-      titleTemplate: '%s - Timedoor Admin',
-      title: 'Client App',
-
-      link: [{
-        rel: 'icon',
-        type: 'image/x-icon',
-        href: `${process.env.APP_BASE_URL}/favicon.ico`,
-      }],
+      titleTemplate: '%s',
     },
   },
 
@@ -29,6 +22,10 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
+      appName: 'Admin Starter',
+      appLogo: '',
+      appFavicon: '/favicon.ico',
+      brandPrimary: '#10AF13',
       appEnv: process.env.APP_ENV || '',
       appBaseUrl: process.env.APP_BASE_URL || '',
       apiBaseUrl: process.env.API_BASE_URL || '',
@@ -139,8 +136,8 @@ export default defineNuxtConfig({
     enabled: process.env.APP_ENV === 'development', // make sure that bacic auth only active in development mode
     users: [
       {
-        username: process.env.BASIC_AUTH_USERNAME || 'timedoor',
-        password: process.env.BASIC_AUTH_PASSWORD || 'timedoor',
+        username: process.env.BASIC_AUTH_USERNAME || 'admin',
+        password: process.env.BASIC_AUTH_PASSWORD || 'change-me',
       },
     ],
     allowedRoutes: ['/api/.*']

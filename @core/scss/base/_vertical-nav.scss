@@ -140,6 +140,11 @@
 
       > .router-link-exact-active {
         @extend %nav-link-active;
+        color: #fff;
+
+        .nav-item-icon {
+          color: #fff !important;
+        }
       }
 
       > a {

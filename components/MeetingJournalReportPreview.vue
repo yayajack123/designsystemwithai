@@ -11,13 +11,15 @@ defineProps<{
   meeting: StudentMeeting
   journal: MeetingJournal
 }>()
+
+const { public: { appName } } = useRuntimeConfig()
 </script>
 
 <template>
   <VCard variant="outlined" class="report-preview rounded-lg pa-5">
     <div class="d-flex justify-space-between flex-wrap gap-3 mb-5">
       <div>
-        <div class="text-caption text-primary font-weight-medium">Timedoor Academy</div>
+        <div class="text-caption text-primary font-weight-medium">{{ appName }}</div>
         <h3 class="text-h5 font-weight-medium text-high-emphasis mb-0">Daily journal report</h3>
       </div>
       <VChip :color="journal.status === 'Sent' ? 'success' : 'secondary'" variant="tonal" size="small">{{ journal.status }}</VChip>

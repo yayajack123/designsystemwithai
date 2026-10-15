@@ -12,8 +12,8 @@ const userStore = useAuthStore();
 const router = useRouter();
 
 const form = ref({
-  email: "demo@timedoor.net",
-  password: "demo123",
+  email: '',
+  password: '',
   remember: false,
 });
 
@@ -85,7 +85,7 @@ definePageMeta({
             <VRow>
               <!-- email -->
               <VCol cols="12">
-                <VTextField v-model="form.email" autofocus label="Email" type="email" placeholder="johndoe@email.com" />
+                <VTextField v-model="form.email" autofocus label="Email" type="email" placeholder="name@example.com" />
               </VCol>
 
               <!-- password -->

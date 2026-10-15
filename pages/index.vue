@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const { public: { appName } } = useRuntimeConfig()
+
 definePageMeta({
   middleware: ['auth'],
   sidebarRoute: 'index',
@@ -10,9 +12,9 @@ definePageMeta({
   <div>
     <VCard
       class="mb-6"
-      title="Timedoor Admin Starter 🚀"
+      :title="appName"
     >
-      <VCardText>All the best for your new project.</VCardText>
+      <VCardText>Your workspace is ready.</VCardText>
     </VCard>
   </div>
 </template>

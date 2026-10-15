@@ -36,6 +36,14 @@
   }
 }
 
+.app-brand-logo {
+  display: block;
+  inline-size: auto;
+  max-block-size: 28px;
+  max-inline-size: 140px;
+  object-fit: contain;
+}
+
 // Primary opacity utility classes (replaces Vuetify theme color tokens that don't support hex-with-alpha)
 .bg-primary-opacity-lighter {
   background-color: rgba(var(--v-theme-primary), 0.08) !important;
