@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
+import { useDisplay } from 'vuetify'
 import { marketingContentHeight, prepareMarketingImage, resizeMarketingBlock, type ResizeHandle } from '@/utils/marketingCanvas'
 import type { MarketingBlock, MarketingVariable, MarketingVariableType } from '@/composables/useMarketingTemplates'
 import { builtinMarketingVariables, isBuiltinMarketingVariable } from '@/composables/useMarketingTemplates'
@@ -20,6 +21,13 @@ const updateBaseMargin = (value: unknown) => {
 }
 
 const activePanel = ref<'elements' | 'layers' | 'styles' | 'variables'>('elements')
+const { smAndDown } = useDisplay()
+const panelTabs = [
+  { value: 'elements', label: 'Elements', icon: 'ri-layout-grid-line' },
+  { value: 'layers', label: 'Layers', icon: 'ri-stack-line' },
+  { value: 'styles', label: 'Styles', icon: 'ri-palette-line' },
+  { value: 'variables', label: 'Variables', icon: 'ri-braces-line' },
+] as const
 const selectedId = ref('')
 const showPreview = ref(false)
 const showSidebar = ref(true)
@@ -334,7 +342,7 @@ const insertFirstVariableIntoUrl = () => {
     <span class="sr-only" role="status">{{ feedback }}</span>
     <header class="builder-toolbar">
       <div class="d-flex align-center gap-2">
-        <span class="builder-title text-body-2 font-weight-medium"><VIcon icon="ri-layout-grid-line" size="18" />Builder</span>
+        <span class="builder-title text-body-2 font-weight-medium"><VIcon icon="ri-pencil-ruler-2-line" size="18" />Builder</span>
         <VDivider vertical class="mx-1" />
         <VBtn icon="ri-arrow-go-back-line" variant="text" size="small" aria-label="Undo" :disabled="!history.length" @click="undo" />
         <VBtn icon="ri-arrow-go-forward-line" variant="text" size="small" aria-label="Redo" :disabled="!future.length" @click="redo" />
@@ -379,11 +387,20 @@ const insertFirstVariableIntoUrl = () => {
     <VRow no-gutters class="builder-workspace">
       <input ref="designFileInput" type="file" class="sr-only" :accept="importFormat === 'json' ? '.json,application/json' : '.html,.htm,text/html'" aria-label="Import design file" @change="importDesign">
       <VCol v-if="showSidebar" cols="12" md="3" class="builder-sidebar" tag="aside">
-        <VTabs v-model="activePanel" class="builder-panel-tabs" height="48" color="primary" grow aria-label="Builder panels">
-          <VTab value="elements">Elements</VTab>
-          <VTab value="layers">Layers</VTab>
-          <VTab value="styles">Styles</VTab>
-          <VTab value="variables">Variables</VTab>
+        <VTabs
+          v-model="activePanel"
+          class="builder-panel-tabs"
+          :direction="smAndDown ? 'horizontal' : 'vertical'"
+          :height="smAndDown ? 48 : undefined"
+          :grow="smAndDown"
+          color="primary"
+          aria-label="Builder panels"
+        >
+          <VTab v-for="panel in panelTabs" :key="panel.value" :value="panel.value" :aria-label="panel.label">
+            <VIcon :icon="panel.icon" size="20" class="builder-panel-tab-icon" />
+            <span class="builder-panel-tab-label">{{ panel.label }}</span>
+            <VTooltip v-if="!smAndDown" activator="parent" location="end">{{ panel.label }}</VTooltip>
+          </VTab>
         </VTabs>
 
         <div v-if="activePanel === 'elements'" class="builder-panel-content">
@@ -519,6 +536,8 @@ const insertFirstVariableIntoUrl = () => {
 .builder-panel-tabs { border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity)); }
 .builder-panel-tabs :deep(.v-tab) { min-width: 0 !important; padding-inline: 8px; font-size: 0.8125rem; letter-spacing: normal; text-transform: none; }
 .builder-panel-tabs :deep(.v-slide-group__prev), .builder-panel-tabs :deep(.v-slide-group__next) { min-width: 24px; flex-basis: 24px; }
+.builder-panel-tab-icon { display: none; }
+.builder-panel-tab-label { display: inline; }
 .builder-panel-content { padding: 16px; }
 .layer-actions { display: flex; flex-direction: column; gap: 12px; }
 .layer-row > span { min-width: 0; }
@@ -550,12 +569,25 @@ const insertFirstVariableIntoUrl = () => {
 .canvas-warning { flex: 0 0 auto; width: min(100%, 390px); min-height: 0; align-items: start; margin-top: 16px; }
 @media (max-width: 959px) {
   .builder-sidebar { border-right: 0; border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity)); }
+  .builder-panel-tab-icon { display: none; }
+  .builder-panel-tab-label { display: inline; }
   .builder-properties { border-inline-start: 0; border-block-start: 1px solid rgba(var(--v-border-color), var(--v-border-opacity)); }
   .builder-panel-content { max-height: 250px; overflow: auto; }
   .canvas-stage { min-height: 600px; padding: 28px 12px; }
 }
 @media (min-width: 960px) {
-  .builder-sidebar, .builder-properties { max-height: 940px; overflow-y: auto; }
+  .builder-sidebar { position: relative; display: flex; max-height: 940px; overflow: hidden; }
+  .builder-sidebar::after { position: absolute; z-index: 1; inset-block: 0; inset-inline-start: 48px; width: 1px; background: rgba(var(--v-border-color), var(--v-border-opacity)); content: ''; pointer-events: none; }
+  .builder-panel-tabs { flex: 0 0 48px; align-self: stretch; width: 48px; padding-block-start: 8px; border-bottom: 0; }
+  .builder-panel-tabs :deep(.v-tab) { width: 48px; min-width: 48px !important; justify-content: center; padding-inline: 0; }
+  .builder-panel-tabs :deep(.v-tab--selected) { background: transparent; }
+  .builder-panel-tabs :deep(.v-tab--selected .v-btn__overlay) { inset: 0; width: 32px; height: 32px; margin: auto; border-radius: 4px; background: rgba(var(--v-theme-primary), .12); opacity: 1; }
+  .builder-panel-tabs :deep(.v-tab__slider) { display: none; }
+  .builder-panel-tabs :deep(.v-slide-group__prev), .builder-panel-tabs :deep(.v-slide-group__next) { display: none; }
+  .builder-panel-tab-icon { display: inline-flex; }
+  .builder-panel-tab-label { display: none; }
+  .builder-panel-content { flex: 1 1 auto; min-width: 0; max-height: 940px; overflow: auto; }
+  .builder-properties { max-height: 940px; overflow-y: auto; }
   :is(.builder-sidebar, .builder-properties) { font-size: 12px; line-height: 18px; }
   :is(.builder-sidebar, .builder-properties) :deep(.text-body-1),
   :is(.builder-sidebar, .builder-properties) :deep(.text-body-2),

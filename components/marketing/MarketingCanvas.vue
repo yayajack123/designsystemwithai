@@ -12,7 +12,7 @@ const selectedBlock = computed(() => props.blocks.find(block => block.id === pro
 const canvasHeight = computed(() => props.height || (props.pageMode === 'a4' ? 551 : 844))
 const showVerticalCenterGuide = computed(() => props.editable && props.dragging && selectedBlock.value && Math.abs(selectedBlock.value.x + selectedBlock.value.width / 2 - 195) <= 4)
 const showHorizontalCenterGuide = computed(() => props.editable && props.dragging && selectedBlock.value && Math.abs(selectedBlock.value.y + selectedBlock.value.height / 2 - canvasHeight.value / 2) <= 4)
-const text = (value: string) => props.values ? substituteMarketingValues(value, props.values) : value.replace(/\{\{([^{}]+)\}\}/g, '⟨$1⟩')
+const text = (value: string) => props.values ? substituteMarketingValues(value, props.values) : value
 const link = (block: MarketingBlock) => safeMarketingLink(text(block.url || ''))
 const justify = (block: MarketingBlock) => ({ left: 'flex-start', center: 'center', right: 'flex-end', justify: 'space-between' }[block.style?.textAlign || 'center'])
 </script>
