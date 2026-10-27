@@ -17,6 +17,7 @@ interface Props {
   iconSize?: string | number
   isActiveStepValid?: boolean
   align?: 'start' | 'center' | 'end' | 'default'
+  layout?: 'default' | 'centered'
 }
 
 interface Emit {
@@ -29,6 +30,7 @@ const props = withDefaults(defineProps<Props>(), {
   iconSize: 52,
   isActiveStepValid: undefined,
   align: 'default',
+  layout: 'default',
 })
 
 const emit = defineEmits<Emit>()
@@ -72,7 +74,7 @@ watchEffect(() => {
     class="app-stepper"
     show-arrows
     :direction="props.direction"
-    :class="`app-stepper-${props.align} ${props.items[0].icon ? 'app-stepper-icons' : ''}`"
+    :class="[`app-stepper-${props.align} ${props.items[0].icon ? 'app-stepper-icons' : ''}`, { 'app-stepper-centered': props.layout === 'centered' }]"
   >
     <VSlideGroupItem
       v-for="(item, index) in props.items"
@@ -80,6 +82,18 @@ watchEffect(() => {
       :value="index"
     >
       <div
+        v-if="props.layout === 'centered'"
+        class="app-stepper-centered-step"
+        :class="activeOrCompletedStepsClasses(index)"
+        :aria-current="index === currentStep ? 'step' : undefined"
+      >
+        <component :is="stepperCheck" v-if="index < currentStep" class="stepper-step-icon" aria-hidden="true" />
+        <span v-else class="stepper-step-indicator" aria-hidden="true" />
+        <span class="text-body-1 font-weight-medium step-centered-title">{{ item.title }}</span>
+        <span v-if="isHorizontalAndNotLastStep(index)" class="step-centered-connector" aria-hidden="true" />
+      </div>
+      <div
+        v-else
         class="cursor-pointer app-stepper-step mx-1"
         :class="[
           (!props.isActiveStepValid && (isValidationEnabled)) && 'stepper-steps-invalid',
@@ -209,6 +223,46 @@ watchEffect(() => {
 
 /* stylelint-disable no-descending-specificity */
 .app-stepper {
+  &.app-stepper-centered {
+    .v-slide-group__content { inline-size: 100%; }
+
+    .app-stepper-centered-step {
+      position: relative;
+      display: flex;
+      flex: 1 0 100px;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding-inline: 8px;
+    }
+
+    .stepper-step-indicator,
+    .stepper-step-icon {
+      flex: 0 0 auto;
+      block-size: 20px;
+      inline-size: 20px;
+    }
+
+    .stepper-step-icon { color: rgb(var(--v-theme-primary)); }
+    .app-stepper-centered-step:not(.stepper-steps-active) .stepper-step-indicator {
+      border-color: rgba(var(--v-theme-primary), 0.16);
+      opacity: 1;
+    }
+    .step-centered-title { color: rgba(var(--v-theme-on-surface), var(--v-high-emphasis-opacity)); text-align: center; }
+
+    .step-centered-connector {
+      position: absolute;
+      inset-block-start: 9px;
+      inset-inline-start: calc(50% + 18px);
+      inline-size: calc(100% - 36px);
+      block-size: 3px;
+      border-radius: 20px;
+      background: rgba(var(--v-theme-primary), 0.16);
+    }
+
+    .stepper-steps-completed .step-centered-connector { background: rgb(var(--v-theme-primary)); }
+  }
+
   &.app-stepper-default:not(.app-stepper-icons) .app-stepper-step:not(:last-child) {
     inline-size: 100%;
   }

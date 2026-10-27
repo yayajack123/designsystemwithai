@@ -3,12 +3,13 @@
   "version": "1.1.0",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@10.34.7",
   "scripts": {
     "dev": "nuxt dev",
     "build": "node --max-old-space-size=4096 node_modules/nuxt/bin/nuxt.mjs build",
     "lint": "eslint . -c .eslintrc.cjs --fix --ext .ts,.js,.cjs,.vue,.tsx,.jsx",
     "build:icons": "tsx plugins/iconify/build-icons.ts",
-    "postinstall": "nuxt prepare && npm run build:icons ",
+    "postinstall": "nuxt prepare && tsx plugins/iconify/build-icons.ts",
     "generate": "nuxt generate"
   },
   "dependencies": {
@@ -17,6 +18,7 @@
     "@floating-ui/dom": "1.6.7",
     "@formkit/drag-and-drop": "0.1.6",
     "@iconify-json/bxl": "1.1.10",
+    "@intlify/shared": "10.0.8",
     "@kgierke/nuxt-basic-auth": "^1.7.0",
     "@lordicon/element": "^2.3.1",
     "@lottiefiles/dotlottie-vue": "^0.11.27",
@@ -36,6 +38,7 @@
     "chart.js": "4.4.3",
     "cookie-es": "1.2.1",
     "eslint-plugin-regexp": "2.6.0",
+    "flatpickr": "4.6.13",
     "jwt-decode": "4.0.0",
     "mapbox-gl": "3.5.1",
     "next-auth": "4.21.1",
@@ -116,17 +119,5 @@
     "vite-svg-loader": "5.1.0",
     "vue": "^3.5.13",
     "vue-shepherd": "3.0.0"
-  },
-  "resolutions": {
-    "postcss": "^8",
-    "@tiptap/core": "^2",
-    "sass": "1.76.0",
-    "vue": "^3.5.13"
-  },
-  "overrides": {
-    "postcss": "^8",
-    "@tiptap/core": "^2",
-    "sass": "1.76.0",
-    "vue": "^3.5.13"
   }
 }

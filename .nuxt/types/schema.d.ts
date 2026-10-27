@@ -28,6 +28,14 @@ import { NuxtModule, ModuleDependencyMeta } from '@nuxt/schema'
    },
   }
   interface SharedPublicRuntimeConfig {
+   appName: string,
+
+   appLogo: string,
+
+   appFavicon: string,
+
+   brandPrimary: string,
+
    appEnv: string,
 
    appBaseUrl: string,

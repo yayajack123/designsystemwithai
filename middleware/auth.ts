@@ -1,7 +1,8 @@
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '~/stores/auth'
 
-export default defineNuxtRouteMiddleware(() => {
+export default defineNuxtRouteMiddleware(to => {
+  if (to.meta.public) return
   const config = useRuntimeConfig()
 
   if (!config.public.authEnabled)

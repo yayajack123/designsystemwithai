@@ -8,7 +8,10 @@ export interface MeetingLesson {
 }
 
 export interface MeetingJournal {
-  status: 'Draft' | 'Sent'
+  status: 'Draft' | 'Sending' | 'Sent' | 'Failed' | 'Sent (Manual)'
+  mediaMode?: 'photo' | 'video'
+  video?: { name: string; url: string; size: number }
+  publicUrl?: string
   updatedAt: string
   sentAt?: string
   projectName?: string

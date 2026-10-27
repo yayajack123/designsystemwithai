@@ -62,14 +62,14 @@ Set deployment environment values before building the application. Do not put pa
 Install dependencies and run the project:
 
 ```sh
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 Build for production:
 
 ```sh
-npm run build
+pnpm build
 ```
 
 The development Basic Auth defaults are `admin` / `change-me`. Set `BASIC_AUTH_USERNAME` and `BASIC_AUTH_PASSWORD` in `.env` to change them. Replace these values for local teams as needed; Basic Auth is not enabled when `APP_ENV` is not `development`.

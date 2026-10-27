@@ -79,6 +79,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    'daily-journal-id': RouteRecordInfo<
+      'daily-journal-id',
+      '/daily-journal/:id()',
+      { id: ParamValue<true> },
+      { id: ParamValue<false> },
+      | never
+    >,
     'dashboard-teacher': RouteRecordInfo<
       'dashboard-teacher',
       '/dashboard-teacher',
@@ -105,6 +112,34 @@ declare module 'vue-router/auto-routes' {
       '/login',
       Record<never, never>,
       Record<never, never>,
+      | never
+    >,
+    'marketing-rule-tester': RouteRecordInfo<
+      'marketing-rule-tester',
+      '/marketing/rule-tester',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    'marketing-templates': RouteRecordInfo<
+      'marketing-templates',
+      '/marketing/templates',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    'marketing-templates-new': RouteRecordInfo<
+      'marketing-templates-new',
+      '/marketing/templates/new',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    'meeting-journal-journalId': RouteRecordInfo<
+      'meeting-journal-journalId',
+      '/meeting-journal/:journalId()',
+      { journalId: ParamValue<true> },
+      { journalId: ParamValue<false> },
       | never
     >,
     'meeting-journal-create': RouteRecordInfo<
@@ -266,6 +301,12 @@ declare module 'vue-router/auto-routes' {
       views:
         | never
     }
+    'pages/daily-journal/[id].vue': {
+      routes:
+        | 'daily-journal-id'
+      views:
+        | never
+    }
     'pages/dashboard-teacher.vue': {
       routes:
         | 'dashboard-teacher'
@@ -287,6 +328,30 @@ declare module 'vue-router/auto-routes' {
     'pages/login.vue': {
       routes:
         | 'login'
+      views:
+        | never
+    }
+    'pages/marketing/rule-tester.vue': {
+      routes:
+        | 'marketing-rule-tester'
+      views:
+        | never
+    }
+    'pages/marketing/templates/index.vue': {
+      routes:
+        | 'marketing-templates'
+      views:
+        | never
+    }
+    'pages/marketing/templates/new.vue': {
+      routes:
+        | 'marketing-templates-new'
+      views:
+        | never
+    }
+    'pages/meeting-journal/[journalId].vue': {
+      routes:
+        | 'meeting-journal-journalId'
       views:
         | never
     }

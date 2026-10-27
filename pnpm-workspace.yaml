@@ -1,0 +1,8 @@
+packages:
+  - .
+
+overrides:
+  postcss: ^8
+  '@tiptap/core': ^2
+  sass: 1.76.0
+  vue: ^3.5.13

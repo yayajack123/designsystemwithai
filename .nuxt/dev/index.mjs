@@ -1,44 +1,44 @@
 import process from 'node:process';globalThis._importMeta_={url:import.meta.url,env:process.env};import { tmpdir } from 'node:os';
-import { defineEventHandler, handleCacheHeaders, splitCookiesString, createEvent, fetchWithEvent, isEvent, eventHandler, setHeaders, createError, sendRedirect, proxyRequest, getRequestHeader, setResponseHeaders, setResponseStatus, send, getRequestHeaders, setResponseHeader, appendResponseHeader, getRequestURL, getResponseHeader, removeResponseHeader, getResponseStatus, getQuery as getQuery$1, readBody, createApp, createRouter as createRouter$1, toNodeListener, lazyEventHandler, getRouterParam, getResponseStatusText } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/h3/dist/index.mjs';
+import { defineEventHandler, handleCacheHeaders, splitCookiesString, createEvent, fetchWithEvent, isEvent, eventHandler, setHeaders, createError, sendRedirect, proxyRequest, getRequestHeader, setResponseHeaders, setResponseStatus, send, getRequestHeaders, setResponseHeader, appendResponseHeader, getRequestURL, getResponseHeader, removeResponseHeader, getResponseStatus, getQuery as getQuery$1, readBody, createApp, createRouter as createRouter$1, toNodeListener, lazyEventHandler, getRouterParam, getResponseStatusText } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/.pnpm/h3@1.15.11/node_modules/h3/dist/index.mjs';
 import { Server } from 'node:http';
 import { resolve, join, dirname } from 'node:path';
 import crypto$1 from 'node:crypto';
 import { parentPort, threadId } from 'node:worker_threads';
-import { escapeHtml } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/@nuxt/nitro-server/node_modules/@vue/shared/dist/shared.cjs.js';
-import viteNodeEntry_mjs from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/@nuxt/vite-builder/dist/vite-node-entry.mjs';
-import { viteNodeFetch } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/@nuxt/vite-builder/dist/vite-node.mjs';
-import { createRenderer, getRequestDependencies, getPreloadLinks, getPrefetchLinks } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/vue-bundle-renderer/dist/runtime.mjs';
-import { renderToString } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/vue/server-renderer/index.mjs';
-import destr, { destr as destr$1 } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/destr/dist/index.mjs';
-import { createHooks } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/hookable/dist/index.mjs';
-import { createFetch, Headers as Headers$1 } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/nitropack/node_modules/ofetch/dist/node.mjs';
-import { fetchNodeRequestHandler, callNodeRequestHandler } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/node-mock-http/dist/index.mjs';
-import { createStorage, prefixStorage } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/unstorage/dist/index.mjs';
-import unstorage_47drivers_47fs from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/unstorage/drivers/fs.mjs';
+import { escapeHtml } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/.pnpm/@vue+shared@3.5.42/node_modules/@vue/shared/dist/shared.cjs.js';
+import viteNodeEntry_mjs from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/.pnpm/@nuxt+vite-builder@3.21.9_@types+node@20.14.12_eslint@8.57.0_magicast@0.5.3_meow@13.2.0_b41a5b2dca3944e2586b459a486463bf/node_modules/@nuxt/vite-builder/dist/vite-node-entry.mjs';
+import { viteNodeFetch } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/.pnpm/@nuxt+vite-builder@3.21.9_@types+node@20.14.12_eslint@8.57.0_magicast@0.5.3_meow@13.2.0_b41a5b2dca3944e2586b459a486463bf/node_modules/@nuxt/vite-builder/dist/vite-node.mjs';
+import { createRenderer, getRequestDependencies, getPreloadLinks, getPrefetchLinks } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/.pnpm/vue-bundle-renderer@2.3.1/node_modules/vue-bundle-renderer/dist/runtime.mjs';
+import { renderToString } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/.pnpm/vue@3.5.13_typescript@5.5.4/node_modules/vue/server-renderer/index.mjs';
+import destr, { destr as destr$1 } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/.pnpm/destr@2.0.5/node_modules/destr/dist/index.mjs';
+import { createHooks } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/.pnpm/hookable@5.5.3/node_modules/hookable/dist/index.mjs';
+import { createFetch, Headers as Headers$1 } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/.pnpm/ofetch@1.5.1/node_modules/ofetch/dist/node.mjs';
+import { fetchNodeRequestHandler, callNodeRequestHandler } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/.pnpm/node-mock-http@1.0.4/node_modules/node-mock-http/dist/index.mjs';
+import { createStorage, prefixStorage } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/.pnpm/unstorage@1.17.5_db0@0.3.4_ioredis@5.11.1/node_modules/unstorage/dist/index.mjs';
+import unstorage_47drivers_47fs from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/.pnpm/unstorage@1.17.5_db0@0.3.4_ioredis@5.11.1/node_modules/unstorage/drivers/fs.mjs';
 import { mkdir, writeFile, rename, unlink, readFile } from 'node:fs/promises';
-import fsDriver from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/unstorage/drivers/fs-lite.mjs';
-import lruCache from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/unstorage/drivers/lru-cache.mjs';
-import { digest, hash as hash$1 } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/ohash/dist/index.mjs';
-import { klona } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/klona/dist/index.mjs';
-import defu, { defuFn } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/defu/dist/defu.mjs';
-import { snakeCase } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/scule/dist/index.mjs';
-import { getContext } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/unctx/dist/index.mjs';
-import { toRouteMatcher, createRouter } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/radix3/dist/index.mjs';
-import consola, { consola as consola$1 } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/consola/dist/index.mjs';
-import { ErrorParser } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/youch-core/build/index.js';
-import { Youch } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/youch/build/index.js';
-import { SourceMapConsumer } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/nitropack/node_modules/source-map/source-map.js';
+import fsDriver from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/.pnpm/unstorage@1.17.5_db0@0.3.4_ioredis@5.11.1/node_modules/unstorage/drivers/fs-lite.mjs';
+import lruCache from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/.pnpm/unstorage@1.17.5_db0@0.3.4_ioredis@5.11.1/node_modules/unstorage/drivers/lru-cache.mjs';
+import { digest, hash as hash$1 } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/.pnpm/ohash@2.0.11/node_modules/ohash/dist/index.mjs';
+import { klona } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/.pnpm/klona@2.0.6/node_modules/klona/dist/index.mjs';
+import defu, { defuFn } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/.pnpm/defu@6.1.7/node_modules/defu/dist/defu.mjs';
+import { snakeCase } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/.pnpm/scule@1.3.0/node_modules/scule/dist/index.mjs';
+import { getContext } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/.pnpm/unctx@2.5.0/node_modules/unctx/dist/index.mjs';
+import { toRouteMatcher, createRouter } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/.pnpm/radix3@1.1.2/node_modules/radix3/dist/index.mjs';
+import consola, { consola as consola$1 } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/.pnpm/consola@3.4.2/node_modules/consola/dist/index.mjs';
+import { ErrorParser } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/.pnpm/youch-core@0.3.3/node_modules/youch-core/build/index.js';
+import { Youch } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/.pnpm/youch@4.1.1/node_modules/youch/build/index.js';
+import { SourceMapConsumer } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/.pnpm/source-map@0.7.6/node_modules/source-map/source-map.js';
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { stringify, uneval } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/devalue/index.js';
-import { captureRawStackTrace, parseRawStackTrace } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/errx/dist/index.js';
-import { isVNode, isRef, toValue } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/vue/index.mjs';
-import _wH6JrtIxmaSoA8lCPWFnE9z4lQeXW6H5z3l5aymEQw from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/@nuxt/vite-builder/dist/fix-stacktrace.mjs';
+import { stringify, uneval } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/.pnpm/devalue@5.8.2/node_modules/devalue/index.js';
+import { captureRawStackTrace, parseRawStackTrace } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/.pnpm/errx@0.1.0/node_modules/errx/dist/index.js';
+import { isVNode, isRef, toValue } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/.pnpm/vue@3.5.13_typescript@5.5.4/node_modules/vue/index.mjs';
+import _wH6JrtIxmaSoA8lCPWFnE9z4lQeXW6H5z3l5aymEQw from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/.pnpm/@nuxt+vite-builder@3.21.9_@types+node@20.14.12_eslint@8.57.0_magicast@0.5.3_meow@13.2.0_b41a5b2dca3944e2586b459a486463bf/node_modules/@nuxt/vite-builder/dist/fix-stacktrace.mjs';
 import { promises } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { dirname as dirname$1, resolve as resolve$1 } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/pathe/dist/index.mjs';
-import { createHead as createHead$1, propsToString, renderSSRHead } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/unhead/dist/server.mjs';
-import { DeprecationsPlugin, PromisesPlugin, TemplateParamsPlugin, AliasSortingPlugin } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/unhead/dist/plugins.mjs';
-import { walkResolver } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/unhead/dist/utils.mjs';
+import { dirname as dirname$1, resolve as resolve$1 } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/.pnpm/pathe@2.0.3/node_modules/pathe/dist/index.mjs';
+import { createHead as createHead$1, propsToString, renderSSRHead } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/.pnpm/unhead@2.1.16/node_modules/unhead/dist/server.mjs';
+import { DeprecationsPlugin, PromisesPlugin, TemplateParamsPlugin, AliasSortingPlugin } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/.pnpm/unhead@2.1.16/node_modules/unhead/dist/plugins.mjs';
+import { walkResolver } from 'file:///Users/user/Documents/Code%20Project/microdemy-DS/node_modules/.pnpm/unhead@2.1.16/node_modules/unhead/dist/utils.mjs';
 
 const HASH_RE = /#/g;
 const AMPERSAND_RE = /&/g;
@@ -962,7 +962,11 @@ const _inlineRuntimeConfig = {
     }
   },
   "public": {
-    "appEnv": "production",
+    "appName": "Admin Starter",
+    "appLogo": "",
+    "appFavicon": "/favicon.ico",
+    "brandPrimary": "#10AF13",
+    "appEnv": "development",
     "appBaseUrl": "http://localhost:3000",
     "apiBaseUrl": "https://be-example.timedoor-web.my.id/api/admin/v1",
     "sanctumBaseUrl": "https://be-example.timedoor-web.my.id/sanctum",
@@ -1009,11 +1013,11 @@ const _inlineRuntimeConfig = {
     }
   },
   "basicAuth": {
-    "enabled": false,
+    "enabled": true,
     "users": [
       {
-        "username": "timedoor",
-        "password": "timedoor"
+        "username": "admin",
+        "password": "change-me"
       }
     ],
     "usersDelimiter": ",",
@@ -2420,7 +2424,7 @@ if (!window.__NUXT_DEVTOOLS_TIME_METRIC__) {
 window.__NUXT_DEVTOOLS_TIME_METRIC__.appInit = Date.now()
 `;
 
-const _jLEdeSvAImDr3EBxLHe6Rev9lOvTXcl3BixSdSLTz8 = (function(nitro) {
+const _8ZhySOIfXNQTaff_3SZKM0wCgNJftuRYYbkVFU3_8lc = (function(nitro) {
   nitro.hooks.hook("render:html", (htmlContext) => {
     htmlContext.head.push(`<script>${script}<\/script>`);
   });
@@ -2428,7 +2432,7 @@ const _jLEdeSvAImDr3EBxLHe6Rev9lOvTXcl3BixSdSLTz8 = (function(nitro) {
 
 const rootDir = "/Users/user/Documents/Code Project/microdemy-DS";
 
-const appHead = {"meta":[{"name":"viewport","content":"width=device-width, initial-scale=1"},{"charset":"utf-8"}],"link":[{"rel":"icon","type":"image/x-icon","href":"http://localhost:3000/favicon.ico"}],"style":[],"script":[],"noscript":[],"titleTemplate":"%s - Timedoor Admin","title":"Client App"};
+const appHead = {"meta":[{"name":"viewport","content":"width=device-width, initial-scale=1"},{"charset":"utf-8"}],"link":[],"style":[],"script":[],"noscript":[],"titleTemplate":"%s"};
 
 const appRootTag = "div";
 
@@ -2452,7 +2456,7 @@ const asyncContext = getContext("nuxt-dev", {
 	asyncContext: true,
 	AsyncLocalStorage
 });
-const _OtGQFEi8nUATJqM2y7IwZ41qVinvF1SLi9C4Akx3XU = (nitroApp) => {
+const _WxTg4XCKRUuY_P5Sg8qlaSTtSsiSZvtoKY42Qj0mww = (nitroApp) => {
 	const handler = nitroApp.h3App.handler;
 	nitroApp.h3App.handler = (event) => {
 		return asyncContext.callAsync({
@@ -2538,8 +2542,8 @@ const _X49YaCa0aTeCS4IBhPAckU5NYczRQlb5h7c7ArGdtNw = defineNitroPlugin((nitroApp
 });
 
 const plugins = [
-  _jLEdeSvAImDr3EBxLHe6Rev9lOvTXcl3BixSdSLTz8,
-_OtGQFEi8nUATJqM2y7IwZ41qVinvF1SLi9C4Akx3XU,
+  _8ZhySOIfXNQTaff_3SZKM0wCgNJftuRYYbkVFU3_8lc,
+_WxTg4XCKRUuY_P5Sg8qlaSTtSsiSZvtoKY42Qj0mww,
 _X49YaCa0aTeCS4IBhPAckU5NYczRQlb5h7c7ArGdtNw,
 _wH6JrtIxmaSoA8lCPWFnE9z4lQeXW6H5z3l5aymEQw
 ];
@@ -2569,7 +2573,7 @@ function getAsset (id) {
 
 const METHODS = /* @__PURE__ */ new Set(["HEAD", "GET"]);
 const EncodingMap = { gzip: ".gz", br: ".br" };
-const _B8vaDW = eventHandler((event) => {
+const _59vbzA = eventHandler((event) => {
   if (event.method && !METHODS.has(event.method)) {
     return;
   }
@@ -2723,7 +2727,7 @@ function publicAssetsURL(...path) {
 	return path.length ? joinRelativeURL(publicBase, ...path) : publicBase;
 }
 
-const _eg1C8z = defineEventHandler((event) => {
+const _Okrmaj = defineEventHandler((event) => {
   const config = useRuntimeConfig().basicAuth;
   if (event.node.req.headers?.["x-nitro-prerender"] && "development" === "prerender") ;
   if (!config.enabled || typeof config.enabled === "string" && config.enabled !== "true" || !config.users?.length || config.allowedRoutes?.some((route) => {
@@ -3177,15 +3181,15 @@ async function getIslandContext(event) {
 }
 
 const _lazy_4cGkqH = () => Promise.resolve().then(function () { return _____$1; });
-const _lazy_080Vu0 = () => Promise.resolve().then(function () { return renderer; });
+const _lazy_9A5Tp7 = () => Promise.resolve().then(function () { return renderer; });
 
 const handlers = [
-  { route: '', handler: _B8vaDW, lazy: false, middleware: true, method: undefined },
+  { route: '', handler: _59vbzA, lazy: false, middleware: true, method: undefined },
   { route: '/api/**', handler: _lazy_4cGkqH, lazy: true, middleware: false, method: undefined },
-  { route: '/__nuxt_error', handler: _lazy_080Vu0, lazy: true, middleware: false, method: undefined },
-  { route: '', handler: _eg1C8z, lazy: false, middleware: true, method: undefined },
+  { route: '/__nuxt_error', handler: _lazy_9A5Tp7, lazy: true, middleware: false, method: undefined },
+  { route: '', handler: _Okrmaj, lazy: false, middleware: true, method: undefined },
   { route: '/__nuxt_island/**', handler: handler$1, lazy: false, middleware: false, method: undefined },
-  { route: '/**', handler: _lazy_080Vu0, lazy: true, middleware: false, method: undefined }
+  { route: '/**', handler: _lazy_9A5Tp7, lazy: true, middleware: false, method: undefined }
 ];
 
 function createNitroApp() {

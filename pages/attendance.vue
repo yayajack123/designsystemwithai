@@ -835,7 +835,7 @@ const changeAllPresence = (cls: ClassSession) => {
               <VBtn
                 v-if="cls.status === 'Active' || cls.status === 'Waiting Approval'"
                 color="primary"
-                class="text-capitalize"
+                class="text-capitalize text-white"
                 rounded="xl"
                 @click="startClass(cls)"
               >
@@ -846,7 +846,7 @@ const changeAllPresence = (cls: ClassSession) => {
               <VBtn
                 v-else-if="cls.status === 'Ongoing'"
                 color="primary"
-                class="text-capitalize"
+                class="text-capitalize text-white"
                 rounded="xl"
                 @click="finishClass(cls)"
               >
@@ -880,7 +880,7 @@ const changeAllPresence = (cls: ClassSession) => {
               <VBtn
                 v-if="cls.status === 'Active' || cls.status === 'Waiting Approval'"
                 color="primary"
-                class="text-capitalize flex-grow-1"
+                class="text-capitalize text-white flex-grow-1"
                 rounded="xl"
                 @click="startClass(cls)"
               >
@@ -890,7 +890,7 @@ const changeAllPresence = (cls: ClassSession) => {
               <VBtn
                 v-else-if="cls.status === 'Ongoing'"
                 color="primary"
-                class="text-capitalize flex-grow-1"
+                class="text-capitalize text-white flex-grow-1"
                 rounded="xl"
                 @click="finishClass(cls)"
               >

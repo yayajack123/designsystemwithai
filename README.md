@@ -13,8 +13,8 @@ The current Timedoor Academy logo in `assets/images/logo.svg` remains the defaul
 Install dependencies and start development server:
 
 ```sh
-yarn install
-yarn dev
+pnpm install
+pnpm dev
 ```
 
 Nuxt public runtime values can be changed per deployment without editing application components. Keep secrets and private API credentials out of `NUXT_PUBLIC_*` variables.
@@ -26,5 +26,5 @@ Set `AUTH_ENABLED=true` when the connected API supports authentication. Configur
 ## Production build
 
 ```sh
-yarn build
+pnpm build
 ```

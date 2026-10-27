@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { avatarText } from '@core/utils/formatters'
+import { useDailyJournalDemo, journalPublicPath } from '@/composables/useDailyJournalDemo'
 
 definePageMeta({
   sidebarRoute: 'reports',
 })
 
 type ReportsTab = 'daily-journal' | 'reports' | 'ptm'
-type JournalStatus = 'Not Created' | 'Pending' | 'Mixed'
+type JournalStatus = 'Not Created' | 'Pending' | 'Mixed' | 'Sending' | 'Sent' | 'Failed' | 'Sent (Manual)'
 type LessonJournalStatus = Exclude<JournalStatus, 'Mixed'>
 type ReportStatus = 'Not Created' | 'Waiting for Daily Journal' | 'Created'
 type PtmStatus = 'Pending' | 'Confirmed'
@@ -69,7 +70,7 @@ const groupDailyJournalRows = (records: ReportRow[]): ReportRow[] => {
         : record.lessonName
           ? [record.lessonName]
           : []
-      const status: LessonJournalStatus = record.status === 'Pending' ? 'Pending' : 'Not Created'
+      const status = record.status as LessonJournalStatus
 
       return names.map(name => ({ name, date: record.date, status }))
     })
@@ -143,7 +144,29 @@ const dailyJournalRecords: ReportRow[] = [
   { id: 'dj-16', studentName: 'Daffa Diandi Althaf', studentId: 'STD-20260119-001', bookSession: 'Web Developer', lessonName: 'Lesson 8 – Responsive Layout', lessonNames: ['Lesson 8 – Responsive Layout', 'Lesson 9 – CSS Grid', 'Lesson 10 – Web Accessibility', 'Lesson 11 – Final Project'], date: '2026-04-12', status: 'Not Created' },
 ]
 
-const dailyJournalData = ref<ReportRow[]>(groupDailyJournalRows(dailyJournalRecords))
+const demo = useDailyJournalDemo()
+onMounted(demo.restore)
+const journalRoute = (item: ReportRow, step = '1') => ({ path: '/meeting-journal/create', query: { returnTo: 'reports', journalId: item.id, studentName: item.studentName, studentCode: item.studentId, bookTitle: item.bookSession, className: item.className, journalDate: item.date, lessons: JSON.stringify(item.lessonNames || (item.lessonName ? [item.lessonName] : [])), step } })
+const journalViewRoute = (item: ReportRow) => item.status === 'Failed'
+  ? journalRoute(item, '2')
+  : { path: `/meeting-journal/${encodeURIComponent(item.id)}` }
+const dailyJournalData = computed<ReportRow[]>(() => {
+  const rows = groupDailyJournalRows(dailyJournalRecords)
+  Object.values(demo.records.value).forEach(record => {
+    const existing = rows.findIndex(row => row.id === record.id)
+    const status = record.journal.status === 'Draft' ? 'Pending' : record.journal.status
+    const row: ReportRow = {
+      id: record.id, studentName: record.studentName, studentId: record.studentCode,
+      bookSession: record.bookTitle, className: record.className,
+      date: record.startsAt.slice(0, 10), status,
+      lessonDetails: record.lessons.map(lesson => ({ name: lesson.title, date: record.startsAt.slice(0, 10), status })),
+      lessonNames: record.lessons.map(lesson => lesson.title),
+    }
+    if (existing >= 0) rows.splice(existing, 1, row)
+    else rows.push(row)
+  })
+  return rows
+})
 
 const reportsData = ref<ReportRow[]>([
   { id: 'report-1', studentName: 'Putu Pradhira Armananda', studentId: 'STD-20260109-002', bookSession: 'Roblox Studio', lessons: 'Lessons 1–8', dailyJournalsDone: 8, dailyJournalsTotal: 8, status: 'Created' },
@@ -163,7 +186,7 @@ const ptmData = ref<ReportRow[]>([
   { id: 'ptm-4', studentName: 'Velcan Kido Andika', studentId: 'STD-20260109-005', bookSession: 'Python Game Dev', className: 'DPS-Adaptive-2A', reportsDone: 1, reportsTotal: 2, status: 'Pending' },
 ])
 
-const dailyJournalCount = computed(() => dailyJournalData.value.length)
+const dailyJournalCount = computed(() => dailyJournalData.value.filter(row => !['Sent', 'Sent (Manual)'].includes(row.status)).length)
 const reportsCount = computed(() => reportsData.value.length)
 const ptmCount = computed(() => ptmData.value.length)
 
@@ -177,7 +200,7 @@ const currentData = computed(() => {
   if (activeTab.value === 'reports') return reportsData.value
   if (activeTab.value === 'ptm') return ptmData.value
 
-  return dailyJournalData.value
+  return dailyJournalData.value.filter(row => selectedStatus.value !== 'All Status' || !['Sent', 'Sent (Manual)'].includes(row.status))
 })
 
 const tableHeaders = computed(() => {
@@ -237,7 +260,7 @@ const currentStatusOptions = computed(() => {
   if (activeTab.value === 'reports') return reportStatusOptions.value.slice(1)
   if (activeTab.value === 'ptm') return ['Pending', 'Confirmed']
 
-  return ['Not Created', 'Pending']
+  return ['Not Created', 'Pending', 'Sending', 'Sent', 'Failed', 'Sent (Manual)']
 })
 
 const filteredData = computed(() => {
@@ -258,7 +281,7 @@ const filteredData = computed(() => {
     const matchesClass = selectedClass.value === 'All Classes'
       || item.className === selectedClass.value
       || Boolean(item.classNames?.includes(selectedClass.value))
-    const matchesStatus = activeTab.value !== 'reports' || selectedStatus.value === 'All Status' || item.status === selectedStatus.value
+    const matchesStatus = selectedStatus.value === 'All Status' || item.status === selectedStatus.value
 
     return matchesSearch && matchesClass && matchesStatus
   })
@@ -354,6 +377,9 @@ const formatDateRange = (item: ReportRow) => {
 }
 
 const statusColor = (status: RowStatus) => {
+  if (status === 'Failed') return 'error'
+  if (status === 'Sending') return 'info'
+  if (status === 'Sent' || status === 'Sent (Manual)') return 'success'
   if (status === 'Pending' || status === 'Mixed' || status === 'Waiting for Daily Journal') return 'warning'
   if (status === 'Created' || status === 'Confirmed') return 'success'
 
@@ -403,7 +429,14 @@ const showDailyJournalLessons = (item: ReportRow) => {
 }
 
 const sendDailyJournal = (item: ReportRow) => {
-  showToast('Send action is a prototype only for ' + item.studentName + '.')
+  navigateTo(journalRoute(item, '2'))
+}
+const copyJournalLink = async (item: ReportRow) => {
+  try {
+    await navigator.clipboard.writeText(`${window.location.origin}${journalPublicPath(item.id)}`)
+    showToast('Link disalin')
+  }
+  catch { showToast('Gagal menyalin link. Periksa izin clipboard.') }
 }
 
 const viewReportDetails = (item: ReportRow) => {
@@ -534,7 +567,7 @@ onBeforeUnmount(() => {
             variant="outlined"
           />
           <VSelect
-            v-if="activeTab === 'reports'"
+            v-if="activeTab !== 'ptm'"
             v-model="selectedStatus"
             class="report-filter-field"
             label="Status"
@@ -737,6 +770,8 @@ onBeforeUnmount(() => {
                   <VDivider vertical class="daily-journal-item-divider" />
 
                   <div class="report-actions daily-journal-item-actions">
+                    <VBtn v-if="demo.records.value[journal.id]" variant="text" size="small" @click="copyJournalLink(journal)">Copy Link</VBtn>
+                    <VBtn v-if="['Sending', 'Sent', 'Sent (Manual)', 'Failed'].includes(journal.status)" variant="outlined" size="small" :to="journalViewRoute(journal)">{{ journal.status === 'Failed' ? 'Retry' : 'View' }}</VBtn>
                     <template v-if="hasJournalStatus(journal, 'Not Created')">
                       <VBtn
                         color="primary"
@@ -745,7 +780,7 @@ onBeforeUnmount(() => {
                         size="small"
                         prepend-icon="ri-pencil-line"
                         :aria-label="`Create journal for ${journal.studentName}`"
-                        :to="{ path: '/meeting-journal/create', query: { returnTo: 'reports' } }"
+                        :to="journalRoute(journal)"
                       >
                         Create
                       </VBtn>
@@ -769,7 +804,7 @@ onBeforeUnmount(() => {
                         size="small"
                         prepend-icon="ri-edit-box-line"
                         :aria-label="`Edit journal for ${journal.studentName}`"
-                        :to="{ path: '/meeting-journal/create', query: { returnTo: 'reports' } }"
+                        :to="journalRoute(journal)"
                       >
                         Edit
                       </VBtn>
@@ -910,6 +945,8 @@ onBeforeUnmount(() => {
 
         <template #item.action="{ item }">
           <div v-if="activeTab === 'daily-journal'" class="report-actions">
+            <VBtn v-if="demo.records.value[item.id]" variant="text" size="small" @click="copyJournalLink(item)">Copy Link</VBtn>
+            <VBtn v-if="['Sending', 'Sent', 'Sent (Manual)', 'Failed'].includes(item.status)" variant="outlined" size="small" :to="journalViewRoute(item)">{{ item.status === 'Failed' ? 'Retry' : 'View' }}</VBtn>
             <template v-if="hasJournalStatus(item, 'Not Created')">
               <VTooltip text="Create" location="top">
                 <template #activator="{ props }">
@@ -921,7 +958,7 @@ onBeforeUnmount(() => {
                     size="small"
                     class="action-btn"
                     :aria-label="`Create journal for ${item.studentName}`"
-                    :to="{ path: '/meeting-journal/create', query: { returnTo: 'reports' } }"
+                    :to="journalRoute(item)"
                   />
                 </template>
               </VTooltip>
@@ -937,7 +974,7 @@ onBeforeUnmount(() => {
                     size="small"
                     class="action-btn"
                     :aria-label="`Edit journal for ${item.studentName}`"
-                    :to="{ path: '/meeting-journal/create', query: { returnTo: 'reports' } }"
+                    :to="journalRoute(item)"
                   />
                 </template>
               </VTooltip>

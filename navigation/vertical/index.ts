@@ -28,6 +28,11 @@ export const mainNavItems = [
     icon: { icon: 'ri-file-text-line' },
   },
   {
+    title: 'Marketing',
+    to: { name: 'marketing-templates' },
+    icon: { icon: 'ri-megaphone-line' },
+  },
+  {
     heading: 'RECORDS',
   },
   {

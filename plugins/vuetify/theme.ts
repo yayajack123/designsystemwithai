@@ -62,15 +62,6 @@ const mixHexColors = (color: string, target: string, amount: number) => {
   return `#${channels.join('')}`
 }
 
-const getReadableTextColor = (color: string) => {
-  const channels = normalizeHexColor(color).slice(1).match(/.{2}/g)!.map(channel => Number.parseInt(channel, 16) / 255)
-  const luminance = channels
-    .map(channel => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4)
-    .reduce((total, channel, index) => total + channel * [0.2126, 0.7152, 0.0722][index], 0)
-
-  return luminance > 0.179 ? '#2E263D' : '#FFFFFF'
-}
-
 export const getBrandThemeColors = (value: string) => {
   const primary = normalizeHexColor(value)
   const light = mixHexColors(primary, '#FFFFFF', 0.24)
@@ -78,7 +69,7 @@ export const getBrandThemeColors = (value: string) => {
 
   return {
     primary,
-    'on-primary': getReadableTextColor(primary),
+    'on-primary': '#FFFFFF',
     'primary-darken-1': dark,
     'primary-light': light,
     'primary-main': primary,

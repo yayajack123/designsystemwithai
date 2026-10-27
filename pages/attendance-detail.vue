@@ -6,26 +6,15 @@ import UiSectionHeader from '@/components/ui/UiSectionHeader.vue'
 import UiTableView from '@/components/ui/UiTableView.vue'
 import PresenceDialog from '@/components/dialogs/PresenceDialog.vue'
 import { findStudentByName } from '@/data/students'
+import { attendanceJournalId, attendanceJournalStudents, type AttendanceJournalStudent } from '@/data/attendanceJournalDemo'
+import { DEMO_SEND_LIMIT, journalPublicPath, useDailyJournalDemo } from '@/composables/useDailyJournalDemo'
 
 definePageMeta({
   sidebarRoute: 'attendance',
 })
 
 // ─────────────────────── Types ───────────────────────
-interface StudentDetail {
-  id: string
-  studentId: string
-  name: string
-  sessionText: string
-  bookTitle: string
-  bookStatus: 'Completed' | 'Idle' | 'Incomplete'
-  hasLaptop: boolean
-  presence: 'On time' | 'Late 5 minutes' | 'Absent'
-  notes: string
-  status: 'Sent' | 'Not send yet' | 'Revision' | '-'
-  actionText: string
-  actionIcon: string
-}
+type StudentDetail = Omit<AttendanceJournalStudent, 'studentType'> & { studentType?: AttendanceJournalStudent['studentType'] }
 
 interface TeacherDetail {
   id: string
@@ -69,13 +58,7 @@ const mockClasses = ref<ClassSession[]>([
     meetingType: 'Group Class',
     meetingNumber: 'Meeting 20',
     status: 'Active',
-    students: [
-      { id: 's1', studentId: 'STD-20260326-019', name: 'Cristofer Mango', sessionText: 'Session 6', bookTitle: 'Web Developer for Beginner', bookStatus: 'Completed', hasLaptop: true, presence: 'On time', notes: 'The Web Developer for Beginners class had a good attendance rate, with students engaging in discussions.', status: '-', actionText: 'Create Journal', actionIcon: 'ri-pencil-line' },
-      { id: 's2', studentId: 'STD-20260326-019', name: 'Richard Payne', sessionText: 'Session 6', bookTitle: 'Web Developer for Beginner', bookStatus: 'Idle', hasLaptop: true, presence: 'On time', notes: 'In the Android Developer for Beginners course, attendance was strong, with most students actively participating.', status: 'Sent', actionText: 'View', actionIcon: 'ri-eye-line' },
-      { id: 's3', studentId: 'STD-20260326-019', name: 'Mr. Justin Richardson', sessionText: 'Session 6', bookTitle: 'Web Developer for Beginner', bookStatus: 'Incomplete', hasLaptop: true, presence: 'Late 5 minutes', notes: 'This week in Coding Kids, attendance was perfect, with every student eager to learn.', status: 'Not send yet', actionText: 'Continue', actionIcon: 'ri-share-forward-2-line' },
-      { id: 's4', studentId: 'STD-20260326-019', name: 'Cristofer Mango', sessionText: 'Session 6', bookTitle: 'Web Developer for Beginner', bookStatus: 'Completed', hasLaptop: true, presence: 'On time', notes: 'The Coding Kids session saw a full turnout, showcasing great enthusiasm among the participants.', status: '-', actionText: 'Continue', actionIcon: 'ri-share-forward-2-line' },
-      { id: 's5', studentId: 'STD-20260326-019', name: 'Jennifer Summers', sessionText: 'Session 6', bookTitle: 'Web Developer for Beginner', bookStatus: 'Completed', hasLaptop: false, presence: 'Absent', notes: 'Attendance for the Coding Kids class was excellent this week, with all students present.', status: '-', actionText: 'Create Journal', actionIcon: 'ri-pencil-line' }
-    ],
+    students: attendanceJournalStudents,
   },
   {
     id: '2',
@@ -105,6 +88,15 @@ const mockClasses = ref<ClassSession[]>([
 const route = useRoute()
 const router = useRouter()
 const classId = computed(() => (route.query.id as string) || '1')
+const demo = useDailyJournalDemo()
+onMounted(demo.restore)
+const demoRecord = (item: StudentDetail) => demo.records.value[attendanceJournalId(classId.value, item.id)]
+const selectedBooksStudent = ref<StudentDetail | null>(null)
+const isBooksDialogOpen = ref(false)
+const showStudentBooks = (item: StudentDetail) => {
+  selectedBooksStudent.value = item
+  isBooksDialogOpen.value = true
+}
 const openStudentBooks = (name: string) => {
   const student = findStudentByName(name)
   if (student) router.push({ path: '/student-detail', query: { id: student.id, tab: 'books' } })
@@ -169,13 +161,13 @@ const teacherHeaders = computed(() => [
 ])
 
 const headers = computed(() => [
-  { title: 'STUDENT NAME', key: 'studentName', sortable: true },
-  { title: 'BOOK', key: 'book', sortable: true },
-  { title: 'ADDONS', key: 'addons', sortable: true, align: 'center' as const },
-  { title: 'PRESENCE', key: 'presence', sortable: true },
-  { title: 'NOTES', key: 'notes', sortable: false },
-  { title: 'STATUS', key: 'status', sortable: true },
-  { title: 'MEETING JOURNAL', key: 'action', sortable: false, align: 'center' as const, width: '160px' }
+  { title: 'STUDENT NAME', key: 'studentName', sortable: true, minWidth: '260px' },
+  { title: 'BOOK', key: 'book', sortable: true, minWidth: '180px' },
+  { title: 'ADDONS', key: 'addons', sortable: true, align: 'center' as const, width: '90px' },
+  { title: 'PRESENCE', key: 'presence', sortable: true, minWidth: '140px' },
+  { title: 'NOTES', key: 'notes', sortable: false, minWidth: '200px' },
+  { title: 'STATUS', key: 'status', sortable: true, minWidth: '130px' },
+  { title: 'MEETING JOURNAL', key: 'action', sortable: false, minWidth: '320px' }
 ])
 
 // ─────────────────────── Helpers ───────────────────────
@@ -185,6 +177,10 @@ const getBookBadgeColor = (status: 'Completed' | 'Idle' | 'Incomplete') => {
   return 'info'
 }
 
+const getStudentBooks = (item: StudentDetail) => item.books?.length
+  ? item.books
+  : [{ title: item.bookTitle, status: item.bookStatus }]
+
 const getPresenceCircleColor = (presence: 'On time' | 'Late 5 minutes' | 'Absent') => {
   if (presence === 'On time') return 'primary'
   if (presence === 'Late 5 minutes') return 'warning'
@@ -193,18 +189,30 @@ const getPresenceCircleColor = (presence: 'On time' | 'Late 5 minutes' | 'Absent
 
 const getPresenceIcon = (presence: 'On time' | 'Late 5 minutes' | 'Absent') => {
   if (presence === 'Absent') return 'ri-close-line'
+  if (presence === 'Late 5 minutes') return 'ri-time-line'
   return 'ri-check-line'
 }
 
-const getStatusCircleColor = (status: 'Sent' | 'Not send yet' | 'Revision' | '-') => {
-  if (status === 'Sent') return 'primary'
-  return 'warning'
+const getJournalStatus = (item: StudentDetail) => {
+  const record = demoRecord(item)
+  return record?.journal.status || (item.status === '-' ? 'Not send yet' : item.status)
 }
 
-const getStatusIcon = (status: 'Sent' | 'Not send yet' | 'Revision' | '-') => {
-  if (status === 'Sent') return 'ri-send-plane-2-line'
-  if (status === 'Not send yet') return 'ri-alert-line'
+const getStatusCircleColor = (status: string) => {
+  if (status === 'Sent' || status === 'Sent (Manual)') return 'success'
+  if (status === 'Sending') return 'info'
+  if (status === 'Failed') return 'error'
+  if (status === 'Draft' || status === 'Revision' || status === 'Not send yet') return 'warning'
+  return 'secondary'
+}
+
+const getStatusIcon = (status: string) => {
+  if (status === 'Sent' || status === 'Sent (Manual)') return 'ri-send-plane-2-line'
+  if (status === 'Sending') return 'ri-loader-4-line'
+  if (status === 'Failed') return 'ri-error-warning-line'
+  if (status === 'Draft') return 'ri-edit-line'
   if (status === 'Revision') return 'ri-refresh-line'
+  if (status === 'Not send yet') return 'ri-alert-line'
   return ''
 }
 
@@ -219,21 +227,38 @@ const showToast = (message: string, color: string = 'success') => {
   toastShow.value = true
 }
 
+const studentJournalId = (item: StudentDetail) => attendanceJournalId(classId.value, item.id)
+const journalEditorRoute = (item: StudentDetail, step = '1', send = false) => ({
+  path: '/meeting-journal/create',
+  query: {
+    classId: classId.value,
+    studentId: item.id,
+    journalId: studentJournalId(item),
+    returnTo: 'attendance-detail',
+    ...(step === '2' ? { step } : {}),
+    ...(send ? { send: '1' } : {}),
+  },
+})
 const handleActionClick = (item: StudentDetail) => {
-  if (item.actionText === 'Create Journal' || item.actionText === 'Continue') {
-    navigateTo({
-      path: '/meeting-journal/create',
-      query: {
-        classId: classId.value,
-        studentId: item.id,
-        returnTo: 'attendance-detail'
-      }
-    })
-  } else if (item.actionText === 'View') {
-    showToast(`Opening journal record for ${item.name}...`, 'info')
-  } else {
-    showToast(`Resuming journal review for ${item.name}...`, 'warning')
+  const record = demoRecord(item)
+  if (!record) {
+    if (item.actionText === 'Create Journal') return navigateTo(journalEditorRoute(item))
+    if (item.actionText === 'Continue') return navigateTo(journalEditorRoute(item, '2'))
+    showToast(item.actionText === 'View' ? `Opening journal record for ${item.name}...` : `Resuming journal review for ${item.name}...`, 'info')
+    return
   }
+
+  return navigateTo({ path: `/meeting-journal/${encodeURIComponent(record.id)}`, query: { returnTo: 'attendance-detail', classId: classId.value } })
+}
+const editJournal = (item: StudentDetail) => navigateTo(journalEditorRoute(item))
+const sendJournal = (item: StudentDetail) => navigateTo(journalEditorRoute(item, '2', true))
+const resumeJournal = (item: StudentDetail) => navigateTo(journalEditorRoute(item, '2'))
+const copyJournalLink = async (item: StudentDetail) => {
+  try {
+    await navigator.clipboard.writeText(`${window.location.origin}${journalPublicPath(studentJournalId(item))}`)
+    showToast('Link jurnal disalin.')
+  }
+  catch { showToast('Gagal menyalin link. Periksa izin clipboard browser.', 'error') }
 }
 
 // ─────────────────────── Presence Dialog Integration ───────────────────────
@@ -400,9 +425,9 @@ const handlePresenceSubmit = (payload: { students: any[], isStartClass: boolean 
           <div class="d-flex flex-column justify-center">
             <span class="text-body-1 font-weight-medium text-high-emphasis leading-normal">{{ item.name }}</span>
             <div class="d-flex align-center mt-0.5">
-              <span class="text-body-2 text-medium-emphasis">{{ item.studentId }}</span>
-              <span class="dot-separator"></span>
-              <span class="text-body-2 text-medium-emphasis">{{ item.sessionText }}</span>
+              <span class="text-caption text-medium-emphasis">{{ item.studentId }}</span>
+              <span class="dot-separator" />
+              <VChip color="secondary" variant="tonal" size="x-small" class="font-weight-regular">{{ item.sessionText }}</VChip>
             </div>
           </div>
         </div>
@@ -410,12 +435,22 @@ const handlePresenceSubmit = (payload: { students: any[], isStartClass: boolean 
 
       <template #item.book="{ item }">
         <div class="d-flex flex-column py-2 gap-1 align-start">
-          <span class="text-body-2 text-high-emphasis leading-normal">{{ item.bookTitle }}</span>
-          <VChip :color="getBookBadgeColor(item.bookStatus)" variant="tonal" size="small" class="font-weight-medium text-caption">
-            {{ item.bookStatus }}
+          <span class="text-body-2 text-high-emphasis leading-normal">{{ getStudentBooks(item)[0].title }}</span>
+          <VChip :color="getBookBadgeColor(getStudentBooks(item)[0].status)" variant="tonal" size="small" class="font-weight-medium text-caption">
+            {{ getStudentBooks(item)[0].status }}
           </VChip>
           <VBtn
-            v-if="findStudentByName(item.name)"
+            v-if="item.books && item.books.length > 1"
+            variant="text"
+            color="primary"
+            size="small"
+            class="px-0 book-dialog-trigger"
+            @click="showStudentBooks(item)"
+          >
+            See all books
+          </VBtn>
+          <VBtn
+            v-else-if="findStudentByName(item.name)"
             variant="text"
             color="primary"
             size="small"
@@ -429,7 +464,7 @@ const handlePresenceSubmit = (payload: { students: any[], isStartClass: boolean 
 
       <template #item.addons="{ item }">
         <div class="d-flex align-center justify-center">
-          <VAvatar v-if="item.hasLaptop" size="24" color="rgba(var(--v-theme-primary), 0.12)" class="rounded-circle text-primary border-none">
+          <VAvatar v-if="item.hasLaptop" size="24" color="rgba(var(--v-theme-primary), 0.12)" class="rounded-circle text-primary border-none" aria-label="Laptop" title="Laptop">
             <VIcon icon="ri-macbook-line" size="14" />
           </VAvatar>
           <VIcon v-else icon="ri-subtract-line" color="disabled" size="16" />
@@ -446,38 +481,87 @@ const handlePresenceSubmit = (payload: { students: any[], isStartClass: boolean 
       </template>
 
       <template #item.notes="{ item }">
-        <div class="text-body-2 text-medium-emphasis text-wrap py-2" style="max-width: 200px; min-width: 150px; line-height: 1.4;">
+        <div class="text-body-2 text-medium-emphasis text-wrap py-2 journal-note-cell">
           {{ item.notes }}
         </div>
       </template>
 
       <template #item.status="{ item }">
         <div class="d-flex align-center gap-2">
-          <template v-if="item.status !== '-'">
-            <VAvatar :color="getStatusCircleColor(item.status)" size="24" class="rounded-circle text-white">
-              <VIcon :icon="getStatusIcon(item.status)" size="14" />
-            </VAvatar>
-            <span class="text-body-2 text-medium-emphasis">{{ item.status }}</span>
-          </template>
-          <span v-else class="text-body-2 text-medium-emphasis">-</span>
+          <VAvatar :color="getStatusCircleColor(getJournalStatus(item))" size="24" class="rounded-circle text-white">
+            <VIcon :icon="getStatusIcon(getJournalStatus(item))" size="14" />
+          </VAvatar>
+          <div class="d-flex flex-column">
+            <span class="text-body-2 text-medium-emphasis">{{ getJournalStatus(item) }}</span>
+            <span v-if="demoRecord(item) && demoRecord(item)!.sendCount >= DEMO_SEND_LIMIT" class="text-caption text-medium-emphasis">Locked</span>
+          </div>
         </div>
       </template>
 
       <template #item.action="{ item }">
-        <VBtn
-          variant="outlined"
-          size="small"
-          color="primary"
-          rounded="xl"
-          class="text-capitalize font-weight-medium"
-          style="border-color: rgba(var(--v-theme-primary), 0.3) !important;"
-          @click="handleActionClick(item)"
-        >
-          <VIcon :icon="item.actionIcon" start size="14" class="me-1" />
-          {{ item.actionText }}
-        </VBtn>
+        <div class="d-flex align-center flex-wrap gap-2 py-2 meeting-journal-actions">
+          <VBtn v-if="!demoRecord(item) && item.actionText === 'Create Journal'" variant="outlined" size="small" color="primary" rounded="xl" class="text-capitalize font-weight-medium" style="border-color: rgba(var(--v-theme-primary), 0.3) !important;" @click="handleActionClick(item)">
+            <VIcon icon="ri-add-line" start size="14" class="me-1" />
+            Create Journal
+          </VBtn>
+
+          <template v-else-if="!demoRecord(item)">
+            <VBtn v-if="item.actionText === 'Continue'" variant="outlined" size="small" color="primary" rounded="xl" class="text-capitalize font-weight-medium" style="border-color: rgba(var(--v-theme-primary), 0.3) !important;" @click="handleActionClick(item)">
+              <VIcon :icon="item.actionIcon" start size="14" class="me-1" />{{ item.actionText }}
+            </VBtn>
+            <VBtn v-else-if="item.actionText === 'View'" variant="outlined" size="small" color="primary" rounded="xl" class="text-capitalize font-weight-medium" style="border-color: rgba(var(--v-theme-primary), 0.3) !important;" @click="handleActionClick(item)">
+              <VIcon icon="ri-eye-line" start size="14" class="me-1" />View
+            </VBtn>
+          </template>
+
+          <template v-else-if="demoRecord(item)!.journal.status === 'Sending'">
+            <VBtn variant="outlined" size="small" color="primary" rounded="xl" class="text-capitalize font-weight-medium" style="border-color: rgba(var(--v-theme-primary), 0.3) !important;" @click="handleActionClick(item)">
+              <VIcon icon="ri-eye-line" start size="14" class="me-1" />View
+            </VBtn>
+            <VBtn variant="outlined" size="small" color="primary" rounded="xl" class="text-capitalize font-weight-medium" style="border-color: rgba(var(--v-theme-primary), 0.3) !important;" @click="resumeJournal(item)">
+              <VIcon icon="ri-play-line" start size="14" class="me-1" />Continue
+            </VBtn>
+          </template>
+
+          <template v-else>
+            <VBtn variant="outlined" size="small" color="primary" rounded="xl" class="text-capitalize font-weight-medium" style="border-color: rgba(var(--v-theme-primary), 0.3) !important;" @click="handleActionClick(item)">
+              <VIcon icon="ri-eye-line" start size="14" class="me-1" />View
+            </VBtn>
+            <VBtn variant="outlined" size="small" color="primary" rounded="xl" class="text-capitalize font-weight-medium" style="border-color: rgba(var(--v-theme-primary), 0.3) !important;" :disabled="demoRecord(item)!.sendCount >= DEMO_SEND_LIMIT || demoRecord(item)!.journal.status === 'Sending'" @click="editJournal(item)">
+              <VIcon icon="ri-edit-line" start size="14" class="me-1" />Edit
+            </VBtn>
+            <VBtn v-if="['Sent', 'Sent (Manual)'].includes(demoRecord(item)!.journal.status)" icon variant="outlined" size="small" color="primary" rounded="circle" aria-label="Copy journal link" title="Copy Link" @click="copyJournalLink(item)">
+              <VIcon icon="ri-link" size="16" />
+            </VBtn>
+            <VBtn variant="outlined" size="small" color="primary" rounded="xl" class="text-capitalize font-weight-medium" style="border-color: rgba(var(--v-theme-primary), 0.3) !important;" :disabled="demoRecord(item)!.sendCount >= DEMO_SEND_LIMIT" @click="sendJournal(item)">
+              <VIcon :icon="demoRecord(item)!.journal.status === 'Failed' ? 'ri-refresh-line' : 'ri-send-plane-2-line'" start size="14" class="me-1" />
+              {{ demoRecord(item)!.journal.status === 'Failed' ? 'Retry' : ['Sent', 'Sent (Manual)'].includes(demoRecord(item)!.journal.status) ? 'Send revision' : 'Send' }}
+            </VBtn>
+          </template>
+        </div>
       </template>
     </UiTableView>
+
+    <VDialog v-model="isBooksDialogOpen" max-width="480">
+      <VCard v-if="selectedBooksStudent" :title="`All books · ${selectedBooksStudent.name}`">
+        <VCardText class="d-flex flex-column gap-3">
+          <div
+            v-for="book in getStudentBooks(selectedBooksStudent)"
+            :key="book.title"
+            class="d-flex align-center justify-space-between gap-3 border rounded-lg pa-3"
+          >
+            <span class="text-body-2 font-weight-medium text-high-emphasis">{{ book.title }}</span>
+            <VChip :color="getBookBadgeColor(book.status)" variant="tonal" size="small" class="font-weight-medium">
+              {{ book.status }}
+            </VChip>
+          </div>
+        </VCardText>
+        <VCardActions class="px-6 pb-4">
+          <VSpacer />
+          <VBtn color="primary" variant="text" @click="isBooksDialogOpen = false">Close</VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
 
     <!-- Presence Dialog Integration -->
     <PresenceDialog
@@ -531,5 +615,15 @@ const handlePresenceSubmit = (payload: { students: any[], isStartClass: boolean 
       border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.12);
     }
   }
+
+  .journal-note-cell {
+    max-width: 220px;
+    min-width: 150px;
+    line-height: 1.4;
+    white-space: normal;
+  }
+
+  .book-dialog-trigger { text-transform: none; }
+  .meeting-journal-actions { min-inline-size: 280px; }
 }
 </style>

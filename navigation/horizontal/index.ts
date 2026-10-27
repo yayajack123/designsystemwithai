@@ -20,4 +20,9 @@ export default [
     icon: { icon: 'ri-group-line' },
     permission: 'view.user',
   },
+  {
+    title: 'Marketing',
+    to: { name: 'marketing-templates' },
+    icon: { icon: 'ri-megaphone-line' },
+  },
 ]
