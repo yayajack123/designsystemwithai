@@ -524,8 +524,8 @@ const previewJournal = computed(() => ({
   status: savedRecord.value?.journal.status || 'Draft' as const,
   sentAt: savedRecord.value?.journal.sentAt,
   updatedAt: new Date().toISOString(), activeProject: isActiveProject.value, projectName: projectName.value,
-  aiSummary: aiSummary.value, evidencePhotos: uploadedPhotos.value.map(photo => photo.url),
-  mediaMode: mediaMode.value, video: uploadedVideo.value,
+  aiSummary: aiSummary.value, evidencePhotos: mediaMode.value === 'photo' ? uploadedPhotos.value.map(photo => photo.url) : [],
+  mediaMode: mediaMode.value, video: mediaMode.value === 'video' ? uploadedVideo.value : undefined,
   publicUrl: publicUrl.value, reportCode: journalId.value,
 }))
 const persist = () => {
@@ -537,6 +537,8 @@ const persist = () => {
     sessionCode: currentStudent.value.sessionText, bookTitle: currentStudent.value.bookTitle,
     ...previewMeeting.value, journal: { ...previewJournal.value, status, teacherNotes: teacherNotes.value },
     parentPhone: parentPhone.value, sendCount: savedRecord.value?.sendCount || 0,
+    journalStage: (savedRecord.value?.sendCount || 0) > 0 ? 'Revision' : 'Created',
+    deliveryStatus: status === 'Failed' ? 'Failed' : null,
     marketingPageSnapshot: savedRecord.value?.marketingPageSnapshot || campaignPreview.value || createMarketingPageSnapshot(
       marketing.templates.value,
       marketing.students.value,
@@ -585,6 +587,10 @@ const confirmSend = () => {
   if (!persist()) return
   if (!demo.beginSend(journalId.value, manualSend.value || !parentPhone.value.trim())) return
   sendDialog.value = false
+}
+const markAsSent = () => {
+  sendReport()
+  if (sendDialog.value) manualSend.value = true
 }
 onMounted(() => {
   demo.restore()
@@ -702,7 +708,7 @@ onBeforeUnmount(() => {
           <!-- Top Row: Always Visible -->
           <div class="lesson-header-row d-flex align-center justify-space-between pa-4 bg-surface gap-4">
             <!-- Left Side: Status & Title -->
-            <div class="d-flex align-center">
+            <div class="lesson-identity d-flex align-center">
               <!-- Status circle indicator (20px) -->
               <div
                 :class="['status-circle d-flex align-center justify-center me-3', lesson.statusColor]"
@@ -714,7 +720,7 @@ onBeforeUnmount(() => {
                 />
               </div>
 
-              <div class="d-flex flex-column">
+              <div class="lesson-title d-flex flex-column">
                 <span class="text-body-1 font-weight-medium text-high-emphasis leading-normal">
                   {{ lesson.title }}
                 </span>
@@ -735,9 +741,9 @@ onBeforeUnmount(() => {
             </div>
 
             <!-- Right Side: Score, Divider, Delete -->
-            <div class="d-flex align-center gap-4">
+            <div class="lesson-actions d-flex align-center gap-4">
               <!-- Score inputs -->
-              <div class="d-flex align-center gap-2">
+              <div class="lesson-score d-flex align-center gap-2">
                 <span class="text-body-2 text-medium-emphasis">Score :</span>
                 <div class="score-input-box">
                   <input
@@ -868,8 +874,10 @@ onBeforeUnmount(() => {
                 />
               </div>
 
-              <VTextField
+              <VTextarea
                 v-model="teacherNotes"
+                rows="4"
+                auto-grow
                 variant="outlined"
                 density="compact"
                 placeholder="Write student observation notes..."
@@ -885,40 +893,11 @@ onBeforeUnmount(() => {
           <VCard border elevation="0" class="rounded-lg pa-5">
             <div class="mb-4">
               <h5 class="text-body-1 font-weight-medium text-high-emphasis mb-3">Media</h5>
-              <div class="media-mode-toggle" role="group" aria-label="Pilih mode media">
-                <VBtn
-                  variant="outlined"
-                  class="media-mode-option"
-                  :class="{ 'media-mode-option--active': mediaMode === 'photo' }"
-                  :aria-pressed="mediaMode === 'photo'"
-                  aria-label="Mode foto"
-                  @click="mediaMode = 'photo'"
-                >
-                  <span class="media-mode-copy">
-                    <span class="d-flex align-center gap-2 font-weight-bold">
-                      <VIcon icon="ri-image-line" size="16" />
-                      <span>Mode Foto: Photo + URL</span>
-                    </span>
-                    <span class="text-caption text-medium-emphasis">Preview di WhatsApp menampilkan foto</span>
-                  </span>
-                </VBtn>
-                <VBtn
-                  variant="outlined"
-                  class="media-mode-option"
-                  :class="{ 'media-mode-option--active': mediaMode === 'video' }"
-                  :aria-pressed="mediaMode === 'video'"
-                  aria-label="Mode video"
-                  @click="mediaMode = 'video'"
-                >
-                  <span class="media-mode-copy">
-                    <span class="d-flex align-center gap-2 font-weight-bold">
-                      <VIcon icon="ri-video-line" size="16" />
-                      <span>Mode Video: Video + Photo (opsional) + URL</span>
-                    </span>
-                    <span class="text-caption text-medium-emphasis">Preview di WhatsApp menampilkan video</span>
-                  </span>
-                </VBtn>
-              </div>
+              <VBtnToggle v-model="mediaMode" mandatory variant="text" class="preview-mode-toggle evidence-mode-toggle" aria-label="Evidence media mode">
+                <VBtn value="photo" prepend-icon="ri-image-line">Photo</VBtn>
+                <VBtn value="video" prepend-icon="ri-video-line">Video</VBtn>
+              </VBtnToggle>
+
             </div>
 
             <input id="journal-video" ref="videoFileInput" type="file" accept="video/mp4,video/quicktime,.mp4,.mov" class="d-none" aria-label="Unggah video" @change="onVideoChange" />
@@ -946,9 +925,10 @@ onBeforeUnmount(() => {
               <VDivider class="mb-4" />
             </section>
 
+            <section v-if="mediaMode === 'photo'">
             <div class="d-flex align-center justify-space-between flex-wrap gap-2 mb-3">
               <div>
-                <h5 class="text-body-1 font-weight-medium text-high-emphasis mb-0">{{ mediaMode === 'video' ? 'Photo (optional)' : 'Evidence Photo' }}</h5>
+                <h5 class="text-body-1 font-weight-medium text-high-emphasis mb-0">Evidence Photo</h5>
                 <span v-if="mediaMode === 'photo'" class="text-caption text-medium-emphasis">Wajib jika tanpa video</span>
               </div>
               <VBtn
@@ -1006,6 +986,7 @@ onBeforeUnmount(() => {
             <span class="text-caption text-medium-emphasis d-block">
               You can upload up to 3 photos from your camera or gallery, and each photo can be a maximum of 1 MB.
             </span>
+            </section>
             <VAlert v-if="mediaError" type="error" variant="tonal" density="compact" class="journal-error mt-3" role="alert"><span class="text-body-2">{{ mediaError }}</span></VAlert>
           </VCard>
         </VCol>
@@ -1170,6 +1151,16 @@ onBeforeUnmount(() => {
           PDF demo info
         </VBtn>
         <VBtn
+          variant="outlined"
+          color="primary"
+          class="px-6 rounded-pill"
+          prepend-icon="ri-check-line"
+          :disabled="locked || sending"
+          @click="markAsSent"
+        >
+          Mark as sent
+        </VBtn>
+        <VBtn
           color="primary"
           variant="flat"
           class="px-6 rounded-pill"
@@ -1296,7 +1287,7 @@ onBeforeUnmount(() => {
 
     <!-- DIALOG 2: Photo Guidelines -->
     <VDialog v-model="showExampleDialog" max-width="700">
-      <VCard class="rounded-lg overflow-hidden shadow-xl bg-surface">
+      <VCard class="photo-guidelines-dialog rounded-lg overflow-hidden shadow-xl bg-surface">
         <VCardTitle class="px-6 pt-6 pb-4 d-flex align-center justify-space-between position-relative">
           <span class="text-h5 font-weight-medium text-high-emphasis">Photo Guidelines</span>
           <VBtn
@@ -1305,6 +1296,7 @@ onBeforeUnmount(() => {
             color="secondary"
             class="rounded-circle"
             size="small"
+            aria-label="Close photo guidelines"
             @click="showExampleDialog = false"
           />
         </VCardTitle>
@@ -1481,6 +1473,19 @@ onBeforeUnmount(() => {
 </template>
 
 <style lang="scss" scoped>
+@import '@/assets/styles/marketing-preview-toggle.css';
+
+.evidence-mode-toggle {
+  display: flex;
+  inline-size: 100%;
+}
+
+.evidence-mode-toggle :deep(.v-btn) {
+  flex: 1 1 0;
+  inline-size: auto !important;
+  padding-inline: 12px;
+}
+
 .journal-fields {
   min-inline-size: 0;
   border: 0;
@@ -1527,6 +1532,16 @@ onBeforeUnmount(() => {
 
 .lesson-header-row {
   border-bottom: 2px solid rgb(var(--v-theme-primary)) !important;
+}
+
+.lesson-identity,
+.lesson-title {
+  min-width: 0;
+}
+
+.lesson-actions,
+.status-circle {
+  flex-shrink: 0;
 }
 
 .status-circle {
@@ -1620,54 +1635,6 @@ onBeforeUnmount(() => {
   }
 }
 
-.media-mode-toggle {
-  display: grid !important;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  inline-size: 100%;
-  gap: 8px;
-
-  :deep(.v-btn) {
-    justify-content: flex-start;
-    inline-size: 100%;
-    block-size: auto !important;
-    min-block-size: 78px;
-    padding: 10px 12px;
-    border: 1px solid rgba(var(--v-border-color), 0.2) !important;
-    border-radius: 8px !important;
-    color: rgb(var(--v-theme-on-surface));
-    box-shadow: none !important;
-    text-align: start;
-    text-transform: none;
-    white-space: normal;
-  }
-
-  :deep(.media-mode-option--active) {
-    border-color: rgb(var(--v-theme-primary)) !important;
-    background-color: rgba(var(--v-theme-primary), 0.08) !important;
-    color: rgb(var(--v-theme-primary)) !important;
-  }
-
-  :deep(.v-btn__content) {
-    display: block;
-    inline-size: 100%;
-    white-space: normal;
-  }
-}
-
-.media-mode-copy {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  inline-size: 100%;
-  font-size: 13px;
-  line-height: 18px;
-  text-align: start;
-}
-
-.media-mode-copy > :first-child { align-items: flex-start; }
-.media-mode-copy > :last-child { font-weight: 400; }
-
 .upload-dashed-box {
   min-block-size: 150px;
   padding: 8px;
@@ -1753,13 +1720,55 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 599px) {
+  .photo-guidelines-dialog {
+    max-height: min(434px, calc(100dvh - 48px));
+
+    > .v-card-title,
+    > .v-card-actions {
+      flex: 0 0 auto;
+    }
+
+    > .v-card-text {
+      min-height: 0;
+      overflow-y: auto;
+    }
+  }
+
+  .full-width-header :deep(.v-col-md-4) {
+    display: none !important;
+  }
+
+  .lesson-header-row {
+    align-items: stretch !important;
+    flex-direction: column;
+    gap: 16px !important;
+  }
+
+  .lesson-actions {
+    gap: 12px !important;
+  }
+
+  .lesson-actions .vertical-divider {
+    margin-inline-start: auto;
+  }
+
+  .lesson-score {
+    gap: 8px !important;
+  }
+
+  .lesson-identity .status-circle {
+    margin-inline-end: 12px !important;
+  }
+
+  .lesson-score .score-input-box {
+    width: 48px;
+    height: 48px;
+  }
+
   .meeting-journal-create-page {
     padding-bottom: 160px !important;
   }
 
-  .media-mode-toggle {
-    grid-template-columns: minmax(0, 1fr);
-  }
 
   .action-footer-bar {
     flex-wrap: wrap;
@@ -1829,6 +1838,11 @@ onBeforeUnmount(() => {
 .lesson-select-card {
   border-color: rgba(var(--v-border-color), 0.12) !important;
   transition: all 0.2s ease;
+
+  &.border-primary,
+  &.border-primary:hover {
+    border-color: rgb(var(--v-theme-primary)) !important;
+  }
   
   &:hover {
     background-color: rgba(var(--v-theme-primary), 0.02);
@@ -1849,7 +1863,7 @@ onBeforeUnmount(() => {
 .checkbox-unchecked {
   width: 18px;
   height: 18px;
-  border-color: rgba(var(--v-theme-on-surface), 0.3) !important;
+  border: 2px solid rgba(var(--v-theme-on-surface), 0.3);
 }
 
 .guideline-tips-box {

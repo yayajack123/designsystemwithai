@@ -58,6 +58,36 @@ export const attendanceJournalStudents: AttendanceJournalStudent[] = [
     notes: 'Mengerjakan tantangan logika dengan mandiri.', studentType: 'My Student',
     status: 'Draft', actionText: 'Edit', actionIcon: 'ri-edit-line',
   },
+  {
+    id: 's10', studentId: 's10', name: 'Made Arya', sessionText: 'Session 1',
+    bookTitle: 'Web Developer', bookStatus: 'Completed', hasLaptop: true, presence: 'On time',
+    notes: 'Berlatih menyusun halaman web.', studentType: 'My Student',
+    status: 'Sent', actionText: 'View', actionIcon: 'ri-eye-line',
+  },
+  {
+    id: 's13', studentId: 's13', name: 'Putu Diah', sessionText: 'Session 1',
+    bookTitle: 'Scratch Basic', bookStatus: 'Completed', hasLaptop: true, presence: 'On time',
+    notes: 'Menyelesaikan latihan animasi.', studentType: 'My Student',
+    status: 'Sent', actionText: 'View', actionIcon: 'ri-eye-line',
+  },
+  {
+    id: 's14', studentId: 's14', name: 'Kadek Surya', sessionText: 'Session 1',
+    bookTitle: 'Python Game Dev', bookStatus: 'Completed', hasLaptop: true, presence: 'On time',
+    notes: 'Memperbarui catatan latihan.', studentType: 'My Student',
+    status: 'Revision', actionText: 'Edit', actionIcon: 'ri-edit-line',
+  },
+  ...[
+    { id: 's15', name: 'Komang Aditya', status: 'Sending' as const },
+    { id: 's16', name: 'Ni Luh Sari', status: 'Failed' as const },
+    { id: 's17', name: 'Gede Pratama', status: 'Sent' as const },
+    { id: 's18', name: 'Ayu Puspita', status: 'Sent (Manual)' as const },
+    { id: 's19', name: 'Made Wijaya', status: 'Failed' as const },
+  ].map(student => ({
+    ...student, studentId: student.id, sessionText: 'Session 1', bookTitle: 'Web Developer',
+    bookStatus: 'Completed' as const, hasLaptop: true, presence: 'On time' as const,
+    notes: 'Mengerjakan latihan pengembangan web.', studentType: 'My Student' as const,
+    actionText: 'View', actionIcon: 'ri-eye-line',
+  })),
 ]
 
 const makeLesson = (id: string, title: string, progress: number, score: number, objectives: string[]) => ({
@@ -123,4 +153,16 @@ export const attendanceJournalSeedRecords: DailyJournalDemo[] = [
   makeJournalRecord(attendanceJournalStudents[0], 'Sent'),
   makeJournalRecord(attendanceJournalStudents[1], 'Draft'),
   makeJournalRecord(attendanceJournalStudents[4], 'Draft'),
+  { ...makeJournalRecord(attendanceJournalStudents[5], 'Sent'), journalStage: 'Sent', deliveryStatus: 'Delivered' },
+  { ...makeJournalRecord(attendanceJournalStudents[6], 'Sent'), journalStage: 'Revised & Sent', deliveryStatus: 'Read', sendCount: 2 },
+  { ...makeJournalRecord(attendanceJournalStudents[7], 'Draft'), journalStage: 'Revision', deliveryStatus: null, sendCount: 1 },
+  ...attendanceJournalStudents.slice(8).map((student, index): DailyJournalDemo => {
+    const isSent = index === 2 || index === 3
+    const record = makeJournalRecord(student, isSent ? 'Sent' : 'Draft')
+    if (index === 0) return { ...record, journal: { ...record.journal, status: 'Sending' }, journalStage: 'Created', deliveryStatus: 'Sending' }
+    if (index === 1) return { ...record, journal: { ...record.journal, status: 'Failed' }, journalStage: 'Created', deliveryStatus: 'Failed' }
+    if (index === 2) return { ...record, journalStage: 'Sent', deliveryStatus: 'Sent' }
+    if (index === 3) return { ...record, journal: { ...record.journal, status: 'Sent (Manual)' }, journalStage: 'Sent', deliveryStatus: 'Marked as Sent' }
+    return { ...record, journal: { ...record.journal, status: 'Failed' }, journalStage: 'Revision', deliveryStatus: 'Failed', sendCount: 1 }
+  }),
 ]

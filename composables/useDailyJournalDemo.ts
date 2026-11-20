@@ -2,6 +2,9 @@ import type { MeetingJournal, MeetingLesson } from '@/data/studentMeetings'
 import type { MarketingPageSnapshot } from '@/composables/useMarketingTemplates'
 import { attendanceJournalSeedRecords } from '@/data/attendanceJournalDemo'
 
+export type JournalStage = 'Created' | 'Sent' | 'Revision' | 'Revised & Sent'
+export type DeliveryStatus = 'Sending' | 'Sent' | 'Delivered' | 'Read' | 'Failed' | 'Marked as Sent'
+
 export interface DailyJournalDemo {
   id: string
   studentName: string
@@ -16,7 +19,22 @@ export interface DailyJournalDemo {
   journal: MeetingJournal
   parentPhone: string
   sendCount: number
+  journalStage?: JournalStage
+  deliveryStatus?: DeliveryStatus | null
   marketingPageSnapshot?: MarketingPageSnapshot
+}
+
+export const getJournalStage = (record: DailyJournalDemo): JournalStage => {
+  if (record.journalStage) return record.journalStage
+  const sent = ['Sent', 'Sent (Manual)'].includes(record.journal.status)
+  return sent ? (record.sendCount > 1 ? 'Revised & Sent' : 'Sent') : (record.sendCount > 0 ? 'Revision' : 'Created')
+}
+
+export const getDeliveryStatus = (record: DailyJournalDemo): DeliveryStatus | null => {
+  if (record.deliveryStatus !== undefined) return record.deliveryStatus
+  const status = record.journal.status
+  if (status === 'Sent (Manual)') return 'Marked as Sent'
+  return status === 'Sending' || status === 'Sent' || status === 'Failed' ? status : null
 }
 
 export const journalStatusColor = (status: string) => {
@@ -97,6 +115,9 @@ export const useDailyJournalDemo = () => {
     const record = records.value[id]
     if (!record || record.sendCount >= DEMO_SEND_LIMIT || record.journal.status === 'Sending') return false
     record.journal.status = manual ? 'Sent (Manual)' : 'Sending'
+    const revision = getJournalStage(record) === 'Revision' || getJournalStage(record) === 'Sent'
+    record.journalStage = manual ? (revision ? 'Revised & Sent' : 'Sent') : (revision ? 'Revision' : 'Created')
+    record.deliveryStatus = manual ? 'Marked as Sent' : 'Sending'
     if (manual) {
       record.sendCount++
       record.journal.sentAt = new Date().toISOString()
@@ -108,6 +129,8 @@ export const useDailyJournalDemo = () => {
     const record = records.value[id]
     if (!record || record.journal.status !== 'Sending') return
     record.journal.status = success ? 'Sent' : 'Failed'
+    record.deliveryStatus = success ? 'Sent' : 'Failed'
+    if (success) record.journalStage = record.journalStage === 'Revision' ? 'Revised & Sent' : 'Sent'
     if (success) {
       record.sendCount++
       record.journal.sentAt = new Date().toISOString()

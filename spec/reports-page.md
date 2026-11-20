@@ -24,8 +24,10 @@ One journal belongs to one lesson. If a student has several lessons awaiting jou
 | Lesson | One lesson title |
 | Class | Class name or em dash |
 | Date | Localized date |
-| Status | Not Created or Pending |
-| Action | Create for Not Created; Edit and Send for Pending |
+| Status | Not Created, Draft, Created, or Revision; separate Sending/Failed delivery indicator |
+| Action | Icon buttons with tooltips: Create for Not Created; Continue editing for Draft; Send to parent or Send revision and Mark as sent for Created/Revision; Retry and Mark as sent after failure; disabled while Sending |
+
+Sent journals leave Pending, including Delivered, Read, and manually marked sends. Each lesson is a separate row in flat and student-grouped views; actions on lessons from the same saved journal open that journal.
 
 ## Reports
 

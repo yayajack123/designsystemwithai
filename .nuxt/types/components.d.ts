@@ -49,6 +49,8 @@ interface _GlobalComponents {
   AppSearchHeader: typeof import("../../components/AppSearchHeader.vue")['default']
   ErrorHeader: typeof import("../../components/ErrorHeader.vue")['default']
   MeetingJournalReportPreview: typeof import("../../components/MeetingJournalReportPreview.vue")['default']
+  PendingJournalActions: typeof import("../../components/PendingJournalActions.vue")['default']
+  PendingJournalStatus: typeof import("../../components/PendingJournalStatus.vue")['default']
   VueApexCharts: typeof import("../../components/VueApexCharts.client.vue")['default']
   AddAuthenticatorAppDialog: typeof import("../../components/dialogs/AddAuthenticatorAppDialog.vue")['default']
   AddEditAddressDialog: typeof import("../../components/dialogs/AddEditAddressDialog.vue")['default']
@@ -147,6 +149,8 @@ interface _GlobalComponents {
   LazyAppSearchHeader: LazyComponent<typeof import("../../components/AppSearchHeader.vue")['default']>
   LazyErrorHeader: LazyComponent<typeof import("../../components/ErrorHeader.vue")['default']>
   LazyMeetingJournalReportPreview: LazyComponent<typeof import("../../components/MeetingJournalReportPreview.vue")['default']>
+  LazyPendingJournalActions: LazyComponent<typeof import("../../components/PendingJournalActions.vue")['default']>
+  LazyPendingJournalStatus: LazyComponent<typeof import("../../components/PendingJournalStatus.vue")['default']>
   LazyVueApexCharts: LazyComponent<typeof import("../../components/VueApexCharts.client.vue")['default']>
   LazyAddAuthenticatorAppDialog: LazyComponent<typeof import("../../components/dialogs/AddAuthenticatorAppDialog.vue")['default']>
   LazyAddEditAddressDialog: LazyComponent<typeof import("../../components/dialogs/AddEditAddressDialog.vue")['default']>

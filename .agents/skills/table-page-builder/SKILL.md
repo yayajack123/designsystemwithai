@@ -1,63 +1,88 @@
 ---
 name: table-page-builder
-description: Generate a Nuxt 3 + Vuetify + TypeScript page built on the UiTableView component (microdemy-DS / project table pages) by interviewing the user section-by-section using the bundled prompt template. Use this skill whenever the user asks to build, scaffold, or generate a new table/list/data-table page, an admin listing page, a report page, or any page described as "using UiTableView", "table view page", or similar — even if they only give a vague page name and no other details. Also use this skill if the user asks to turn a page idea into a structured build prompt for an AI coding agent (e.g. Claude Code) for a table-based page. Trigger on phrases like "new table page", "add a page with UiTableView", "generate a listing page", "build a report/dashboard table page", or when the user references microdemy-DS/Nuxt/Vuetify table pages.
+description: Build Nuxt 3 + Vuetify + TypeScript listing pages in compatible repositories using UiTableView, or turn table-page requirements into an implementation prompt. Resolve missing product decisions through a focused interview.
 ---
 
-# Table Page Builder (UiTableView)
+# Table Page Builder
 
-Generates a table-based page for the user's Nuxt 3 + Vuetify + TypeScript project, built on the project's shared `UiTableView` component. The bundled reference file (`references/table-page-template.md`) is the source of truth for every field the page needs — it's the user's own prompt-template documentation for this component, extracted from their codebase conventions.
+## Output and sources
 
-**Do not skip straight to writing code.** The whole point of this skill is to interview the user first, section by section, mirroring the structure of the template, so the generated page actually matches what they want instead of guessing.
+Infer the requested mode: **Implementation** creates/revises the repository page; **Prompt** produces a filled specification without application changes. Ask only if ambiguous. Auditing this skill does not start a page interview.
 
-## Workflow
+Use the repository containing the requested page as the target, regardless of its directory or remote name. Resolve project paths below from that repository's root, not from the original microdemy-DS checkout. This skill is intended for repositories with compatible Nuxt, Vuetify, TypeScript, and UiTableView patterns; verify those assumptions before use.
 
-### Step 1 — Load the template
-Read `references/table-page-template.md` in full before asking anything. It defines every placeholder (`[PAGE_NAME]`, `[SIDEBAR_ROUTE]`, tabs, filters, headers, slots, etc.) and the final `UiTableView` usage contract (props/events/slots). Treat its "Props / Events / Slots" reference tables as ground truth for what's valid to generate — don't invent props that aren't listed there.
+Before interviewing, locate the target repository and read:
+1. `agents.md` or `AGENTS.md` and `spec/design.md`; follow required UI skills when implementing.
+2. [Intake template](reference/table-page-template.md).
+3. `components/ui/UiTableView.vue`, related pages, navigation, reusable components/composables, and existing data contracts.
 
-### Step 2 — Interview the user, section by section
+Component source defines API support; design.md defines tokens; the template collects requirements. If a required component, template, or design source is missing or incompatible, identify the gap and its scope impact. Mark prompt output provisional, and resolve the gap with the user before implementation rather than assuming the original repository's API or adding a replacement silently.
 
-Go through the template's numbered sections in order and collect answers for every placeholder. Don't dump all 12 sections as one giant wall of questions — group them into a handful of conversational rounds so it doesn't feel like a form:
+## Visual reference before implementation
 
-1. **Page basics** (Section 1–2): page name, sidebar route, file path, title, description.
-2. **Tabs** (Section 3): does the page need tabs at all? If yes, tab labels/values/icons, whether switching tabs swaps the dataset+columns or just filters the same dataset.
-3. **Filters & view toggle** (Section 4–5): what filters are needed (search + selects), and whether a view toggle (list/grid/other) is needed beyond the default list view.
-4. **Table columns & data** (Section 6, 8): column list per tab (title, key, sortable, align, width, whether it needs a custom slot), the status badge mapping if there's a status column, and the action-button behavior per row condition. Also get the data shape (TS interface fields) and how many mock rows to generate.
-5. **Extras** (Section 9–11): custom view slots (if a toggle was requested), any dialogs triggered from row actions, and which states to handle (loading/empty/filtered).
+Before coding a table page, ask whether the user has a screenshot or Figma link unless already supplied or explicitly declined. Wait for that answer; do not treat silence as declining. Ask for screenshots directly in conversation, not through a text-only input tool. If no reference exists, proceed from agreed requirements and repository patterns.
 
-Use `ask_user_input_v0` for genuinely short, enumerable choices (yes/no on tabs, yes/no on view toggle, items-per-page default, which states to handle). For open-ended things like column lists, filter names, or data shape, just ask directly in prose — those aren't good fits for tappable buttons.
+Inspect supplied screenshots with available image tools. For Figma links, load the applicable Figma skills before their tools (including design-to-code before get_design_context), then inspect the referenced frame and its screenshot/context. If access fails or the target frame is ambiguous, explain the gap and request accessible content or the exact frame; do not claim the reference was read. Extract column grouping, avatar treatment, statuses, filters, actions, and hierarchy, then resolve ambiguities with the user. References guide layout; existing tokens and component contracts still apply. Prompt-only output records reference findings or explicit access limitations without creating UI.
 
-**Don't ask about things you can reasonably default.** If the user doesn't care about a field (e.g. items-per-page default, pagination options), use the template's own defaults (`10` / `[5, 10, 20]`) rather than interrupting the flow — state the assumption instead of asking.
+## Focused interview and plan
 
-**Skip sections that don't apply.** If the user says "no tabs," skip straight past tab-specific follow-ups (like per-tab header sets) and just build one column set.
+Extract answers from the brief, conversation, and repository first. Ask only missing product questions in small related rounds; skip inapplicable sections. Derive interfaces, refs, header keys, and slots rather than asking users to design implementation details.
 
-### Step 3 — Confirm before generating
+Collect purpose/audience, route/title, columns, filters, actions, optional tabs/views/dialogs, data source, and responsive presentation. Define tab count semantics, whether tabs filter or swap datasets/columns, and filter persistence on tab changes.
 
-Once every required section (2, 3, 4, 6, 7, 8 are required per the template; 5, 9, 10 are conditional) has an answer, give the user a short recap of what you're about to build (page title, tabs, columns, filters) and confirm before writing code — especially if any assumption was made silently in Step 2.
+For each applicable item below, ask unless the user has already answered explicitly; a screenshot alone does not establish business rules:
+- **Column contents:** can one column contain multiple data fields? Confirm the fields, primary/secondary order, and formatting (for example name plus ID/email). Record sorting/search fields separately from visual grouping.
+- **People:** for columns representing students, teachers, staff, or other people, ask whether to show photo avatars, initials, or no avatar. For photos, verify the image source and agree a missing/broken-photo fallback; do not invent profile photos.
+- **Status:** ask which exact statuses exist and their labels before defining types, badge mappings, fixtures, or filter options. Check any existing API enum and resolve discrepancies rather than inventing statuses.
+- **Filters:** ask which filters and search fields are needed. Verify each against available record fields, a documented relation, or supported server parameters and option sources. Surface missing data/support before implementing; agree an alternative or leave it blocked instead of adding a nonfunctional filter. Agreed mock fixtures must include those fields and representative values.
+- **Detail action:** ask whether details open in a modal or a separate page. For a modal, create a working VDialog template using existing patterns, selected-record content, open/close behavior, and applicable states. For a separate page, record the intended route and required data but do not create that page in this workflow. Link only to an existing verified destination; otherwise keep the action visibly disabled with explanatory text until the destination exists. Do not create a broken link or empty handler.
 
-### Step 4 — Generate the page
+Explicitly ask the mobile preference unless already supplied:
+- **Scrollable table:** preserves column comparison through horizontal scrolling.
+- **Mobile cards:** regroups content/actions using `mobileCards` and an explicit `mobile-cards` slot; define mobile empty, sorting, and pagination behavior.
 
-Write the actual `.vue` file (not just the filled-in markdown template) at `pages/[PAGE_FILE_NAME].vue`, following the template's Section 12 `UiTableView` usage contract exactly:
+### Interactive interview panel
 
-- Import and use `UiTableView` from `@/components/ui/UiTableView.vue`.
-- Use only existing design system tokens/components — no new hex values, font sizes, or one-off styles. If the user hasn't shared their design tokens/spacing scale in this conversation, ask for (or look for) the relevant SCSS/theme file rather than inventing values.
-- Build `headers` as a computed that switches per active tab if multi-tab.
-- Build `filteredItems` as a computed applying all active filters.
-- Wire `reset-filters` to a handler that resets every filter ref.
-- Generate mock data matching the declared TS interface, with the requested row count.
-- Implement every column marked "Custom Slot: yes" as a named `#item.[key]` template, matching header keys exactly.
-- Handle the states the user selected in Step 2 (loading skeleton via `:loading`, empty search result, empty tab, filter-applied reset state) via the `#no-data` slot and a `loading` ref.
-- Icons: Remix Icon (`ri-*-line`) unless the user's project uses Tabler Icons — check prior context/memory for which icon set this project uses before picking one.
+Prefer the agent's native question panel over a numbered wall of questions in chat. Discover the available input tools: in Default mode use `request_user_input_async` when available; use `request_user_input` only when permitted by the current mode. If neither is available, fall back to concise conversational questions. Do not switch modes merely to access a tool.
 
-Run through the template's "Before You Start Checklist" (Section 11 of the template) against the generated file before presenting it — treat any unchecked item as a bug to fix, not a note to leave for later.
+Ask one decision at a time, or at most two closely related questions. Use short Indonesian titles and plain-language options matching the user's language. Offer suggested choices for enumerable decisions, with free text for custom answers. Examples:
+- Column contents: "Satu data per kolom" / "Gabungan beberapa data"; if combined, ask which fields and their order next.
+- Person avatar: "Foto" / "Inisial" / "Tanpa avatar"; ask photo source/fallback only after choosing photos.
+- Detail: "Modal" / "Halaman terpisah".
+- Mobile: "Tabel geser" / "Kartu mobile".
+- Status labels or filter fields: use a short free-text panel question; do not fabricate options without a confirmed data contract.
 
-### Step 5 — Deliver
+For visual references, ask in the panel whether there is a screenshot, Figma link, or no reference. Collect a Figma URL through text input. If screenshot is chosen, request the attachment in chat, since the panel cannot receive files. Do not repeat the reference question if already answered.
 
-Save the file under `/mnt/user-data/outputs/` (mirroring the intended `pages/...` path in the filename or a comment at the top noting the real destination), and present it with `present_files`. If the user's actual codebase is available (e.g. via an uploaded project or repo access), write directly into the correct `pages/` path instead.
+An async question returns immediately, not an answer. Keep the required decision pending until the user replies; do independent repository inspection while waiting, but do not implement dependent work or treat the preselected option/time elapsed as consent. Do not send additional rounds before the previous answers arrive. Summarize confirmed choices briefly between rounds only when useful; ask only the remaining applicable questions.
 
-## Notes on style
+State safe defaults such as 10 desktop rows per page; do not silently decide material layout, integration, or destructive-action behavior.
 
-This user typically wants build prompts/code that:
-- Mirrors component/layer naming exactly (no renaming keys or props to "cleaner" names).
-- Cites the root cause when something in the request conflicts with the template's contract, rather than silently deviating.
-- Stays tightly scoped to what was asked — don't add extra columns, filters, or views the user didn't request "for completeness."
-- Reuses existing design-system tokens/components only.
+Summarize scope, files, reuse, data flow, token mapping, assumptions/risks, and validation before implementation, scaled to the change. Warn when a reusable component is missing and explain scope impact. Resolve material decisions before dependent work. A complete brief with mobile already decided does not require another approval round.
+
+## Generate
+
+### Prompt mode
+
+Fill the canonical template, remove inapplicable sections, and record assumptions, repository references, and acceptance criteria. Keep unresolved required decisions as explicit questions and label the prompt provisional. Return Markdown in chat or the requested file path. Do not modify Vue pages or navigation.
+
+### Implementation mode
+
+Write directly to the agreed repository path using project-required editing tools. Preserve unrelated edits. Add navigation only within requested scope and existing route/permission patterns.
+
+- Reuse UiTableView and existing controls/dialogs/utilities and semantic tokens. Inspect the target repository's icon conventions.
+- Match listing page titles and actions to the target repository's existing page patterns. Verify heading levels and UiTableView's current API before avoiding duplicate headings; do not change a global header component as part of generating a page.
+- Apply client-side filters before table pagination; normalize nullable clearable inputs. Reset relevant filters to declared defaults.
+- Compute headers when columns vary. Match item slots exactly to header keys.
+- Reuse API/composable contracts for requested integration. Generate fixtures only for an agreed mock/prototype workflow; label them and do not imply persistence or invent endpoints.
+- Define ownership of search, filtering, sorting, page, page size, and total for server data. Do not filter one fetched page as if it were the complete dataset.
+- Follow the template's **Integration constraints** for overrides. Do not expand the shared component API without scope agreement.
+- Implement real action behavior and appropriate pending/disabled/success/error feedback. Icon actions need accessible names; tooltips supplement labels.
+- A deferred detail page is an explicit scope exception: document it and use a clearly disabled action when no destination exists; do not silently scaffold the page.
+- Loading/empty/error/feedback follow actual data and action flows, rather than optional quality checkboxes.
+
+## Validate and deliver
+
+Apply the template's **Acceptance checklist**. Inspect package.json before choosing checks; avoid repository-wide auto-fix lint for scoped changes. Review mobile/desktop, light/dark, keyboard, and reduced motion when applicable and available. Report checks actually run and blockers; a declared ref alone does not prove a state works.
+
+Prompt-only output needs completeness, path, API, and unresolved-decision review, not an application build. Deliver supported file links, changed files, validation, and limitations; do not assume artifact directories or presentation tools.

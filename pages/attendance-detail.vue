@@ -7,7 +7,7 @@ import UiTableView from '@/components/ui/UiTableView.vue'
 import PresenceDialog from '@/components/dialogs/PresenceDialog.vue'
 import { findStudentByName } from '@/data/students'
 import { attendanceJournalId, attendanceJournalStudents, type AttendanceJournalStudent } from '@/data/attendanceJournalDemo'
-import { DEMO_SEND_LIMIT, journalPublicPath, useDailyJournalDemo } from '@/composables/useDailyJournalDemo'
+import { DEMO_SEND_LIMIT, getDeliveryStatus, getJournalStage, journalPublicPath, useDailyJournalDemo, type DeliveryStatus } from '@/composables/useDailyJournalDemo'
 
 definePageMeta({
   sidebarRoute: 'attendance',
@@ -167,7 +167,7 @@ const headers = computed(() => [
   { title: 'PRESENCE', key: 'presence', sortable: true, minWidth: '140px' },
   { title: 'NOTES', key: 'notes', sortable: false, minWidth: '200px' },
   { title: 'STATUS', key: 'status', sortable: true, minWidth: '130px' },
-  { title: 'MEETING JOURNAL', key: 'action', sortable: false, minWidth: '320px' }
+  { title: 'MEETING JOURNAL', key: 'action', sortable: false, width: '180px' }
 ])
 
 // ─────────────────────── Helpers ───────────────────────
@@ -195,25 +195,32 @@ const getPresenceIcon = (presence: 'On time' | 'Late 5 minutes' | 'Absent') => {
 
 const getJournalStatus = (item: StudentDetail) => {
   const record = demoRecord(item)
-  return record?.journal.status || (item.status === '-' ? 'Not send yet' : item.status)
+  if (record) return getJournalStage(record)
+  if (item.status === '-' || item.status === 'Not send yet') return 'Not Created'
+  if (item.status === 'Revision') return 'Revision'
+  return ['Sent', 'Sent (Manual)'].includes(item.status) ? 'Sent' : 'Created'
 }
 
-const getStatusCircleColor = (status: string) => {
-  if (status === 'Sent' || status === 'Sent (Manual)') return 'success'
-  if (status === 'Sending') return 'info'
-  if (status === 'Failed') return 'error'
-  if (status === 'Draft' || status === 'Revision' || status === 'Not send yet') return 'warning'
+const journalStageColor = (status: string) => {
+  if (status === 'Sent' || status === 'Revised & Sent') return 'success'
+  if (status === 'Revision') return 'warning'
+  if (status === 'Created') return 'info'
   return 'secondary'
 }
 
-const getStatusIcon = (status: string) => {
-  if (status === 'Sent' || status === 'Sent (Manual)') return 'ri-send-plane-2-line'
-  if (status === 'Sending') return 'ri-loader-4-line'
-  if (status === 'Failed') return 'ri-error-warning-line'
-  if (status === 'Draft') return 'ri-edit-line'
-  if (status === 'Revision') return 'ri-refresh-line'
-  if (status === 'Not send yet') return 'ri-alert-line'
-  return ''
+const deliveryDetails: Record<DeliveryStatus, { icon: string, color: string, text: string }> = {
+  Sending: { icon: 'ri-time-line', color: 'info', text: 'Sending: waiting for a delivery update from WhatsApp.' },
+  Sent: { icon: 'ri-check-line', color: 'secondary', text: 'Sent: WhatsApp has accepted the message, but it has not reached the parent’s device yet.' },
+  Delivered: { icon: 'ri-check-double-line', color: 'secondary', text: 'Delivered: the message has reached the parent’s device but has not been read yet.' },
+  Read: { icon: 'ri-check-double-line', color: 'info', text: 'Read: the parent has read the message on WhatsApp.' },
+  Failed: { icon: 'ri-error-warning-line', color: 'error', text: 'Failed: the message could not be sent. Open the journal to retry or mark it as sent.' },
+  'Marked as Sent': { icon: 'ri-external-link-line', color: 'success', text: 'Marked as Sent: manually marked as sent by the teacher. Delivery outside the system is not tracked.' },
+}
+const deliveryForStudent = (item: StudentDetail): DeliveryStatus | null => {
+  const record = demoRecord(item)
+  if (record) return getDeliveryStatus(record)
+  if (item.status === 'Sent (Manual)') return 'Marked as Sent'
+  return item.status === 'Sending' || item.status === 'Sent' || item.status === 'Failed' ? item.status : null
 }
 
 // ─────────────────────── Interactive Actions ───────────────────────
@@ -399,7 +406,7 @@ const handlePresenceSubmit = (payload: { students: any[], isStartClass: boolean 
       title=""
       :headers="headers"
       :items="filteredStudents"
-      :items-per-page="5"
+      :items-per-page="15"
       @reset-filters="resetFilters"
     >
       <template #filters>
@@ -423,11 +430,11 @@ const handlePresenceSubmit = (payload: { students: any[], isStartClass: boolean 
             {{ avatarText(item.name) }}
           </VAvatar>
           <div class="d-flex flex-column justify-center">
-            <span class="text-body-1 font-weight-medium text-high-emphasis leading-normal">{{ item.name }}</span>
+            <span class="text-body-1 font-weight-medium text-high-emphasis leading-normal">{{ item.name }} <VIcon icon="ri-external-link-line" color="primary" size="14" aria-hidden="true" /></span>
             <div class="d-flex align-center mt-0.5">
               <span class="text-caption text-medium-emphasis">{{ item.studentId }}</span>
               <span class="dot-separator" />
-              <VChip color="secondary" variant="tonal" size="x-small" class="font-weight-regular">{{ item.sessionText }}</VChip>
+              <span class="text-caption text-primary text-decoration-underline">{{ item.sessionText }} <VIcon icon="ri-external-link-line" size="12" class="ms-1" aria-hidden="true" /></span>
             </div>
           </div>
         </div>
@@ -488,21 +495,28 @@ const handlePresenceSubmit = (payload: { students: any[], isStartClass: boolean 
 
       <template #item.status="{ item }">
         <div class="d-flex align-center gap-2">
-          <VAvatar :color="getStatusCircleColor(getJournalStatus(item))" size="24" class="rounded-circle text-white">
-            <VIcon :icon="getStatusIcon(getJournalStatus(item))" size="14" />
-          </VAvatar>
           <div class="d-flex flex-column">
-            <span class="text-body-2 text-medium-emphasis">{{ getJournalStatus(item) }}</span>
-            <span v-if="demoRecord(item) && demoRecord(item)!.sendCount >= DEMO_SEND_LIMIT" class="text-caption text-medium-emphasis">Locked</span>
+            <VChip :color="journalStageColor(getJournalStatus(item))" variant="tonal" size="small" class="font-weight-medium">
+              {{ getJournalStatus(item) }}
+            </VChip>
           </div>
+          <VTooltip v-if="deliveryForStudent(item)" :text="deliveryDetails[deliveryForStudent(item)!].text" location="top">
+            <template #activator="{ props }">
+              <span v-bind="props" tabindex="0" role="img" :aria-label="deliveryDetails[deliveryForStudent(item)!].text">
+                <VAvatar :color="deliveryDetails[deliveryForStudent(item)!].color" size="24" class="text-white">
+                  <VIcon :icon="deliveryDetails[deliveryForStudent(item)!].icon" size="15" />
+                </VAvatar>
+              </span>
+            </template>
+          </VTooltip>
         </div>
       </template>
 
       <template #item.action="{ item }">
-        <div class="d-flex align-center flex-wrap gap-2 py-2 meeting-journal-actions">
+        <div class="d-flex align-center gap-2 py-2">
           <VBtn v-if="!demoRecord(item) && item.actionText === 'Create Journal'" variant="outlined" size="small" color="primary" rounded="xl" class="text-capitalize font-weight-medium" style="border-color: rgba(var(--v-theme-primary), 0.3) !important;" @click="handleActionClick(item)">
             <VIcon icon="ri-add-line" start size="14" class="me-1" />
-            Create Journal
+            Create
           </VBtn>
 
           <template v-else-if="!demoRecord(item)">
@@ -514,29 +528,45 @@ const handlePresenceSubmit = (payload: { students: any[], isStartClass: boolean 
             </VBtn>
           </template>
 
-          <template v-else-if="demoRecord(item)!.journal.status === 'Sending'">
-            <VBtn variant="outlined" size="small" color="primary" rounded="xl" class="text-capitalize font-weight-medium" style="border-color: rgba(var(--v-theme-primary), 0.3) !important;" @click="handleActionClick(item)">
-              <VIcon icon="ri-eye-line" start size="14" class="me-1" />View
-            </VBtn>
-            <VBtn variant="outlined" size="small" color="primary" rounded="xl" class="text-capitalize font-weight-medium" style="border-color: rgba(var(--v-theme-primary), 0.3) !important;" @click="resumeJournal(item)">
-              <VIcon icon="ri-play-line" start size="14" class="me-1" />Continue
-            </VBtn>
-          </template>
-
           <template v-else>
-            <VBtn variant="outlined" size="small" color="primary" rounded="xl" class="text-capitalize font-weight-medium" style="border-color: rgba(var(--v-theme-primary), 0.3) !important;" @click="handleActionClick(item)">
-              <VIcon icon="ri-eye-line" start size="14" class="me-1" />View
+            <VBtn v-if="demoRecord(item)!.journal.status === 'Sending'" variant="outlined" size="small" color="primary" rounded="pill" @click="resumeJournal(item)">
+              <VIcon icon="ri-play-line" start size="14" />Continue
             </VBtn>
-            <VBtn variant="outlined" size="small" color="primary" rounded="xl" class="text-capitalize font-weight-medium" style="border-color: rgba(var(--v-theme-primary), 0.3) !important;" :disabled="demoRecord(item)!.sendCount >= DEMO_SEND_LIMIT || demoRecord(item)!.journal.status === 'Sending'" @click="editJournal(item)">
-              <VIcon icon="ri-edit-line" start size="14" class="me-1" />Edit
+            <VBtn v-else-if="demoRecord(item)!.sendCount >= DEMO_SEND_LIMIT || ['Sent', 'Sent (Manual)'].includes(demoRecord(item)!.journal.status)" variant="outlined" size="small" color="primary" rounded="pill" @click="handleActionClick(item)">
+              <VIcon icon="ri-eye-line" start size="14" />View
             </VBtn>
-            <VBtn v-if="['Sent', 'Sent (Manual)'].includes(demoRecord(item)!.journal.status)" icon variant="outlined" size="small" color="primary" rounded="circle" aria-label="Copy journal link" title="Copy Link" @click="copyJournalLink(item)">
-              <VIcon icon="ri-link" size="16" />
+            <VBtn v-else-if="demoRecord(item)!.journal.status === 'Failed'" variant="outlined" size="small" color="primary" rounded="pill" @click="sendJournal(item)">
+              <VIcon icon="ri-refresh-line" start size="14" />Retry
             </VBtn>
-            <VBtn variant="outlined" size="small" color="primary" rounded="xl" class="text-capitalize font-weight-medium" style="border-color: rgba(var(--v-theme-primary), 0.3) !important;" :disabled="demoRecord(item)!.sendCount >= DEMO_SEND_LIMIT" @click="sendJournal(item)">
-              <VIcon :icon="demoRecord(item)!.journal.status === 'Failed' ? 'ri-refresh-line' : 'ri-send-plane-2-line'" start size="14" class="me-1" />
-              {{ demoRecord(item)!.journal.status === 'Failed' ? 'Retry' : ['Sent', 'Sent (Manual)'].includes(demoRecord(item)!.journal.status) ? 'Send revision' : 'Send' }}
+            <VBtn v-else variant="outlined" size="small" color="primary" rounded="pill" @click="editJournal(item)">
+              <VIcon icon="ri-edit-line" start size="14" />Edit
             </VBtn>
+
+            <VMenu location="bottom end">
+              <template #activator="{ props }">
+                <VBtn v-bind="props" icon="ri-more-2-fill" variant="text" size="small" color="primary" rounded="pill" :aria-label="`More journal actions for ${item.name}`" />
+              </template>
+              <VList density="compact">
+                <VListItem v-if="demoRecord(item)!.sendCount < DEMO_SEND_LIMIT && !['Sent', 'Sent (Manual)'].includes(demoRecord(item)!.journal.status)" prepend-icon="ri-eye-line" title="View" @click="handleActionClick(item)" />
+                <template v-if="demoRecord(item)!.journal.status !== 'Sending'">
+                  <VTooltip :disabled="demoRecord(item)!.sendCount < DEMO_SEND_LIMIT" location="top" :text="`Journal locked after ${DEMO_SEND_LIMIT} successful or manual sends.`">
+                    <template #activator="{ props }">
+                      <div v-if="demoRecord(item)!.sendCount >= DEMO_SEND_LIMIT || ['Sent', 'Sent (Manual)', 'Failed'].includes(demoRecord(item)!.journal.status)" v-bind="props" :tabindex="demoRecord(item)!.sendCount >= DEMO_SEND_LIMIT ? 0 : undefined">
+                        <VListItem prepend-icon="ri-edit-line" title="Edit" :disabled="demoRecord(item)!.sendCount >= DEMO_SEND_LIMIT" @click="editJournal(item)" />
+                      </div>
+                    </template>
+                  </VTooltip>
+                  <VListItem v-if="['Sent', 'Sent (Manual)'].includes(demoRecord(item)!.journal.status)" prepend-icon="ri-link" title="Copy link" @click="copyJournalLink(item)" />
+                  <VTooltip :disabled="demoRecord(item)!.sendCount < DEMO_SEND_LIMIT" location="top" :text="`Journal locked after ${DEMO_SEND_LIMIT} successful or manual sends.`">
+                    <template #activator="{ props }">
+                      <div v-if="demoRecord(item)!.journal.status !== 'Failed'" v-bind="props" :tabindex="demoRecord(item)!.sendCount >= DEMO_SEND_LIMIT ? 0 : undefined">
+                        <VListItem prepend-icon="ri-send-plane-2-line" :title="['Sent', 'Sent (Manual)'].includes(demoRecord(item)!.journal.status) ? 'Send revision' : 'Send'" :disabled="demoRecord(item)!.sendCount >= DEMO_SEND_LIMIT" @click="sendJournal(item)" />
+                      </div>
+                    </template>
+                  </VTooltip>
+                </template>
+              </VList>
+            </VMenu>
           </template>
         </div>
       </template>
@@ -624,6 +654,5 @@ const handlePresenceSubmit = (payload: { students: any[], isStartClass: boolean 
   }
 
   .book-dialog-trigger { text-transform: none; }
-  .meeting-journal-actions { min-inline-size: 280px; }
 }
 </style>

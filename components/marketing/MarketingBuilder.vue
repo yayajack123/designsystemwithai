@@ -30,6 +30,7 @@ const panelTabs = [
 ] as const
 const selectedId = ref('')
 const showPreview = ref(false)
+const showBuiltinVariables = ref(false)
 const showSidebar = ref(true)
 const canvasStage = ref<HTMLElement | null>(null)
 const designFileInput = ref<HTMLInputElement | null>(null)
@@ -191,7 +192,7 @@ const removeSelected = () => {
   nextTick(() => canvasFrame.value?.focus({ preventScroll: true }))
 }
 const onKeydown = (event: KeyboardEvent) => {
-  if (showPreview.value || event.isComposing || (event.target as HTMLElement).closest('input, textarea, select, [contenteditable="true"], [role="textbox"], [role="combobox"]')) return
+  if (showPreview.value || showBuiltinVariables.value || event.isComposing || (event.target as HTMLElement).closest('input, textarea, select, [contenteditable="true"], [role="textbox"], [role="combobox"]')) return
   if (event.key === 'Escape') {
     event.preventDefault()
     if (drag.value) cancelDrag()
@@ -438,11 +439,32 @@ const insertFirstVariableIntoUrl = () => {
             <VBtn color="secondary" variant="outlined" size="small" :disabled="!selectedBlock || !['heading', 'text', 'button'].includes(selectedBlock.type)" @click="insertFirstVariable">Insert into content</VBtn>
             <VBtn color="secondary" variant="outlined" size="small" :disabled="selectedBlock?.type !== 'button'" @click="insertFirstVariableIntoUrl">Insert into button URL</VBtn>
           </div>
-          <VAlert type="info" variant="tonal" density="compact" class="mb-4">
-            <div class="text-body-2 font-weight-medium mb-2">Built-in variables</div>
-            <div v-for="variable in builtinMarketingVariables" :key="variable.name" class="text-body-2 mb-1">{{ variablePlaceholder(variable.name) }} · {{ variable.label }}</div>
-            <div class="text-caption mt-2">Filled from system data. Branch WhatsApp uses dummy numbers in this demo.</div>
-          </VAlert>
+          <VDialog v-model="showBuiltinVariables" max-width="480" aria-labelledby="builtin-variables-title">
+            <template #activator="{ props: dialogProps }">
+              <VBtn v-bind="dialogProps" color="info" variant="tonal" size="small" prepend-icon="ri-information-line" class="builtin-variables-trigger mb-4">View built-in variables</VBtn>
+            </template>
+            <VCard>
+              <VCardTitle id="builtin-variables-title">Built-in variables</VCardTitle>
+              <VCardText>
+                <p class="text-body-2 text-medium-emphasis">Values come from system data. Branch WhatsApp numbers are examples in this demo.</p>
+                <VTable density="compact" class="builtin-variables-table">
+                  <thead>
+                    <tr>
+                      <th scope="col" class="text-subtitle-2">Variable</th>
+                      <th scope="col" class="text-subtitle-2">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="variable in builtinMarketingVariables" :key="variable.name">
+                      <td class="text-body-2 font-weight-medium">{{ variablePlaceholder(variable.name) }}</td>
+                      <td class="text-body-2">{{ variable.label }}</td>
+                    </tr>
+                  </tbody>
+                </VTable>
+              </VCardText>
+              <VCardActions class="justify-end pa-4"><VBtn color="secondary" variant="outlined" @click="showBuiltinVariables = false">Close</VBtn></VCardActions>
+            </VCard>
+          </VDialog>
           <VBtn color="primary" variant="outlined" size="small" prepend-icon="ri-add-line" class="mb-2" @click="addVariable">Add custom variable</VBtn>
           <p class="text-body-2 font-weight-medium mt-2">Custom variables</p>
           <template v-for="(variable, index) in variables" :key="index">
@@ -558,6 +580,9 @@ const insertFirstVariableIntoUrl = () => {
 .variable-row { display: flex; flex-direction: column; align-items: stretch; gap: 20px; padding: 20px 0; border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity)); }
 .variable-row > strong { overflow-wrap: anywhere; }
 .variable-row > .v-btn { align-self: flex-start; }
+.builtin-variables-trigger { max-width: 100%; height: auto; min-height: 32px; white-space: normal; }
+.builtin-variables-trigger :deep(.v-btn__content) { white-space: normal; text-align: start; }
+.builtin-variables-table :deep(th), .builtin-variables-table :deep(td) { white-space: nowrap; }
 .builder-workspace > .canvas-stage { display: flex; min-width: 0; flex-direction: column; align-items: safe center; overflow: auto; padding: 28px 24px; background: rgb(var(--v-theme-background)); }
 .builder-workspace > .canvas-stage:fullscreen { width: 100vw; height: 100vh; align-items: safe center; padding: 32px; }
 .canvas-label { display: flex; align-items: center; gap: 4px; margin-bottom: 8px; }

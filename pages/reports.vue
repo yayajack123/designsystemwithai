@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { avatarText } from '@core/utils/formatters'
-import { useDailyJournalDemo, journalPublicPath } from '@/composables/useDailyJournalDemo'
+import { useDailyJournalDemo, journalPublicPath, getJournalStage, getDeliveryStatus } from '@/composables/useDailyJournalDemo'
 
 definePageMeta({
   sidebarRoute: 'reports',
 })
 
 type ReportsTab = 'daily-journal' | 'reports' | 'ptm'
-type JournalStatus = 'Not Created' | 'Pending' | 'Mixed' | 'Sending' | 'Sent' | 'Failed' | 'Sent (Manual)'
+type JournalStatus = 'Draft' | 'Created' | 'Revision' | 'Not Created' | 'Pending' | 'Mixed' | 'Sending' | 'Sent' | 'Failed' | 'Sent (Manual)'
 type LessonJournalStatus = Exclude<JournalStatus, 'Mixed'>
 type ReportStatus = 'Not Created' | 'Waiting for Daily Journal' | 'Created'
 type PtmStatus = 'Pending' | 'Confirmed'
@@ -23,6 +23,8 @@ interface DailyJournalLesson {
 
 interface ReportRow {
   id: string
+  journalId?: string
+  delivery?: string | null
   studentName: string
   studentId: string
   bookSession: string
@@ -146,26 +148,46 @@ const dailyJournalRecords: ReportRow[] = [
 
 const demo = useDailyJournalDemo()
 onMounted(demo.restore)
-const journalRoute = (item: ReportRow, step = '1') => ({ path: '/meeting-journal/create', query: { returnTo: 'reports', journalId: item.id, studentName: item.studentName, studentCode: item.studentId, bookTitle: item.bookSession, className: item.className, journalDate: item.date, lessons: JSON.stringify(item.lessonNames || (item.lessonName ? [item.lessonName] : [])), step } })
+const journalRoute = (item: ReportRow, step = '1') => ({ path: '/meeting-journal/create', query: { returnTo: 'reports', journalId: item.journalId || item.id, studentName: item.studentName, studentCode: item.studentId, bookTitle: item.bookSession, className: item.className, journalDate: item.date, lessons: JSON.stringify(item.lessonNames || (item.lessonName ? [item.lessonName] : [])), step } })
 const journalViewRoute = (item: ReportRow) => item.status === 'Failed'
   ? journalRoute(item, '2')
   : { path: `/meeting-journal/${encodeURIComponent(item.id)}` }
 const dailyJournalData = computed<ReportRow[]>(() => {
-  const rows = groupDailyJournalRows(dailyJournalRecords)
+  const rows = dailyJournalRecords.map(row => ({ ...row, status: row.status === 'Pending' ? 'Draft' as const : row.status }))
   Object.values(demo.records.value).forEach(record => {
     const existing = rows.findIndex(row => row.id === record.id)
-    const status = record.journal.status === 'Draft' ? 'Pending' : record.journal.status
+    const stage = getJournalStage(record)
+    const status = stage === 'Created' && !record.journal.aiSummary ? 'Draft' : stage
+    if (status === 'Sent' || status === 'Revised & Sent') return
     const row: ReportRow = {
       id: record.id, studentName: record.studentName, studentId: record.studentCode,
       bookSession: record.bookTitle, className: record.className,
-      date: record.startsAt.slice(0, 10), status,
+      date: record.startsAt.slice(0, 10), status, delivery: getDeliveryStatus(record),
       lessonDetails: record.lessons.map(lesson => ({ name: lesson.title, date: record.startsAt.slice(0, 10), status })),
       lessonNames: record.lessons.map(lesson => lesson.title),
     }
     if (existing >= 0) rows.splice(existing, 1, row)
     else rows.push(row)
   })
-  return rows
+  const lessonRows = rows.flatMap(row => {
+    const lessons = row.lessonNames?.length ? row.lessonNames : [row.lessonName || '0 Lesson']
+    return lessons.map((lesson, index) => ({ ...row, id: `${row.id}-lesson-${index}`, journalId: row.id, lessonName: lesson, lessonNames: [lesson], lessonDetails: [{ name: lesson, date: row.date, status: row.status as LessonJournalStatus }] }))
+  })
+  const showcaseStates = [
+    ['Not Created', null],
+    ['Draft', null],
+    ['Created', null],
+    ['Created', 'Sending'],
+    ['Created', 'Failed'],
+    ['Revision', null],
+    ['Revision', 'Failed'],
+  ]
+  const showcase = showcaseStates.flatMap(([status, delivery]) => {
+    const row = lessonRows.find(item => item.status === status && (item.delivery || null) === delivery)
+    return row ? [row] : []
+  })
+  const showcaseIds = new Set(showcase.map(row => row.id))
+  return [...showcase, ...lessonRows.filter(row => !showcaseIds.has(row.id))]
 })
 
 const reportsData = ref<ReportRow[]>([
@@ -260,7 +282,7 @@ const currentStatusOptions = computed(() => {
   if (activeTab.value === 'reports') return reportStatusOptions.value.slice(1)
   if (activeTab.value === 'ptm') return ['Pending', 'Confirmed']
 
-  return ['Not Created', 'Pending', 'Sending', 'Sent', 'Failed', 'Sent (Manual)']
+  return ['Not Created', 'Draft', 'Created', 'Revision']
 })
 
 const filteredData = computed(() => {
@@ -430,6 +452,15 @@ const showDailyJournalLessons = (item: ReportRow) => {
 
 const sendDailyJournal = (item: ReportRow) => {
   navigateTo(journalRoute(item, '2'))
+}
+const handlePendingAction = (item: ReportRow, action: string) => {
+  if (action !== 'Mark as sent') {
+    navigateTo(journalRoute(item, ['Create', 'Continue editing'].includes(action) ? '1' : '2'))
+    return
+  }
+  const id = item.journalId || item.id
+  if (!demo.records.value[id]) return
+  if (demo.beginSend(id, true)) showToast('Journal marked as sent.')
 }
 const copyJournalLink = async (item: ReportRow) => {
   try {
@@ -737,27 +768,7 @@ onBeforeUnmount(() => {
                   </div>
 
                   <div class="daily-journal-item-statuses">
-                    <template v-if="(journal.lessonDetails?.length || 0) > 1">
-                      <VChip
-                        v-for="summary in getJournalStatusCounts(journal)"
-                        :key="summary.status"
-                        :color="statusColor(summary.status)"
-                        variant="tonal"
-                        size="small"
-                        class="font-weight-medium"
-                      >
-                        {{ summary.count }} {{ summary.status }}
-                      </VChip>
-                    </template>
-                    <VChip
-                      v-else
-                      :color="statusColor(journal.status)"
-                      variant="tonal"
-                      size="small"
-                      class="font-weight-medium"
-                    >
-                      {{ journal.status }}
-                    </VChip>
+                    <PendingJournalStatus :status="journal.status" :delivery="journal.delivery" />
                   </div>
 
                   <VDivider vertical class="daily-journal-item-divider" />
@@ -770,45 +781,7 @@ onBeforeUnmount(() => {
                   <VDivider vertical class="daily-journal-item-divider" />
 
                   <div class="report-actions daily-journal-item-actions">
-                    <VBtn v-if="demo.records.value[journal.id]" variant="text" size="small" @click="copyJournalLink(journal)">Copy Link</VBtn>
-                    <VBtn v-if="['Sending', 'Sent', 'Sent (Manual)', 'Failed'].includes(journal.status)" variant="outlined" size="small" :to="journalViewRoute(journal)">{{ journal.status === 'Failed' ? 'Retry' : 'View' }}</VBtn>
-                    <template v-if="hasJournalStatus(journal, 'Not Created')">
-                      <VBtn
-                        color="primary"
-                        variant="flat"
-                        rounded="pill"
-                        size="small"
-                        prepend-icon="ri-pencil-line"
-                        :aria-label="`Create journal for ${journal.studentName}`"
-                        :to="journalRoute(journal)"
-                      >
-                        Create
-                      </VBtn>
-                    </template>
-                    <template v-if="hasJournalStatus(journal, 'Pending')">
-                      <VBtn
-                        color="primary"
-                        variant="flat"
-                        rounded="pill"
-                        size="small"
-                        prepend-icon="ri-send-plane-line"
-                        :aria-label="`Send journal for ${journal.studentName}`"
-                        @click="sendDailyJournal(journal)"
-                      >
-                        Send
-                      </VBtn>
-                      <VBtn
-                        color="primary"
-                        variant="outlined"
-                        rounded="pill"
-                        size="small"
-                        prepend-icon="ri-edit-box-line"
-                        :aria-label="`Edit journal for ${journal.studentName}`"
-                        :to="journalRoute(journal)"
-                      >
-                        Edit
-                      </VBtn>
-                    </template>
+                    <PendingJournalActions :status="journal.status" :delivery="journal.delivery" :student-name="journal.studentName" @action="handlePendingAction(journal, $event)" />
                   </div>
                 </div>
               </div>
@@ -917,21 +890,7 @@ onBeforeUnmount(() => {
         </template>
 
         <template #item.status="{ item }">
-          <div
-            v-if="activeTab === 'daily-journal' && (item.lessonDetails?.length || 0) > 1"
-            class="report-journal-statuses"
-          >
-            <VChip
-              v-for="summary in getJournalStatusCounts(item)"
-              :key="summary.status"
-              :color="statusColor(summary.status)"
-              variant="tonal"
-              size="small"
-              class="font-weight-medium"
-            >
-              {{ summary.count }} {{ summary.status }}
-            </VChip>
-          </div>
+          <PendingJournalStatus v-if="activeTab === 'daily-journal'" :status="item.status" :delivery="item.delivery" />
           <VChip
             v-else
             :color="statusColor(item.status)"
@@ -945,54 +904,7 @@ onBeforeUnmount(() => {
 
         <template #item.action="{ item }">
           <div v-if="activeTab === 'daily-journal'" class="report-actions">
-            <VBtn v-if="demo.records.value[item.id]" variant="text" size="small" @click="copyJournalLink(item)">Copy Link</VBtn>
-            <VBtn v-if="['Sending', 'Sent', 'Sent (Manual)', 'Failed'].includes(item.status)" variant="outlined" size="small" :to="journalViewRoute(item)">{{ item.status === 'Failed' ? 'Retry' : 'View' }}</VBtn>
-            <template v-if="hasJournalStatus(item, 'Not Created')">
-              <VTooltip text="Create" location="top">
-                <template #activator="{ props }">
-                  <VBtn
-                    v-bind="props"
-                    icon="ri-pencil-line"
-                    color="primary"
-                    variant="outlined"
-                    size="small"
-                    class="action-btn"
-                    :aria-label="`Create journal for ${item.studentName}`"
-                    :to="journalRoute(item)"
-                  />
-                </template>
-              </VTooltip>
-            </template>
-            <template v-if="hasJournalStatus(item, 'Pending')">
-              <VTooltip text="Edit" location="top">
-                <template #activator="{ props }">
-                  <VBtn
-                    v-bind="props"
-                    icon="ri-edit-box-line"
-                    color="primary"
-                    variant="outlined"
-                    size="small"
-                    class="action-btn"
-                    :aria-label="`Edit journal for ${item.studentName}`"
-                    :to="journalRoute(item)"
-                  />
-                </template>
-              </VTooltip>
-              <VTooltip text="Send" location="top">
-                <template #activator="{ props }">
-                  <VBtn
-                    v-bind="props"
-                    icon="ri-send-plane-line"
-                    color="primary"
-                    variant="outlined"
-                    size="small"
-                    class="action-btn"
-                    :aria-label="`Send journal for ${item.studentName}`"
-                    @click="sendDailyJournal(item)"
-                  />
-                </template>
-              </VTooltip>
-            </template>
+            <PendingJournalActions :status="item.status" :delivery="item.delivery" :student-name="item.studentName" @action="handlePendingAction(item, $event)" />
           </div>
 
           <div v-else-if="activeTab === 'reports'" class="report-actions">

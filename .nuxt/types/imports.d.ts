@@ -72,6 +72,8 @@ declare global {
   const getAppManifest: typeof import('../../node_modules/.pnpm/nuxt@3.21.9_@types+node@20.14.12_@vue+compiler-sfc@3.5.42_cac@6.7.14_db0@0.3.4_esbuild@_192ef103f6339b99b537d08ff3dd7d3c/node_modules/nuxt/dist/app/composables/manifest').getAppManifest
   const getCurrentInstance: typeof import('vue').getCurrentInstance
   const getCurrentScope: typeof import('vue').getCurrentScope
+  const getDeliveryStatus: typeof import('../../composables/useDailyJournalDemo').getDeliveryStatus
+  const getJournalStage: typeof import('../../composables/useDailyJournalDemo').getJournalStage
   const getRouteRules: typeof import('../../node_modules/.pnpm/nuxt@3.21.9_@types+node@20.14.12_@vue+compiler-sfc@3.5.42_cac@6.7.14_db0@0.3.4_esbuild@_192ef103f6339b99b537d08ff3dd7d3c/node_modules/nuxt/dist/app/composables/manifest').getRouteRules
   const h: typeof import('vue').h
   const hasInjectionContext: typeof import('vue').hasInjectionContext
@@ -531,7 +533,7 @@ declare global {
   export type { Component, ComponentPublicInstance, ComputedRef, DirectiveBinding, ExtractDefaultPropTypes, ExtractPropTypes, ExtractPublicPropTypes, InjectionKey, PropType, Ref, MaybeRef, MaybeRefOrGetter, VNode, WritableComputedRef } from 'vue'
   import('vue')
   // @ts-ignore
-  export type { DailyJournalDemo } from '../../composables/useDailyJournalDemo'
+  export type { JournalStage, DeliveryStatus, DailyJournalDemo } from '../../composables/useDailyJournalDemo'
   import('../../composables/useDailyJournalDemo')
   // @ts-ignore
   export type { MarketingStatus, MarketingDisplayStatus, MarketingVariableType, MarketingBlockStyle, MarketingBlock, MarketingVariable, MarketingTemplate, MarketingStudent, MarketingPageSnapshot } from '../../composables/useMarketingTemplates'
@@ -615,6 +617,8 @@ declare module 'vue' {
     readonly getAppManifest: UnwrapRef<typeof import('../../node_modules/.pnpm/nuxt@3.21.9_@types+node@20.14.12_@vue+compiler-sfc@3.5.42_cac@6.7.14_db0@0.3.4_esbuild@_192ef103f6339b99b537d08ff3dd7d3c/node_modules/nuxt/dist/app/composables/manifest')['getAppManifest']>
     readonly getCurrentInstance: UnwrapRef<typeof import('vue')['getCurrentInstance']>
     readonly getCurrentScope: UnwrapRef<typeof import('vue')['getCurrentScope']>
+    readonly getDeliveryStatus: UnwrapRef<typeof import('../../composables/useDailyJournalDemo')['getDeliveryStatus']>
+    readonly getJournalStage: UnwrapRef<typeof import('../../composables/useDailyJournalDemo')['getJournalStage']>
     readonly getRouteRules: UnwrapRef<typeof import('../../node_modules/.pnpm/nuxt@3.21.9_@types+node@20.14.12_@vue+compiler-sfc@3.5.42_cac@6.7.14_db0@0.3.4_esbuild@_192ef103f6339b99b537d08ff3dd7d3c/node_modules/nuxt/dist/app/composables/manifest')['getRouteRules']>
     readonly h: UnwrapRef<typeof import('vue')['h']>
     readonly hasInjectionContext: UnwrapRef<typeof import('vue')['hasInjectionContext']>

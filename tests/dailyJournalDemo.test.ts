@@ -4,7 +4,7 @@ import { ref } from 'vue'
 import { buildDailyJournalPrompt } from '../utils/dailyJournalPrompt'
 import { validateJournalVideo, validateJournalMedia } from '../utils/dailyJournalMedia'
 import { getBrandThemeColors } from '../plugins/vuetify/theme'
-import { useDailyJournalDemo, journalPublicPath, journalStatusColor } from '../composables/useDailyJournalDemo'
+import { useDailyJournalDemo, journalPublicPath, journalStatusColor, getDeliveryStatus, getJournalStage } from '../composables/useDailyJournalDemo'
 
 const state = ref({})
 Object.assign(globalThis, { useState: () => state })
@@ -42,21 +42,36 @@ test('delivery waits for explicit outcome, retries do not consume quota, and man
   })
   assert.equal(demo.beginSend('test', false), true)
   assert.equal(demo.records.value.test.journal.status, 'Sending')
+  assert.equal(getJournalStage(demo.records.value.test), 'Created')
+  assert.equal(getDeliveryStatus(demo.records.value.test), 'Sending')
   assert.equal(demo.beginSend('test', false), false)
   assert.equal(demo.records.value.test.sendCount, 0)
   demo.settleSend('test', false)
   assert.equal(demo.records.value.test.journal.status, 'Failed')
+  assert.equal(getDeliveryStatus(demo.records.value.test), 'Failed')
   assert.equal(demo.records.value.test.sendCount, 0)
   demo.settleSend('test', true)
   assert.equal(demo.records.value.test.journal.status, 'Failed')
   demo.beginSend('test', false)
   demo.settleSend('test', true)
   assert.equal(demo.records.value.test.sendCount, 1)
+  assert.equal(getJournalStage(demo.records.value.test), 'Sent')
   demo.beginSend('test', true)
   assert.equal(demo.records.value.test.journal.status, 'Sent (Manual)')
   assert.equal(demo.records.value.test.sendCount, 2)
+  assert.equal(getJournalStage(demo.records.value.test), 'Revised & Sent')
+  assert.equal(getDeliveryStatus(demo.records.value.test), 'Marked as Sent')
   assert.equal(demo.beginSend('test', true), false)
   assert.equal(journalStatusColor('Failed'), 'error')
+})
+
+test('legacy journal records derive stage and delivery without changing saved data', () => {
+  const record = { ...useDailyJournalDemo().records.value.test, journalStage: undefined, deliveryStatus: undefined, sendCount: 1, journal: { ...useDailyJournalDemo().records.value.test.journal, status: 'Draft' as const } }
+  assert.equal(getJournalStage(record), 'Revision')
+  assert.equal(getDeliveryStatus(record), null)
+  record.journal.status = 'Sent' as typeof record.journal.status
+  assert.equal(getJournalStage(record), 'Sent')
+  assert.equal(getDeliveryStatus(record), 'Sent')
 })
 
 test('dummy fallback prompt includes actual student, scores and observations', () => {
