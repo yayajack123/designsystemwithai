@@ -29,7 +29,8 @@ onMounted(() => {
   }
   ready.value = true
 })
-useHead({ title: 'Daily Journal demo', meta: [{ name: 'robots', content: 'noindex' }] })
+useSeoMeta({ title: 'Daily journal', description: 'View the daily journal report.' })
+useHead({ meta: [{ name: 'robots', content: 'noindex' }] })
 </script>
 
 <template>

@@ -55,6 +55,7 @@ const formattedUpdate = computed(() => session.value
   }).format(new Date(session.value.lastUpdated)) + ' WIB'
   : '',
 )
+useSeoMeta({ title: 'Session detail', description: 'View student session details.' })
 </script>
 
 <template>
@@ -159,7 +160,7 @@ const formattedUpdate = computed(() => session.value
       <VCol cols="12" md="4">
         <VCard variant="outlined" class="detail-card pa-6">
           <div class="student-banner d-flex align-center gap-3 pa-4 mb-5">
-            <VAvatar size="40" class="student-banner-avatar"><span class="text-body-1 font-weight-medium">{{ studentInitials }}</span></VAvatar>
+            <UiStudentAvatar>{{ studentInitials }}</UiStudentAvatar>
             <div>
               <div class="text-body-1 font-weight-medium">{{ student.name }}</div>
               <div class="text-body-2">Student</div>

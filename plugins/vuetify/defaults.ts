@@ -25,6 +25,9 @@ export default {
   VChip: {
     elevation: 0,
   },
+  VDialog: {
+    transition: 'app-dialog-transition',
+  },
   VMenu: {
     offset: '2px',
   },

@@ -307,6 +307,7 @@ const buildStudentScoreHistory = (student: any) => {
 const scoreHistoryAttempts = computed(() => {
   return selectedHistoryStudent.value ? buildStudentScoreHistory(selectedHistoryStudent.value) : []
 })
+useSeoMeta({ title: 'Schedule', description: 'View and manage the schedule.' })
 </script>
 
 <template>

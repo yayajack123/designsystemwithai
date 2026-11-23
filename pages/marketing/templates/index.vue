@@ -109,11 +109,12 @@ const runBulk = (action: 'inactive' | 'delete') => {
   selected.value = []
   notify(failures.length ? `${targets.length - failures.length} updated; ${failures.length} default template(s) skipped.` : `${targets.length} template(s) ${action === 'delete' ? 'deleted' : 'set inactive'}.`)
 }
+useSeoMeta({ title: 'Marketing templates', description: 'Manage marketing templates for daily journals.' })
 </script>
 
 <template>
   <div class="marketing-list-page">
-    <UiSectionHeader title="Marketing templates" description="Choose the page 2 message that matches each journal audience.">
+    <UiSectionHeader title="Marketing templates" title-class="text-h4 font-weight-medium text-high-emphasis" description="Choose the page 2 message that matches each journal audience.">
       <template #actions>
         <VBtn color="primary" prepend-icon="ri-add-line" to="/marketing/templates/new">New template</VBtn>
       </template>
@@ -170,10 +171,10 @@ const runBulk = (action: 'inactive' | 'delete') => {
             <template #item.name="{ item }">
               <div class="template-name-cell">
                 <div class="d-flex align-center flex-wrap gap-2">
-                  <span class="text-body-1 font-weight-medium">{{ item.name }}</span>
+                  <span class="text-body-1 font-weight-medium text-high-emphasis">{{ item.name }}</span>
                   <VChip v-if="item.isDefault" size="x-small" color="success" variant="tonal" class="template-default-chip">Default</VChip>
                 </div>
-                <span class="d-flex align-center gap-1 text-caption text-medium-emphasis">
+                <span class="d-flex align-center gap-1 text-body-2 text-medium-emphasis">
                   <VIcon icon="ri-layout-grid-line" size="12" aria-hidden="true" />
                   {{ item.blocks.length }} elements · {{ item.customVariableCount }} custom {{ item.customVariableCount === 1 ? 'variable' : 'variables' }}
                 </span>
@@ -183,8 +184,8 @@ const runBulk = (action: 'inactive' | 'delete') => {
               <VChip size="small" variant="tonal" :color="statusColor(item.displayStatus)" class="template-status-chip">{{ item.displayStatus }}</VChip>
             </template>
             <template #item.period="{ item }">
-              <div v-if="item.isDefault" class="text-body-2 text-medium-emphasis">Always on</div>
-              <div v-else class="template-period text-body-2 text-medium-emphasis">
+              <div v-if="item.isDefault" class="text-body-1 text-high-emphasis">Always on</div>
+              <div v-else class="template-period text-body-1 text-high-emphasis">
                 <span>{{ item.periodStart }}</span>
                 <span>{{ item.periodEnd }}</span>
               </div>
@@ -194,8 +195,8 @@ const runBulk = (action: 'inactive' | 'delete') => {
                 <VChip v-for="filter in item.filters" :key="filter" size="x-small" color="grey-100" variant="flat" class="template-filter-chip">{{ filter }}</VChip>
               </div>
             </template>
-            <template #item.priority="{ item }"><span class="text-body-2 font-weight-medium">{{ item.isDefault ? '—' : item.priority }}</span></template>
-            <template #item.updatedAt="{ item }"><span class="text-body-2 text-medium-emphasis">{{ dateLabel(item.updatedAt) }}</span></template>
+            <template #item.priority="{ item }"><span class="text-body-1 font-weight-medium text-high-emphasis">{{ item.isDefault ? '—' : item.priority }}</span></template>
+            <template #item.updatedAt="{ item }"><span class="text-body-1 text-high-emphasis">{{ dateLabel(item.updatedAt) }}</span></template>
             <template #item.actions="{ item }">
               <div class="d-flex justify-end gap-1">
                 <VTooltip text="Preview"><template #activator="{ props: tooltipProps }"><VBtn v-bind="tooltipProps" icon="ri-eye-line" size="small" variant="outlined" color="secondary" class="action-btn" aria-label="Preview template" @click="openPreview(item)" /></template></VTooltip>
@@ -235,10 +236,9 @@ const runBulk = (action: 'inactive' | 'delete') => {
 .template-search, .status-select { flex: 0 1 220px; min-width: min(220px, 100%); }
 .template-table-scroll { max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; }
 .template-table-scroll :deep(table) { min-width: 1420px; }
-.template-table-scroll :deep(.v-data-table__td) { height: auto; padding-block: 10px; vertical-align: middle; }
 .template-table-scroll :deep(.action-btn) { border-color: rgba(var(--v-theme-on-surface), 0.08) !important; border-radius: 4px; }
 .template-table-scroll :deep(.action-btn:hover) { background-color: rgba(var(--v-theme-on-surface), 0.04); }
-.template-name-cell { display: flex; min-width: 240px; min-height: 48px; flex-direction: column; justify-content: center; gap: 4px; }
+.template-name-cell { display: flex; min-width: 240px; flex-direction: column; justify-content: center; padding-block: 8px; }
 .template-default-chip { font-size: 10px; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; }
 .template-status-chip { min-width: 78px; justify-content: center; font-weight: 600; }
 .template-period { display: flex; flex-direction: column; gap: 2px; white-space: nowrap; }

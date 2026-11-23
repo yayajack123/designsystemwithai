@@ -4,6 +4,7 @@ import type { RouteLocation } from '#vue-router'
 interface Props {
   title: string
   description?: string
+  titleClass?: string
   back?: RouteLocation
   customBack?: boolean
 }
@@ -42,7 +43,7 @@ const handleBackClick = (e: MouseEvent) => {
         cols="12"
         md="8"
       >
-        <h1 class="text-h5">
+        <h1 :class="props.titleClass || 'text-h5'">
           {{ props.title }}
         </h1>
         <p

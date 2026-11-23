@@ -146,6 +146,7 @@ const branchStats = [
     desc: 'Branch Canggu',
   },
 ]
+useSeoMeta({ title: 'My attendance', description: 'View your attendance and meeting details.' })
 </script>
 
 <template>

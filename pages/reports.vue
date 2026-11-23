@@ -12,7 +12,7 @@ type LessonJournalStatus = Exclude<JournalStatus, 'Mixed'>
 type ReportStatus = 'Not Created' | 'Waiting for Daily Journal' | 'Created'
 type PtmStatus = 'Pending' | 'Confirmed'
 type RowStatus = JournalStatus | ReportStatus | PtmStatus
-type ViewType = 'flat' | 'student' | 'class'
+type ViewType = 'flat' | 'student'
 type ReportGroup = { key: string; order: 'asc' }
 
 interface DailyJournalLesson {
@@ -125,6 +125,8 @@ const ptmNotes = ref('')
 const estimatedPtmDate = ref('')
 const isLessonsDialogOpen = ref(false)
 const selectedDailyJournal = ref<ReportRow | null>(null)
+const journalToMarkSent = ref<ReportRow | null>(null)
+const journalToSend = ref<ReportRow | null>(null)
 let loadingTimer: ReturnType<typeof setTimeout> | undefined
 
 const dailyJournalRecords: ReportRow[] = [
@@ -369,7 +371,6 @@ const hasActiveFilter = computed(() =>
 
 const tableGroupBy = computed<ReportGroup[]>(() => {
   if (viewType.value === 'student') return [{ key: 'studentName', order: 'asc' }]
-  if (viewType.value === 'class') return [{ key: 'className', order: 'asc' }]
 
   return []
 })
@@ -454,13 +455,28 @@ const sendDailyJournal = (item: ReportRow) => {
   navigateTo(journalRoute(item, '2'))
 }
 const handlePendingAction = (item: ReportRow, action: string) => {
-  if (action !== 'Mark as sent') {
-    navigateTo(journalRoute(item, ['Create', 'Continue editing'].includes(action) ? '1' : '2'))
+  if (['Create', 'Continue editing'].includes(action)) {
+    navigateTo(journalRoute(item, '1'))
     return
   }
-  const id = item.journalId || item.id
-  if (!demo.records.value[id]) return
+  if (action !== 'Mark as sent') {
+    journalToSend.value = item
+    return
+  }
+  if (demo.records.value[item.journalId || item.id]) journalToMarkSent.value = item
+}
+const confirmSendDailyJournal = () => {
+  if (!journalToSend.value) return
+  const journal = journalToSend.value
+  journalToSend.value = null
+  sendDailyJournal(journal)
+}
+const confirmMarkSent = () => {
+  if (!journalToMarkSent.value) return
+  const id = journalToMarkSent.value.journalId || journalToMarkSent.value.id
   if (demo.beginSend(id, true)) showToast('Journal marked as sent.')
+  else showToast('Journal could not be marked as sent.')
+  journalToMarkSent.value = null
 }
 const copyJournalLink = async (item: ReportRow) => {
   try {
@@ -536,6 +552,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   if (loadingTimer) clearTimeout(loadingTimer)
 })
+useSeoMeta({ title: 'Reports', description: 'View student and meeting reports.' })
 </script>
 
 <template>
@@ -575,7 +592,7 @@ onBeforeUnmount(() => {
       class="report-card"
       :class="{ 'report-card--daily-journal': activeTab === 'daily-journal' }"
     >
-      <VCardText class="report-filter-bar">
+      <VCardText class="report-filter-bar py-4">
         <div class="report-filter-fields">
           <VTextField
             v-model="searchQuery"
@@ -635,12 +652,6 @@ onBeforeUnmount(() => {
             icon="ri-team-line"
             aria-label="Group by student"
             title="Group by student"
-          />
-          <VBtn
-            value="class"
-            icon="ri-door-closed-line"
-            aria-label="Group by class"
-            title="Group by class"
           />
         </VBtnToggle>
       </VCardText>
@@ -704,13 +715,7 @@ onBeforeUnmount(() => {
               @keydown="handleStudentHeaderKeydown($event, student.key)"
             >
               <div class="daily-journal-student-identity">
-                <VAvatar
-                  size="34"
-                  color="grey-50"
-                  class="daily-journal-student-avatar"
-                >
-                  <span class="text-body-2 text-high-emphasis">{{ avatarText(student.studentName) }}</span>
-                </VAvatar>
+                <UiStudentAvatar>{{ avatarText(student.studentName) }}</UiStudentAvatar>
                 <div class="daily-journal-student-copy">
                   <span class="text-body-1 font-weight-medium text-high-emphasis">
                     {{ student.studentName }}
@@ -807,28 +812,21 @@ onBeforeUnmount(() => {
       >
         <template #item.student="{ item }">
           <div class="report-student-cell">
-            <VAvatar
-              size="34"
-              color="primary"
-              variant="tonal"
-              class="report-student-avatar"
-            >
-              <span class="text-caption font-weight-medium">{{ avatarText(item.studentName) }}</span>
-            </VAvatar>
+            <UiStudentAvatar>{{ avatarText(item.studentName) }}</UiStudentAvatar>
             <div class="report-student-copy">
-              <span class="text-body-2 font-weight-medium text-high-emphasis">{{ item.studentName }}</span>
-              <span class="text-caption text-medium-emphasis">{{ item.studentId }}</span>
+              <span class="text-body-1 font-weight-medium text-high-emphasis">{{ item.studentName }}</span>
+              <span class="text-body-2 text-medium-emphasis">{{ item.studentId }}</span>
             </div>
           </div>
         </template>
 
         <template #item.bookSession="{ item }">
-          <span class="text-body-2 text-high-emphasis">{{ item.bookSession }}</span>
+          <span class="text-body-1 text-high-emphasis">{{ item.bookSession }}</span>
         </template>
 
         <template #item.lessonName="{ item }">
           <div class="report-lessons-cell">
-            <span class="text-body-2 text-high-emphasis">
+            <span class="text-body-1 font-weight-medium text-high-emphasis">
               {{ getDailyJournalLessons(item).length > 1 ? `${getDailyJournalLessons(item).length} Lesson` : getDailyJournalLessons(item)[0] || '—' }}
             </span>
             <VBtn
@@ -846,15 +844,15 @@ onBeforeUnmount(() => {
         </template>
 
         <template #item.lessons="{ item }">
-          <span class="text-body-2 text-high-emphasis">{{ item.lessons }}</span>
+          <span class="text-body-1 text-high-emphasis">{{ item.lessons }}</span>
         </template>
 
         <template #item.className="{ item }">
-          <span class="text-body-2 text-medium-emphasis">{{ item.className || '—' }}</span>
+          <span class="text-body-1 text-high-emphasis">{{ item.className || '—' }}</span>
         </template>
 
         <template #item.date="{ item }">
-          <span class="text-body-2 text-high-emphasis">
+          <span class="text-body-1 text-high-emphasis">
             {{ activeTab === 'daily-journal' ? formatDateRange(item) : formatDate(item.date) }}
           </span>
         </template>
@@ -868,7 +866,7 @@ onBeforeUnmount(() => {
               rounded
               aria-hidden="true"
             />
-            <span class="text-body-2 font-weight-medium text-no-wrap">
+            <span class="text-body-1 font-weight-medium text-no-wrap">
               {{ item.dailyJournalsDone || 0 }}/{{ item.dailyJournalsTotal || 0 }} DJ
             </span>
           </div>
@@ -883,7 +881,7 @@ onBeforeUnmount(() => {
               rounded
               aria-hidden="true"
             />
-            <span class="text-body-2 font-weight-medium text-no-wrap">
+            <span class="text-body-1 font-weight-medium text-no-wrap">
               {{ item.reportsDone || 0 }}/{{ item.reportsTotal || 0 }}
             </span>
           </div>
@@ -915,7 +913,7 @@ onBeforeUnmount(() => {
               color="secondary"
               rounded="pill"
               size="small"
-              class="pending-menu-button"
+              class="table-action-button"
               :aria-label="`View report details for ${item.studentName}`"
               @click="viewReportDetails(item)"
             >
@@ -934,7 +932,7 @@ onBeforeUnmount(() => {
                   color="secondary"
                   rounded="pill"
                   size="small"
-                  class="pending-menu-button"
+                  class="table-action-button"
                   :aria-label="`More actions for ${item.studentName}`"
                 >
                   <VIcon icon="ri-more-2-fill" />
@@ -972,7 +970,7 @@ onBeforeUnmount(() => {
                   variant="outlined"
                   color="secondary"
                   size="small"
-                  class="ptm-menu-button"
+                  class="table-action-button"
                   :aria-label="'More actions for ' + item.studentName"
                 />
               </template>
@@ -999,13 +997,18 @@ onBeforeUnmount(() => {
       </VDataTable>
     </VCard>
 
-    <VDialog v-model="isPtmDialogOpen" max-width="520">
-      <VCard v-if="selectedPtm" class="ptm-confirm-dialog" elevation="0">
-        <VCardTitle class="d-flex align-start justify-space-between gap-4 pa-6 pb-2">
-          <span class="text-h5 text-high-emphasis">Confirm PTM</span>
-          <DialogCloseBtn aria-label="Close confirm PTM dialog" @click="isPtmDialogOpen = false" />
-        </VCardTitle>
-        <VCardText class="px-6 pt-3">
+    <UiConfirmDialog :model-value="Boolean(journalToSend)" title="Send journal to parent?" @update:model-value="!$event && (journalToSend = null)">
+      Review the daily journal for {{ journalToSend?.studentName }} before sending it to their parent.
+      <template #actions><VBtn variant="outlined" color="secondary" class="px-6" @click="journalToSend = null">Cancel</VBtn><VBtn color="primary" class="px-6" @click="confirmSendDailyJournal">Review journal</VBtn></template>
+    </UiConfirmDialog>
+
+    <UiConfirmDialog :model-value="Boolean(journalToMarkSent)" title="Mark journal as sent?" @update:model-value="!$event && (journalToMarkSent = null)">
+      Confirm that the journal for {{ journalToMarkSent?.studentName }} has been shared manually. This uses one send and does not send a message.
+      <template #actions><VBtn variant="outlined" color="secondary" class="px-6" @click="journalToMarkSent = null">Cancel</VBtn><VBtn color="primary" class="px-6" @click="confirmMarkSent">Mark as sent</VBtn></template>
+    </UiConfirmDialog>
+
+    <UiConfirmDialog v-model="isPtmDialogOpen" title="Confirm PTM" :max-width="520">
+        <div v-if="selectedPtm" class="pt-3">
           <div class="ptm-action-context mb-5 text-body-2 text-medium-emphasis">
             {{ selectedPtm.studentName }} · {{ selectedPtm.bookSession }}
           </div>
@@ -1030,15 +1033,14 @@ onBeforeUnmount(() => {
               :config="{ dateFormat: 'F j, Y' }"
             />
           </div>
-        </VCardText>
-        <VCardActions class="px-6 pb-6 pt-0 justify-end gap-2">
-          <VBtn variant="text" color="secondary" @click="isPtmDialogOpen = false">Cancel</VBtn>
-          <VBtn color="primary" :disabled="!estimatedPtmDate" @click="confirmPtm">
+        </div>
+        <template #actions>
+          <VBtn variant="outlined" color="secondary" class="px-6" @click="isPtmDialogOpen = false">Cancel</VBtn>
+          <VBtn color="primary" class="px-6" :disabled="!estimatedPtmDate" @click="confirmPtm">
             Confirm
           </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
+        </template>
+    </UiConfirmDialog>
 
     <VDialog v-model="isLessonsDialogOpen" max-width="480">
       <VCard v-if="selectedDailyJournal" class="report-detail-dialog">
@@ -1346,7 +1348,6 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 16px;
-  padding: 16px 20px;
 }
 
 .report-filter-fields {
@@ -1367,7 +1368,7 @@ onBeforeUnmount(() => {
   display: inline-flex;
   flex: 0 0 auto;
   align-items: center;
-  height: 50px;
+  height: 50px !important;
   border: 1px solid rgba(var(--v-theme-on-surface), 0.12) !important;
   border-radius: 8px !important;
   padding: 7px !important;
@@ -1413,7 +1414,7 @@ onBeforeUnmount(() => {
   min-width: 200px;
   align-items: center;
   gap: 10px;
-  padding-block: 4px;
+  padding-block: 8px;
 }
 
 .report-student-avatar {
@@ -1438,7 +1439,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding-block: 4px;
+  padding-block: 8px;
 }
 
 .report-journal-statuses {
@@ -1451,7 +1452,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 2px;
+  gap: 4px;
   white-space: nowrap;
 }
 
@@ -1550,7 +1551,6 @@ onBeforeUnmount(() => {
 }
 
 .report-table :deep(td) {
-  height: 60px;
   white-space: nowrap;
 }
 
@@ -1581,10 +1581,6 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 600px) {
-  .report-filter-bar {
-    padding: 14px 16px;
-  }
-
   .report-filter-fields {
     align-items: stretch;
   }

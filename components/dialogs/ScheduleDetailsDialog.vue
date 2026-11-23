@@ -215,9 +215,7 @@ const onSeeHistory = (student: StudentMember) => {
             >
               <!-- Left: Avatar, Name & ID -->
               <div class="d-flex align-center gap-4 flex-shrink-0" style="width: 310px;">
-                <div class="student-avatar d-flex align-center justify-center text-body-1 flex-shrink-0">
-                  {{ student.initials.slice(0, 2) }}
-                </div>
+                <UiStudentAvatar>{{ student.initials.slice(0, 2) }}</UiStudentAvatar>
                 <div class="d-flex flex-column overflow-hidden">
                   <div class="d-flex align-baseline gap-2 overflow-hidden">
                     <span class="text-body-1 font-weight-medium text-high-emphasis text-truncate d-inline-block" style="max-width: 140px;">
@@ -399,14 +397,6 @@ const onSeeHistory = (student: StudentMember) => {
 
 .student-item {
   border-color: rgba(var(--v-theme-on-surface), 0.12) !important;
-}
-
-.student-avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background-color: var(--misc-avatar-bg, #f0eff0);
-  color: rgba(var(--v-theme-on-surface), 0.9);
 }
 
 .max-height-body {

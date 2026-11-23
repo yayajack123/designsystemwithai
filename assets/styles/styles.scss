@@ -1,4 +1,55 @@
 // Write your overrides
+.table-action-button {
+  border-color: rgba(var(--v-theme-on-surface), 0.08) !important;
+  border-radius: 4px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .table-action-button:hover {
+    background-color: rgba(var(--v-theme-on-surface), 0.04);
+  }
+}
+
+.v-dialog {
+  > .v-overlay__scrim.fade-transition-enter-active,
+  > .v-overlay__scrim.fade-transition-leave-active,
+  > .v-overlay__content.app-dialog-transition-enter-active,
+  > .v-overlay__content.app-dialog-transition-leave-active {
+    transition-duration: 250ms !important;
+    transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1) !important;
+  }
+
+  > .v-overlay__scrim.fade-transition-enter-from,
+  > .v-overlay__scrim.fade-transition-leave-to {
+    opacity: 0 !important;
+  }
+
+  > .v-overlay__content.app-dialog-transition-enter-active,
+  > .v-overlay__content.app-dialog-transition-leave-active {
+    transition-property: opacity, transform;
+  }
+
+  > .v-overlay__content.app-dialog-transition-enter-from,
+  > .v-overlay__content.app-dialog-transition-leave-to {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .v-dialog {
+    > .v-overlay__content.app-dialog-transition-enter-active,
+    > .v-overlay__content.app-dialog-transition-leave-active {
+      transition-property: opacity;
+    }
+
+    > .v-overlay__content.app-dialog-transition-enter-from,
+    > .v-overlay__content.app-dialog-transition-leave-to {
+      transform: none;
+    }
+  }
+}
+
 .invalid-border {
   border: 1px solid rgb(var(--v-theme-error));
 }

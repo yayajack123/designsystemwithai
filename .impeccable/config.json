@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "layout-transition",
+        "value": "*",
+        "files": [
+          "@layouts/components/VerticalNavLayout.vue"
+        ],
+        "createdAt": "2026-11-23T02:21:04.375Z",
+        "reason": "Existing sidebar layout transition intentionally adjusts content space when navigation collapses; transform would not update layout."
+      }
+    ]
+  }
+}

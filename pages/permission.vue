@@ -2,6 +2,7 @@
 definePageMeta({
   sidebarRoute: 'permission',
 })
+useSeoMeta({ title: 'Permissions', description: 'Manage permissions.' })
 </script>
 
 <template>

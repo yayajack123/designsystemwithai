@@ -21,7 +21,7 @@ layoutConfig.app.logo = brandLogo
 
 useHead({
   title: appName,
-  titleTemplate: title => title && title !== appName ? `${title} · ${appName}` : appName,
+  titleTemplate: title => title || appName,
   link: [{ rel: 'icon', href: runtimeConfig.public.appFavicon }],
 })
 

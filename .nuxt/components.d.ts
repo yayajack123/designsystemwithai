@@ -87,7 +87,9 @@ export const AccountSettingsDelete: typeof import("../components/sections/accoun
 export const AccountSettingsSecurity: typeof import("../components/sections/account-settings/AccountSettingsSecurity.vue")['default']
 export const ThemeCard: typeof import("../components/themes/ThemeCard.vue")['default']
 export const UiAutoComplete: typeof import("../components/ui/UiAutoComplete.vue")['default']
+export const UiConfirmDialog: typeof import("../components/ui/UiConfirmDialog.vue")['default']
 export const UiSectionHeader: typeof import("../components/ui/UiSectionHeader.vue")['default']
+export const UiStudentAvatar: typeof import("../components/ui/UiStudentAvatar.vue")['default']
 export const UiTableView: typeof import("../components/ui/UiTableView.vue")['default']
 export const NuxtWelcome: typeof import("../node_modules/.pnpm/nuxt@3.21.9_@types+node@20.14.12_@vue+compiler-sfc@3.5.42_cac@6.7.14_db0@0.3.4_esbuild@_192ef103f6339b99b537d08ff3dd7d3c/node_modules/nuxt/dist/app/components/welcome.vue")['default']
 export const NuxtLayout: typeof import("../node_modules/.pnpm/nuxt@3.21.9_@types+node@20.14.12_@vue+compiler-sfc@3.5.42_cac@6.7.14_db0@0.3.4_esbuild@_192ef103f6339b99b537d08ff3dd7d3c/node_modules/nuxt/dist/app/components/nuxt-layout")['default']
@@ -187,7 +189,9 @@ export const LazyAccountSettingsDelete: LazyComponent<typeof import("../componen
 export const LazyAccountSettingsSecurity: LazyComponent<typeof import("../components/sections/account-settings/AccountSettingsSecurity.vue")['default']>
 export const LazyThemeCard: LazyComponent<typeof import("../components/themes/ThemeCard.vue")['default']>
 export const LazyUiAutoComplete: LazyComponent<typeof import("../components/ui/UiAutoComplete.vue")['default']>
+export const LazyUiConfirmDialog: LazyComponent<typeof import("../components/ui/UiConfirmDialog.vue")['default']>
 export const LazyUiSectionHeader: LazyComponent<typeof import("../components/ui/UiSectionHeader.vue")['default']>
+export const LazyUiStudentAvatar: LazyComponent<typeof import("../components/ui/UiStudentAvatar.vue")['default']>
 export const LazyUiTableView: LazyComponent<typeof import("../components/ui/UiTableView.vue")['default']>
 export const LazyNuxtWelcome: LazyComponent<typeof import("../node_modules/.pnpm/nuxt@3.21.9_@types+node@20.14.12_@vue+compiler-sfc@3.5.42_cac@6.7.14_db0@0.3.4_esbuild@_192ef103f6339b99b537d08ff3dd7d3c/node_modules/nuxt/dist/app/components/welcome.vue")['default']>
 export const LazyNuxtLayout: LazyComponent<typeof import("../node_modules/.pnpm/nuxt@3.21.9_@types+node@20.14.12_@vue+compiler-sfc@3.5.42_cac@6.7.14_db0@0.3.4_esbuild@_192ef103f6339b99b537d08ff3dd7d3c/node_modules/nuxt/dist/app/components/nuxt-layout")['default']>

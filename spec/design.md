@@ -19,6 +19,9 @@ This section details the typography tokens configured for this project, based on
 ### Base Font Family
 
 - **Font Family:** `"Poppins", sans-serif` (with system-specific fallbacks)
+- **Student initials must use `UiStudentAvatar`**: a 34px circular `VAvatar`, `grey-100` background, border, and medium `body-1` high-emphasis text. Keep the student name visible alongside it.
+  Why: keep student avatars consistent across the project.
+  <!-- 2026-11-23: "buat penggunaan komponen avatar konsisten ... apply ke halaman yang menampilkan avatar dari siswa" -->
 
 ### Typography Tokens Table
 
@@ -169,7 +172,7 @@ Grey tokens are utilized for semantic text weights, borders, dividers, and vario
 
 - Marketing template forms group information, audience, and selection priority with `VRow`/`VCol` (3-column explanation, 9-column fields on desktop; stacked on mobile) and 24px section dividers. `AppStepper` supports an optional `layout="centered"`, matching Figma `2143:7737`: 20px indicators above centered `text-body-1` medium labels, a 16px gap, and 3px connectors. Completed steps reuse the existing 20px check asset; active rings use `primary` on `surface`, pending indicators and connectors use the existing 16% primary opacity. The default layout stays unchanged; marketing uses the centered layout on desktop and retains the mobile progress bar. Footer actions use an explicit flat `primary` Continue/Activate button and outlined `secondary` Back/Save draft buttons. Supporting form actions also use outlined `secondary`. No new typography, color tokens, or animation are introduced.
 
-- Marketing Template CMS uses `UiSectionHeader`, `UiTableView`, Vuetify form controls, `VCard`, `VChip`, and `AppStepper`. The template list keeps its desktop table and uses horizontal scrolling on narrow screens. Its columns are Name, Status, Period, Filters, Priority, Last modified, and Actions; name metadata shows element and custom-variable counts, while audience criteria use wrapping filter chips. Rows grow with wrapped content and retain a 68px minimum height. Default templates use a compact success-tonal badge, and action icons reuse Assessments' `.action-btn` outline (8% on-surface border, 4px radius, 4% on-surface hover) inside the existing `VBtn` and `VMenu` components. `MarketingBuilder` is a dedicated reusable editor because the existing `TiptapEditor` supports rich text only; it owns the 390px page canvas, layer/property panels, variable controls, undo/redo, and A4/mobile preview. Use existing Poppins typography and semantic `primary`, `surface`, `background`, `success`, `warning`, `error`, `info`, and `secondary` colors. The builder is the visual signature: live page preview stays beside the editing tools.
+- Marketing Template CMS uses `UiSectionHeader`, `UiTableView`, Vuetify form controls, `VCard`, `VChip`, and `AppStepper`. The template list keeps its desktop table and uses horizontal scrolling on narrow screens. Its columns are Name, Status, Period, Filters, Priority, Last modified, and Actions; name metadata shows element and custom-variable counts, while audience criteria use wrapping filter chips. Rows grow with wrapped content and follow the Assessments table's sizing and padding. Default templates use a compact success-tonal badge, and action icons reuse Assessments' `.action-btn` outline (8% on-surface border, 4px radius, 4% on-surface hover) inside the existing `VBtn` and `VMenu` components. `MarketingBuilder` is a dedicated reusable editor because the existing `TiptapEditor` supports rich text only; it owns the 390px page canvas, layer/property panels, variable controls, undo/redo, and A4/mobile preview. Use existing Poppins typography and semantic `primary`, `surface`, `background`, `success`, `warning`, `error`, `info`, and `secondary` colors. The builder is the visual signature: live page preview stays beside the editing tools.
 - Template status counts follow Figma node `5:103267` in one `VCard`: four evenly divided metrics with a muted label, prominent number, concise context, and a neutral square icon tile. Keep 20px outer card padding and 24px horizontal inset on both sides of each desktop divider so icons and labels do not touch separators. At tablet widths use 12px horizontal and 16px vertical cell padding in a 2×2 grid; below 600px, stack metrics with 12px vertical spacing and horizontal dividers to preserve readable text. Use the existing `grey-100` tile, `elevation="4"`, semantic text/surface colors, and token-based dividers. Keep one shared card rather than separate metric cards or colored rails.
 
 - Marketing artwork demos use static assets in `public/marketing/demo/` and stable template IDs. Add missing demo templates as Draft without replacing saved templates. Preserve artwork aspect ratios at the 390px canvas width; initialize fit-content height when an existing design exceeds 400px. Image-based CTAs use a named, transparent button layer above the artwork, retaining an accessible link name and focus outline without duplicating the artwork's printed label.
@@ -184,7 +187,9 @@ Grey tokens are utilized for semantic text weights, borders, dividers, and vario
 
 - Meeting journal view-only follows Figma node `1113:4382`: teacher/update strip; lesson cards with 16px header padding, 24/38 score, and separate objective accordion; 24px detail grid with project/media left and AI notes right; live report below. Cards/fields use 12px radius, divider opacity 12%, local list gaps 20px, and existing semantic surfaces. Preserve all snapshot fields and view-only behavior. Full token mapping and deliberate differences are documented in [the implementation plan](../plan/meeting-journal-view-only-figma.md).
 
-- Reports' View action opens `/meeting-journal/:journalId`, reusing the meeting journal detail view with the saved browser-local demo snapshot. It restores storage before showing missing-data feedback, returns to Reports, and exposes no edit/send controls. Failed rows retain Retry into the create/review flow. Existing student-history detail routes retain their mock meeting data. Internal detail may show saved video evidence; the parent-facing report still excludes video.
+- Meeting journal detail keeps Back to list, journal status, and the existing conditional Edit action in a bar fixed to the bottom of the viewport and aligned to the content area. Reserve space for its measured height and wrap the actions on mobile; retain the existing routes and edit permissions.
+
+- Reports' View action opens `/meeting-journal/:journalId`, reusing the meeting journal detail view with the saved browser-local demo snapshot. It restores storage before showing missing-data feedback and returns to Reports. Completed reports offer browser print-to-PDF; eligible snapshots offer manual-send confirmation and simulated parent delivery with the existing send limit. Failed rows retain Retry into the create/review flow. Existing student-history detail routes retain their mock meeting data. Internal detail may show saved video evidence; the parent-facing report still excludes video.
 
 - Teacher Notes uses an 8% primary tint, a subtle 1px border at 16% primary opacity, and a tonal note icon to distinguish the teacher's narrative from lesson data. Documentation columns are capped at 224px including gutters, yielding thumbnails up to 200px wide while retaining three columns on narrow layouts. Square previews use the numeric `:aspect-ratio="1"` prop.
 
@@ -298,6 +303,14 @@ Below details what specific color and typography tokens are configured on these 
 
 #### Cards (`VCard`, `VCardText`, `VCardTitle`, `VCardActions`)
 
+- Confirmation dialogs use `UiConfirmDialog`, following Assessment: `text-h5` title, 24px body padding, close button, and `grey-50` footer with 24px horizontal and 16px vertical padding. Use an outlined secondary cancel action and a filled semantic primary or error confirmation; adjust width for forms when needed.
+
+- Dialogs and their scrims enter and leave together using a 250ms opacity transition and `cubic-bezier(0.23, 1, 0.32, 1)`; dialog content also scales from 0.96. Under reduced motion, retain opacity and remove scaling. Dialog children do not animate separately.
+
+- **Group each card's title and description as its header, and use 24px between header, content, and footer when present.**
+  Why: distinguish the header, content, and footer groups consistently.
+  <!-- 2026-11-23: "diterapkan konsisten struktur card header, content dan footer" -->
+
 - Marketing preview uses `MarketingPreviewDocument` to fit the existing 390px canvas proportionally inside its container. Keep A4 pages at a 210:297 ratio and use independent format (A4/mobile) and content (page 2/full journal sample) controls. The full sample reuses `MeetingJournalReportPreview`; preview controls must not update campaign data. Recipient summaries use a filled `primary` card with `on-primary` text throughout.
 
 - **Typography:** Titles map to `h6` or `subtitle-1`. Text maps to `body-2` or `body-1`.
@@ -307,6 +320,9 @@ Below details what specific color and typography tokens are configured on these 
 
 #### Buttons & Actions (`VBtn`, `VIcon`)
 
+- Table icon actions use the Marketing Templates pattern: small outlined `VBtn`, `secondary` for neutral actions, `table-action-button` for the 8% border and 4% hover, and a 4px gap. Keep semantic colors for actions such as approve, reject, and delete.
+  Why: keep table actions consistent while preserving semantic meaning.
+  <!-- 2026-11-23: "warna semantik tetap pertahankan, sisanya sesuaikan" -->
 - **Typography:** `VBtn` automatically maps properties of the `button` typography token (15px, medium weight).
 - **Shape:** Every `VBtn` variant uses a full rounded corner radius (`rounded="pill"`, equivalent to `border-radius: 999px`). Keep this rule for flat, outlined, text, tonal, elevated, plain, and icon buttons. Use `VBtnToggle` only when grouped controls require a separate group container treatment.
 - **Colors:**
@@ -325,6 +341,9 @@ Below details what specific color and typography tokens are configured on these 
 #### Lists & Navigation (`VList`, `VListItem`, `VListItemTitle`, `VListItemSubtitle`)
 
 - **Typography:** `VListItemTitle` uses `body-1` (15px). `VListItemSubtitle` uses `body-2` (13px) or `caption` (13px with wider spacing).
+- **Table action menus beside small buttons use 13px item text**, matching the button. Other lists retain the default above.
+  Why: keep related table actions visually consistent.
+  <!-- 2026-11-23: "khusus untuk menu di samping tombol di table" -->
 - **Colors:** Active list item uses `primary` text/bg overlay. Muted list items use `text-secondary` or `disabled` color.
 
 #### Sidebar Navigation Active State
@@ -333,6 +352,11 @@ Below details what specific color and typography tokens are configured on these 
 
 #### Tables & Data Representation (`UiTableView`, `VDataTable`, `VDataTableServer`)
 
-- **Typography:** Table headers use `subtitle-2` or `overline`. Cell text uses `body-2`.
+- **Typography and spacing:** Data tables use the Assessments hierarchy: table headers use `subtitle-2` or `overline`, primary cell content uses `text-body-1`, and supporting content uses `text-body-2`. Two-line identity cells use 8px vertical padding. Document any exceptions for tables with different content needs.
+  Why: keep text hierarchy and table density consistent.
+  <!-- 2026-11-23: "sesuaikan table menu report agar sama dengan sizing dan paddingnya dengan menu assestment"; "apply juga ke list marketing templates" -->
+- **Student names** use `text-body-1`, `font-weight-medium`, and `text-high-emphasis` across table and mobile card views.
+  Why: keep student names consistent and easy to identify across tables.
+  <!-- 2026-11-23: "buat konsisten menggunakan text-body-1 dengan warna text-high-empashis" -->
 - **Colors:** Row borders use `grey-100`. Alternate rows or hover states use `grey-50` (`#FAFAFA` light, `#2A2E42` dark).
 - **Responsive pattern:** Keep `VDataTable` for desktop and use `UiTableView`'s optional `mobileCards` mode with an explicit `mobile-cards` slot when mobile needs different content grouping or action hierarchy. Avoid `nth-child` and pseudo-element labels for structural transformations.

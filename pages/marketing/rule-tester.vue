@@ -12,11 +12,12 @@ const journalDate = ref(new Date().toISOString().slice(0, 10))
 const selectedStudent = computed(() => students.find(student => student.id === selectedStudentId.value) || students[0])
 const result = computed(() => selectMarketingTemplate(templates.value, selectedStudent.value, journalDate.value))
 const cases = computed(() => students.slice(0, 10).map(student => ({ student, result: selectMarketingTemplate(templates.value, student, journalDate.value) })))
+useSeoMeta({ title: 'Rule tester', description: 'Test marketing template rules against student profiles.' })
 </script>
 
 <template>
   <div class="rule-tester-page">
-    <UiSectionHeader title="Rule tester" description="See which published template wins for a student and journal date." :back="{ path: '/marketing/templates' }" />
+    <UiSectionHeader title="Rule tester" title-class="text-h4 font-weight-medium text-high-emphasis" description="See which published template wins for a student and journal date." :back="{ path: '/marketing/templates' }" />
     <VRow>
       <VCol cols="12" md="4">
         <VCard rounded="lg">

@@ -260,11 +260,12 @@ const simulateTest = () => {
   testUsage.value = { date: testDate.value, count: testsUsedToday.value + 1 }
   testResult.value = { phone: normalizeMarketingTestPhone(testPhone.value), branch: previewBranch.value, mode: 'a4', content: 'full', values: { ...previewValues.value, student_name: 'Siswa Contoh' }, blocks: JSON.parse(JSON.stringify(template.value.blocks)) }
 }
+useSeoMeta({ title: 'Marketing template editor', description: 'Create or edit a marketing template.' })
 </script>
 
 <template>
   <div class="marketing-editor-page">
-    <UiSectionHeader :title="isEdit ? 'Edit marketing template' : 'New marketing template'" description="Build page 2 content for daily journal messages." :back="{ path: '/marketing/templates' }">
+    <UiSectionHeader :title="isEdit ? 'Edit marketing template' : 'New marketing template'" title-class="text-h4 font-weight-medium text-high-emphasis" description="Build page 2 content for daily journal messages." :back="{ path: '/marketing/templates' }">
       <template #actions>
         <div class="d-flex align-center ga-3 flex-nowrap">
           <span v-if="!isEdit" class="text-caption text-medium-emphasis">
@@ -407,7 +408,7 @@ const simulateTest = () => {
                   <VCardText class="pa-5 pb-3"><h3 class="text-body-1 font-weight-medium mb-1">Example recipients</h3><p class="text-body-2 text-medium-emphasis mb-0">{{ Math.min(10, estimates.recipients.length) }} of {{ estimates.recipients.length.toLocaleString() }} students</p></VCardText>
                   <VList v-if="estimates.recipients.length" tag="ul" role="list" class="recipient-list py-0" aria-label="Example recipients" lines="two">
                     <VListItem v-for="student in estimates.recipients.slice(0, 10)" :key="student.id" tag="li" role="listitem" :title="student.code" :subtitle="`${student.branch} · ${student.course || 'Course not set'}`" class="px-5 py-3">
-                      <template #prepend><VAvatar color="primary" variant="tonal" size="36" class="text-body-2">{{ student.initials }}</VAvatar></template>
+                      <template #prepend><UiStudentAvatar>{{ student.initials }}</UiStudentAvatar></template>
                     </VListItem>
                   </VList>
                   <VCardText v-else class="pa-5 pt-2"><VIcon icon="ri-user-search-line" color="secondary" class="mb-2" /><p class="text-body-2 mb-1">No matching recipients for this date.</p><p class="text-caption text-medium-emphasis mb-0">Review the audience filters and campaign priority.</p></VCardText>
@@ -457,12 +458,10 @@ const simulateTest = () => {
         </div>
       </VCardActions>
     </VCard>
-    <VDialog v-model="confirmActivation" max-width="560">
-      <VCard :title="template.isDefault && activeCountryDefault ? `Replace ${template.country} default?` : 'Activate with warnings?'">
-        <VCardText><p v-if="template.isDefault && activeCountryDefault">The active {{ template.country }} default is “{{ activeCountryDefault.name }}”. Replacing it makes the current default Inactive.</p><p v-if="collisions.length">Same-priority conflicts: {{ collisions.map(item => item.name).join(', ') }}. The earlier-created template wins.</p><p v-if="missingBranchValues.length">{{ missingBranchValues.length }} empty branch values will use defaults.</p></VCardText>
-        <VCardActions class="justify-end flex-wrap gap-2 pa-4"><VBtn color="secondary" variant="outlined" @click="confirmActivation = false">Cancel</VBtn><VBtn color="primary" variant="flat" @click="persistComplete(true)">{{ template.isDefault && activeCountryDefault ? 'Replace default' : 'Activate anyway' }}</VBtn></VCardActions>
-      </VCard>
-    </VDialog>
+    <UiConfirmDialog v-model="confirmActivation" :max-width="560" :title="template.isDefault && activeCountryDefault ? `Replace ${template.country} default?` : 'Activate with warnings?'">
+      <p v-if="template.isDefault && activeCountryDefault">The active {{ template.country }} default is “{{ activeCountryDefault.name }}”. Replacing it makes the current default Inactive.</p><p v-if="collisions.length">Same-priority conflicts: {{ collisions.map(item => item.name).join(', ') }}. The earlier-created template wins.</p><p v-if="missingBranchValues.length">{{ missingBranchValues.length }} empty branch values will use defaults.</p>
+      <template #actions><VBtn color="secondary" variant="outlined" class="px-6" @click="confirmActivation = false">Cancel</VBtn><VBtn color="primary" variant="flat" class="px-6" @click="persistComplete(true)">{{ template.isDefault && activeCountryDefault ? 'Replace default' : 'Activate anyway' }}</VBtn></template>
+    </UiConfirmDialog>
     <VDialog :model-value="!!testResult" max-width="560" @update:model-value="!$event && (testResult = null)">
       <VCard v-if="testResult" title="TEST · Local simulation">
         <VCardText><p class="text-body-2">{{ testResult.phone }} · {{ testResult.branch }} · A4 · Full journal sample. Local simulation; no message was sent.</p><div class="preview-stage"><MarketingPreviewDocument :blocks="testResult.blocks" :values="testResult.values" :mode="testResult.mode" :content="testResult.content" test-sample /></div></VCardText>

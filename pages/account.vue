@@ -51,6 +51,7 @@ const copyTeacherId = async () => {
     snackbar.value = true
   }
 }
+useSeoMeta({ title: 'Account', description: 'View your account details.' })
 </script>
 
 <template>

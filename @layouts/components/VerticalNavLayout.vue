@@ -73,13 +73,13 @@ const verticalNavAttrs = computed(() => {
         :bottom-nav-items="props.bottomNavItems"
         v-bind="{ ...verticalNavAttrs.additionalVerticalNavAttrs }"
       >
-        <template #nav-header>
+        <template v-if="$slots['vertical-nav-header']" #nav-header>
           <slot name="vertical-nav-header" />
         </template>
-        <template #before-nav-items>
+        <template v-if="$slots['before-vertical-nav-items']" #before-nav-items>
           <slot name="before-vertical-nav-items" />
         </template>
-        <template #after-nav-items>
+        <template v-if="$slots['after-vertical-nav-items']" #after-nav-items>
           <slot name="after-vertical-nav-items" />
         </template>
       </VerticalNav>

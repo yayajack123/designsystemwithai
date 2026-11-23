@@ -73,6 +73,7 @@ const addNewUser = async (userData: any) => {
 definePageMeta({
   sidebarRoute: 'user',
 })
+useSeoMeta({ title: 'Users', description: 'Manage users and their roles.' })
 </script>
 
 <template>
@@ -196,9 +197,12 @@ definePageMeta({
 
         <!-- Actions -->
         <template #item.actions="{ item }">
+          <div class="d-flex align-center gap-1">
           <IconBtn
             color="error"
             size="small"
+            variant="outlined"
+            class="table-action-button"
             @click="console.log('delete_items', item)"
           >
             <VIcon icon="ri-delete-bin-7-line" />
@@ -212,6 +216,9 @@ definePageMeta({
 
           <IconBtn
             size="small"
+            variant="outlined"
+            color="secondary"
+            class="table-action-button"
             @click="console.log('detail', item)"
           >
             <VIcon icon="ri-eye-line" />
@@ -228,6 +235,9 @@ definePageMeta({
               <IconBtn
                 v-bind="props"
                 size="small"
+                variant="outlined"
+                color="secondary"
+                class="table-action-button"
               >
                 <VIcon icon="ri-more-fill" />
                 <VTooltip
@@ -257,6 +267,7 @@ definePageMeta({
               </VListItem>
             </VList>
           </VMenu>
+          </div>
         </template>
       </VDataTableServer>
     </VCard>

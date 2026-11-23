@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useElementSize } from '@vueuse/core'
 import { useRoute } from 'vue-router'
 import UiSectionHeader from '@/components/ui/UiSectionHeader.vue'
 import MeetingJournalReportPreview from '@/components/MeetingJournalReportPreview.vue'
@@ -17,7 +18,12 @@ const route = useRoute()
 const demo = useDailyJournalDemo()
 const marketing = useMarketingTemplates()
 const ready = ref(false)
+const footerRef = ref<HTMLElement | null>(null)
+const { height: footerHeight } = useElementSize(footerRef)
 const expandedLessons = ref<Record<string, boolean>>({})
+const markSentDialog = ref(false)
+const sendDialog = ref(false)
+const feedback = ref('')
 const snapshotMode = computed(() => Boolean(route.params.journalId))
 const snapshot = computed(() => demo.records.value[String(route.params.journalId || '')])
 onMounted(() => { demo.restore(); ready.value = true })
@@ -44,6 +50,16 @@ const description = computed(() => student.value && session.value && book.value 
 const isLocked = computed(() => snapshotMode.value
   ? (snapshot.value?.sendCount || 0) >= DEMO_SEND_LIMIT || snapshot.value?.journal.status === 'Sending'
   : journal.value?.status === 'Sent' || journal.value?.status === 'Sending')
+const hasReport = computed(() => Boolean(journal.value?.aiSummary))
+const canSend = computed(() => Boolean(snapshot.value && hasReport.value && !isLocked.value))
+const printJournal = () => window.print()
+const sendJournal = (manual: boolean) => {
+  if (!snapshot.value || !canSend.value) return
+  const success = demo.beginSend(snapshot.value.id, manual)
+  feedback.value = success ? (manual ? 'Journal marked as sent.' : 'Sending simulation started.') : 'Journal could not be sent.'
+  markSentDialog.value = false
+  sendDialog.value = false
+}
 const displayDateTime = (value: string) => `${formatMeetingDate(value)}, ${formatMeetingTime(value)} WIB`
 const editRoute = computed(() => ({
   path: '/meeting-journal/create',
@@ -54,17 +70,13 @@ const editRoute = computed(() => ({
     returnTo: 'attendance-detail',
   },
 }))
+useSeoMeta({ title: 'Meeting journal', description: 'View the student meeting journal.' })
 </script>
 
 <template>
-  <section class="meeting-journal-detail">
+  <section class="meeting-journal-detail" :style="{ paddingBottom: `${footerHeight || 72}px` }">
     <div class="journal-full-width-header bg-surface border-b px-6">
-    <UiSectionHeader :title="student?.name || 'Meeting journal'" :description="description" :back="historyRoute" class="journal-page-heading mb-0">
-      <template #actions>
-        <VBtn v-if="snapshotMode && snapshot && !isLocked" variant="outlined" color="primary" size="small" prepend-icon="ri-edit-line" :to="editRoute">Edit</VBtn>
-        <VChip v-if="journal" :color="journalStatusColor(journal.status)" variant="tonal" size="small">{{ journal.status }}</VChip>
-      </template>
-    </UiSectionHeader>
+    <UiSectionHeader :title="student?.name || 'Meeting journal'" :description="description" :back="historyRoute" class="journal-page-heading mb-0" />
     </div>
 
     <VProgressLinear v-if="snapshotMode && !ready" indeterminate color="primary" aria-label="Memuat snapshot jurnal" />
@@ -91,7 +103,14 @@ const editRoute = computed(() => ({
 
       <section class="journal-section" aria-labelledby="covered-lessons-heading">
         <VAlert v-if="isLocked" icon="ri-lock-line" variant="tonal" color="warning" class="journal-lock mb-6">
-          <span class="text-body-1 text-high-emphasis">This journal has been sent and locked.</span>
+          <span class="text-body-1 text-high-emphasis">{{ journal.status === 'Sending' ? 'This journal is being sent.' : 'This journal is locked.' }}</span>
+        </VAlert>
+        <VAlert v-if="snapshot && journal.status === 'Sending'" type="info" variant="tonal" class="mb-6">
+          Sending is simulated locally. Choose an outcome to update the delivery status.
+          <div class="d-flex flex-wrap gap-2 mt-3">
+            <VBtn variant="outlined" @click="demo.settleSend(snapshot.id, true)">Demo: berhasil</VBtn>
+            <VBtn variant="outlined" color="error" @click="demo.settleSend(snapshot.id, false)">Demo: gagal</VBtn>
+          </div>
         </VAlert>
         <h2 id="covered-lessons-heading" class="text-h5 font-weight-medium mb-1">Covered lessons</h2>
         <p class="text-body-2 text-medium-emphasis mb-4">Lessons covered in this meeting</p>
@@ -212,7 +231,7 @@ const editRoute = computed(() => ({
           </div>
         </div>
         <VCard variant="outlined" class="journal-card pa-4">
-          <MeetingJournalReportPreview :student="student" :session="session" :book="book" :meeting="meeting" :journal="journal" />
+          <MeetingJournalReportPreview class="journal-print-report" :student="student" :session="session" :book="book" :meeting="meeting" :journal="journal" />
           <template v-if="campaignPreview">
             <VDivider class="my-6" />
             <p v-if="!snapshot?.marketingPageSnapshot" class="text-body-2 text-medium-emphasis mb-4">Contoh campaign trial gratis · Mockup dengan nomor WhatsApp demo.</p>
@@ -230,10 +249,35 @@ const editRoute = computed(() => ({
         </VCard>
       </section>
     </template>
+    <div ref="footerRef" class="journal-action-footer border-t bg-surface">
+      <VBtn variant="outlined" color="secondary" class="px-6 rounded-pill" prepend-icon="ri-arrow-left-line" :to="historyRoute">
+        Back to list
+      </VBtn>
+      <div class="journal-footer-actions">
+        <VChip v-if="journal" :color="journalStatusColor(journal.status)" variant="tonal" size="small">{{ journal.status }}</VChip>
+        <VBtn v-if="snapshotMode && snapshot && !isLocked" variant="outlined" color="primary" class="px-6 rounded-pill" prepend-icon="ri-edit-line" :to="editRoute">Edit</VBtn>
+        <VBtn v-if="hasReport" variant="outlined" color="primary" class="px-6 rounded-pill" prepend-icon="ri-download-line" @click="printJournal">Download PDF</VBtn>
+        <VBtn v-if="snapshot && hasReport" variant="outlined" color="primary" class="px-6 rounded-pill" prepend-icon="ri-check-line" :disabled="!canSend" @click="markSentDialog = true">Mark as sent</VBtn>
+        <VBtn v-if="snapshot && hasReport" color="primary" class="px-6 rounded-pill" prepend-icon="ri-send-plane-2-line" :disabled="!canSend" @click="sendDialog = true">{{ journal?.status === 'Failed' ? 'Retry' : 'Send to parent' }}</VBtn>
+      </div>
+    </div>
+    <UiConfirmDialog v-model="markSentDialog" title="Mark journal as sent?">
+        Confirm that the journal for {{ student?.name }} has been shared manually. This uses one send and does not send a message.
+        <template #actions><VBtn variant="outlined" color="secondary" class="px-6" @click="markSentDialog = false">Cancel</VBtn><VBtn color="primary" class="px-6" @click="sendJournal(true)">Mark as sent</VBtn></template>
+    </UiConfirmDialog>
+    <UiConfirmDialog v-model="sendDialog" title="Send journal to parent?">
+          <p>Confirm sending the journal for {{ student?.name }}. This local demo does not send a WhatsApp message.</p>
+          <p v-if="snapshot?.parentPhone" class="mb-0">Parent WhatsApp: {{ snapshot.parentPhone }}</p>
+          <p v-else class="mb-0">No parent WhatsApp number is available. Share the journal manually and use Mark as sent.</p>
+        <template #actions><VBtn variant="outlined" color="secondary" class="px-6" @click="sendDialog = false">Cancel</VBtn><VBtn color="primary" class="px-6" :disabled="!snapshot?.parentPhone?.trim() || !canSend" @click="sendJournal(false)">Send to parent</VBtn></template>
+    </UiConfirmDialog>
+    <VSnackbar :model-value="Boolean(feedback)" @update:model-value="!$event && (feedback = '')">{{ feedback }}</VSnackbar>
   </section>
 </template>
 
 <style scoped lang="scss">
+@use "@configured-variables" as variables;
+
 .meeting-journal-detail { min-inline-size: 0; }
 .journal-full-width-header { margin-inline: -24px; margin-block-start: -24px; padding-block: 20px; }
 .journal-page-heading { margin-block-end: 0 !important; }
@@ -269,7 +313,31 @@ const editRoute = computed(() => ({
 .journal-sent-badge { padding: 6px 12px 6px 6px; border: 1px solid rgba(var(--v-border-color), 0.12); border-radius: 24px; background: rgb(var(--v-theme-surface)); }
 .journal-lock { flex: 0 0 auto; border: 1px solid rgba(var(--v-theme-warning), 0.16); border-radius: 12px; background: rgba(var(--v-theme-warning), 0.08); }
 .journal-review { border-block-end: 0; }
+.journal-action-footer {
+  position: fixed;
+  z-index: 10;
+  inset-block-end: 0;
+  inset-inline: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 24px;
+  box-shadow: 0 -4px 10px rgba(var(--v-theme-on-surface), 0.04);
+}
+.journal-footer-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 12px; }
+@media (min-width: 1280px) {
+  :global(.layout-nav-type-vertical) .journal-action-footer { inset-inline-start: variables.$layout-vertical-nav-width; }
+  :global(.layout-nav-type-vertical.layout-vertical-nav-collapsed) .journal-action-footer { inset-inline-start: variables.$layout-vertical-nav-collapsed-width; }
+}
 @media (max-width: 599px) {
   .journal-summary-copy { min-block-size: 0; }
+  .journal-action-footer { flex-wrap: wrap; padding-inline: 16px; }
+  .journal-footer-actions { flex: 1 1 auto; }
+}
+@media print {
+  :global(body *) { visibility: hidden !important; }
+  .journal-print-report, .journal-print-report :deep(*) { visibility: visible !important; }
+  .journal-print-report { position: absolute; inset: 0; width: 100%; box-shadow: none; }
 }
 </style>

@@ -89,6 +89,7 @@ function resetFilters() {
   selectedType.value = null
   selectedOrder.value = null
 }
+useSeoMeta({ title: 'Events', description: 'Manage events and participants.' })
 </script>
 
 <template>
@@ -175,6 +176,7 @@ function resetFilters() {
                 variant="outlined"
                 color="secondary"
                 size="small"
+                class="table-action-button"
                 disabled
               />
             </span>

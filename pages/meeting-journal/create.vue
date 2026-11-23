@@ -623,6 +623,7 @@ onBeforeUnmount(() => {
   clearTimeout(aiTimer)
   clearTimeout(compressionTimer)
 })
+useSeoMeta({ title: 'Create meeting journal', description: 'Create or edit a meeting journal.' })
 </script>
 
 <template>
@@ -807,7 +808,6 @@ onBeforeUnmount(() => {
             </div>
 
             <!-- Accordion Content (Visible when expanded) -->
-            <VExpandTransition>
               <div v-show="lesson.expanded" class="accordion-content px-4 pb-4">
                 <ul class="objective-list text-body-2 text-medium-emphasis pl-6">
                   <li v-for="(obj, oIdx) in lesson.objectives" :key="oIdx" class="mb-1 leading-relaxed">
@@ -815,7 +815,6 @@ onBeforeUnmount(() => {
                   </li>
                 </ul>
               </div>
-            </VExpandTransition>
           </div>
         </div>
       </div>
@@ -847,15 +846,14 @@ onBeforeUnmount(() => {
       </VBtn>
     </div>
 
-    <VExpandTransition>
       <VRow v-show="!isDetailsCollapsed" class="mb-6 gap-y-6">
         <!-- Left Column: Project Details & Evidence Photo -->
         <VCol cols="12" md="6" class="d-flex flex-column gap-6">
           <!-- Project Details Card -->
           <VCard border elevation="0" class="rounded-lg py-6 px-5">
-            <h5 class="text-body-1 font-weight-medium text-high-emphasis mb-4">Project Details</h5>
-            <div class="d-flex flex-column gap-4">
-              <div class="d-flex align-center gap-3">
+            <h5 class="text-body-1 font-weight-medium text-high-emphasis mb-6">Project Details</h5>
+            <div>
+              <div class="d-flex align-center flex-wrap gap-3">
                 <VTextField
                   v-model="projectName"
                   variant="outlined"
@@ -874,6 +872,15 @@ onBeforeUnmount(() => {
                 />
               </div>
 
+            </div>
+          </VCard>
+
+          <VCard border elevation="0" class="rounded-lg py-6 px-5">
+            <div class="mb-6">
+              <h5 class="text-body-1 font-weight-medium text-high-emphasis mb-1">Teacher Notes</h5>
+              <p class="text-caption text-medium-emphasis mb-0">Bahan untuk AI. Catatan ini tidak ditampilkan langsung ke Parents.</p>
+            </div>
+            <div>
               <VTextarea
                 v-model="teacherNotes"
                 rows="4"
@@ -881,11 +888,11 @@ onBeforeUnmount(() => {
                 variant="outlined"
                 density="compact"
                 placeholder="Write student observation notes..."
-                hide-details
                 label="Teacher Notes"
+                :counter="200"
+                :maxlength="200"
                 class="bg-surface w-100"
               />
-              <p class="text-caption text-medium-emphasis mb-0">Bahan untuk AI. Catatan ini tidak ditampilkan langsung ke Parents.</p>
             </div>
           </VCard>
 
@@ -1038,7 +1045,6 @@ onBeforeUnmount(() => {
           </VCard>
         </VCol>
       </VRow>
-    </VExpandTransition>
     </fieldset>
 
     <!-- Step 2 Content Container -->
@@ -1173,19 +1179,15 @@ onBeforeUnmount(() => {
       </template>
     </div>
 
-    <VDialog v-model="sendDialog" max-width="540">
-      <VCard title="Send to Parent">
-        <VCardText>
-          <p class="text-body-2">Demo lokal. Tidak ada pesan WhatsApp yang dikirim.</p>
+    <UiConfirmDialog v-model="sendDialog" :max-width="540" :title="manualSend || !parentPhone.trim() ? 'Mark journal as sent?' : 'Send journal to parent?'">
+          <p class="text-body-2">{{ manualSend || !parentPhone.trim() ? 'Konfirmasi bahwa jurnal sudah dibagikan secara manual.' : 'Konfirmasi pengiriman jurnal. Demo lokal tidak mengirim pesan WhatsApp.' }}</p>
           <VTextField v-model="parentPhone" label="Nomor WhatsApp Parents" :disabled="sending" />
           <VCheckbox :model-value="!parentPhone.trim() || manualSend" :disabled="!parentPhone.trim()" label="Kirim manual, tandai jurnal sudah dikirim" @update:model-value="manualSend = Boolean($event)" />
           <p class="text-body-2">Jika kirim manual dipilih, bagikan link sendiri. Status menjadi Sent (Manual), memakai jatah kirim, dan revisi tidak dikirim otomatis.</p>
           <p v-if="!parentPhone.trim()" class="text-body-2 text-medium-emphasis">Nomor Parents kosong. Kirim manual wajib dipilih.</p>
           <p class="text-body-2 text-break">{{ publicUrl }}</p>
-        </VCardText>
-        <VCardActions><VSpacer /><VBtn @click="sendDialog = false">Batal</VBtn><VBtn color="primary" @click="confirmSend">{{ manualSend || !parentPhone.trim() ? 'Tandai Sent (Manual)' : 'Mulai kirim demo' }}</VBtn></VCardActions>
-      </VCard>
-    </VDialog>
+        <template #actions><VBtn color="secondary" variant="outlined" class="px-6" @click="sendDialog = false">Batal</VBtn><VBtn color="primary" class="px-6" @click="confirmSend">{{ manualSend || !parentPhone.trim() ? 'Mark as sent' : 'Send to parent' }}</VBtn></template>
+    </UiConfirmDialog>
 
     <!-- DIALOG 1: Select Covered Lessons -->
     <VDialog v-model="showAddLessonDialog" max-width="700">
@@ -1217,7 +1219,7 @@ onBeforeUnmount(() => {
             <div
               v-for="lesson in filteredAvailableLessons"
               :key="lesson.id"
-              class="lesson-select-card border rounded-lg pa-4 mb-4 d-flex align-center cursor-pointer transition-all"
+              class="lesson-select-card border rounded-lg pa-4 mb-4 d-flex align-center cursor-pointer"
               role="checkbox"
               tabindex="0"
               :aria-checked="selectedLessonIds.includes(lesson.id)"
@@ -1377,24 +1379,9 @@ onBeforeUnmount(() => {
     </VDialog>
 
     <!-- DIALOG 3: Back Confirmation -->
-    <VDialog v-model="showBackConfirmDialog" max-width="500">
-      <VCard class="rounded-lg overflow-hidden shadow-xl bg-surface">
-        <VCardTitle class="px-6 pt-5 pb-3 border-b d-flex align-center justify-space-between">
-          <span class="text-h6 font-weight-medium text-high-emphasis">Back to detail attendance?</span>
-          <VBtn
-            icon="ri-close-line"
-            variant="text"
-            color="secondary"
-            class="rounded-circle"
-            size="small"
-            @click="showBackConfirmDialog = false"
-          />
-        </VCardTitle>
-        <VCardText class="px-6 py-4 text-body-2 text-medium-emphasis">
+    <UiConfirmDialog v-model="showBackConfirmDialog" title="Back to detail attendance?">
           Are you sure you want to go back? Your current progress won't be saved. If you want to keep your changes, please click the 'Save as Draft' button below.
-        </VCardText>
-        <VCardActions class="px-6 py-4 bg-light-gray border-t d-flex justify-end gap-3">
-          <VSpacer />
+        <template #actions>
           <VBtn
             variant="outlined"
             color="secondary"
@@ -1411,9 +1398,8 @@ onBeforeUnmount(() => {
           >
             Stay on this page
           </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
+        </template>
+    </UiConfirmDialog>
 
     <!-- DIALOG 4: Upload Photo Source -->
     <VDialog v-model="showUploadPhotoDialog" max-width="500">
@@ -1432,7 +1418,7 @@ onBeforeUnmount(() => {
         <VCardText class="pa-6">
           <div class="d-flex flex-column gap-4">
             <div
-              class="upload-option-card border rounded-lg pa-4 d-flex align-center cursor-pointer transition-all"
+              class="upload-option-card border rounded-lg pa-4 d-flex align-center cursor-pointer"
               @click="triggerCameraInput"
             >
               <div class="upload-icon-box rounded me-3 d-flex align-center justify-center text-primary">
@@ -1444,7 +1430,7 @@ onBeforeUnmount(() => {
               <VIcon icon="ri-arrow-right-s-line" size="20" class="text-medium-emphasis" />
             </div>
             <div
-              class="upload-option-card border rounded-lg pa-4 d-flex align-center cursor-pointer transition-all"
+              class="upload-option-card border rounded-lg pa-4 d-flex align-center cursor-pointer"
               @click="triggerGalleryInput"
             >
               <div class="upload-icon-box rounded me-3 d-flex align-center justify-center text-primary">
@@ -1516,8 +1502,7 @@ onBeforeUnmount(() => {
 }
 
 .create-journal-content-container {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
 }
 
 .teacher-info-badge {
@@ -1837,17 +1822,12 @@ onBeforeUnmount(() => {
 
 .lesson-select-card {
   border-color: rgba(var(--v-border-color), 0.12) !important;
-  transition: all 0.2s ease;
 
   &.border-primary,
   &.border-primary:hover {
     border-color: rgb(var(--v-theme-primary)) !important;
   }
   
-  &:hover {
-    background-color: rgba(var(--v-theme-primary), 0.02);
-    border-color: rgba(var(--v-theme-primary), 0.4) !important;
-  }
 }
 
 .checkbox-box {
@@ -1884,23 +1864,36 @@ onBeforeUnmount(() => {
 
 .upload-option-card {
   border-color: rgba(var(--v-border-color), 0.12) !important;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    background-color: rgba(var(--v-theme-primary), 0.04);
-    border-color: rgb(var(--v-theme-primary)) !important;
-    
-    .upload-icon-box {
-      background-color: rgb(var(--v-theme-primary)) !important;
-      color: white !important;
-    }
-  }
 }
 
 .upload-icon-box {
   width: 44px;
   height: 44px;
   background-color: rgba(var(--v-theme-primary), 0.08) !important;
-  transition: all 0.2s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .lesson-select-card:hover {
+    background-color: rgba(var(--v-theme-primary), 0.02);
+    border-color: rgba(var(--v-theme-primary), 0.4) !important;
+  }
+
+  .upload-option-card {
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+
+    &:hover {
+      background-color: rgba(var(--v-theme-primary), 0.04);
+      border-color: rgb(var(--v-theme-primary)) !important;
+
+      .upload-icon-box {
+        background-color: rgb(var(--v-theme-primary)) !important;
+        color: white !important;
+      }
+    }
+  }
+
+  .upload-icon-box {
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
 }
 </style>

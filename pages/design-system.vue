@@ -158,6 +158,7 @@ const resetReviewFilters = () => {
   reviewSelectedStatus.value = 'All'
   reviewSelectedQuiz.value = 'All'
 }
+useSeoMeta({ title: 'Design system', description: 'Explore design system components and patterns.' })
 </script>
 
 <template>
@@ -887,13 +888,7 @@ const resetReviewFilters = () => {
             <!-- Student Avatar & Details -->
             <template #item.student="{ item }">
               <div class="d-flex align-center py-2">
-                <VAvatar
-                  size="34"
-                  class="me-3"
-                  color="grey-50"
-                >
-                  <span class="text-caption font-weight-medium">{{ item.initials.slice(0, 2) }}</span>
-                </VAvatar>
+                <UiStudentAvatar class="me-3">{{ item.initials.slice(0, 2) }}</UiStudentAvatar>
                 <div class="d-flex flex-column">
                   <span class="text-body-1 font-weight-medium text-high-emphasis">{{ item.name }}</span>
                   <span class="text-body-2 text-medium-emphasis">{{ item.studentId }}</span>
@@ -1136,13 +1131,7 @@ const resetReviewFilters = () => {
           <!-- Custom Item Rendering (Table Columns) -->
           <template #item.student="{ item }">
             <div class="d-flex align-center py-2">
-              <VAvatar
-                size="34"
-                class="me-3"
-                color="grey-50"
-              >
-                <span class="text-caption font-weight-medium">{{ item.initials.slice(0, 2) }}</span>
-              </VAvatar>
+              <UiStudentAvatar class="me-3">{{ item.initials.slice(0, 2) }}</UiStudentAvatar>
               <div class="d-flex flex-column">
                 <span class="text-body-1 font-weight-medium text-high-emphasis">{{ item.name }}</span>
                 <span class="text-body-2 text-medium-emphasis">{{ item.studentId }}</span>
@@ -1196,7 +1185,7 @@ const resetReviewFilters = () => {
                 >
                   <VCard variant="outlined">
                     <VCardText class="d-flex align-center gap-3">
-                      <VAvatar color="primary-opacity-lighter" class="text-primary">{{ item.initials.slice(0, 2) }}</VAvatar>
+                      <UiStudentAvatar>{{ item.initials.slice(0, 2) }}</UiStudentAvatar>
                       <div>
                         <div class="font-weight-medium">{{ item.name }}</div>
                         <div class="text-caption">{{ item.book }}</div>

@@ -74,6 +74,7 @@ const getAvatarText = (name: string) => {
 
   return avatarText(cleanName)
 }
+useSeoMeta({ title: 'Students', description: 'View and manage students.' })
 </script>
 
 <template>
@@ -119,15 +120,7 @@ const getAvatarText = (name: string) => {
       <!-- Custom column: Student Name -->
       <template #item.student="{ item }">
         <div class="d-flex align-center gap-3 py-2">
-          <VAvatar
-            size="34"
-            color="grey-100"
-            class="border border-white"
-          >
-            <span class="text-caption font-weight-medium text-high-emphasis">
-              {{ getAvatarText(item.name) }}
-            </span>
-          </VAvatar>
+          <UiStudentAvatar>{{ getAvatarText(item.name) }}</UiStudentAvatar>
           <div class="d-flex flex-column">
             <span class="text-body-1 font-weight-medium text-high-emphasis">{{ item.name }}</span>
             <span class="text-body-2 text-medium-emphasis">{{ item.studentId }}</span>

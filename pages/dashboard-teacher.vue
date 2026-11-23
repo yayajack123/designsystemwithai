@@ -418,6 +418,7 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
   toastText.value = `${item.title} opened in demo mode`
   toastShow.value = true
 }
+useSeoMeta({ title: 'Teacher dashboard', description: 'View teaching activity and student progress.' })
 </script>
 
 <template>
@@ -594,13 +595,9 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
                 >
                   <div class="watchlist-mobile-card__topline">
                     <div class="student-cell watchlist-mobile-card__student">
-                      <VAvatar size="34" color="grey-100" class="border">
-                        <span class="text-caption font-weight-medium text-high-emphasis">
-                          {{ getAvatarText(item.name) }}
-                        </span>
-                      </VAvatar>
+                      <UiStudentAvatar>{{ getAvatarText(item.name) }}</UiStudentAvatar>
                       <div class="min-w-0">
-                        <h3 class="text-body-1 font-weight-medium mb-1">
+                        <h3 class="text-body-1 font-weight-medium text-high-emphasis mb-1">
                           {{ item.name }}
                         </h3>
                         <p class="text-caption text-medium-emphasis mb-0">
@@ -656,13 +653,9 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
 
             <template #item.student="{ item }">
               <div class="student-cell">
-                <VAvatar size="34" color="grey-100" class="border">
-                  <span class="text-caption font-weight-medium text-high-emphasis">
-                    {{ getAvatarText(item.name) }}
-                  </span>
-                </VAvatar>
+                <UiStudentAvatar>{{ getAvatarText(item.name) }}</UiStudentAvatar>
                 <div class="min-w-0">
-                  <span class="student-name font-weight-medium">{{ item.name }}</span>
+                  <span class="student-name text-body-1 font-weight-medium text-high-emphasis">{{ item.name }}</span>
                   <span class="student-course text-caption">{{ item.course }} · {{ item.window }}</span>
                 </div>
               </div>
@@ -750,7 +743,7 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
                 >
                   <div class="pending-task-card__topline">
                     <div class="min-w-0">
-                      <h3 class="text-body-1 font-weight-medium mb-1">
+                      <h3 class="text-body-1 font-weight-medium text-high-emphasis mb-1">
                         {{ item.student }}
                       </h3>
                     </div>
@@ -840,7 +833,7 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
                           color="secondary"
                           rounded="pill"
                           size="small"
-                          class="pending-menu-button"
+                          class="table-action-button"
                           :aria-label="`More actions for ${item.student}`"
                         >
                           <VIcon icon="ri-more-2-fill" />
@@ -878,7 +871,7 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
             </template>
 
             <template #item.student="{ item }">
-              <span class="student-name font-weight-medium">{{ item.student }}</span>
+              <span class="student-name text-body-1 font-weight-medium text-high-emphasis">{{ item.student }}</span>
             </template>
 
             <template #item.book="{ item }">
@@ -953,7 +946,7 @@ const openSelfLearningItem = (item: SelfLearningItem) => {
                     color="secondary"
                     rounded="pill"
                     size="small"
-                    class="pending-menu-button"
+                    class="table-action-button"
                     :aria-label="`More actions for ${item.student}`"
                   >
                     <VIcon icon="ri-more-2-fill" />

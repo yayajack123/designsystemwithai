@@ -591,6 +591,7 @@ const seeDetails = (cls: ClassSession) => {
 const changeAllPresence = (cls: ClassSession) => {
   openPresenceDialog(cls, false)
 }
+useSeoMeta({ title: 'Attendance', description: 'Manage class attendance.' })
 </script>
 
 <template>

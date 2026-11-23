@@ -6,6 +6,7 @@ definePageMeta({
   sidebarRoute: 'index',
 
 })
+useSeoMeta({ title: 'Home', description: 'View your workspace.' })
 </script>
 
 <template>

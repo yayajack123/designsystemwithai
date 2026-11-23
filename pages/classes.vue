@@ -269,6 +269,7 @@ const toast = (color: string, text: string) => {
   snackbarText.value = text
   showSnackbar.value = true
 }
+useSeoMeta({ title: 'Classes', description: 'Manage classes, teachers, and students.' })
 </script>
 
 <template>

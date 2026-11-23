@@ -120,6 +120,7 @@ const handleSelectTheme = (theme: ThemeItem) => {
 const unwrapTheme = (item: ThemeItem | { raw?: ThemeItem }): ThemeItem => {
   return item.raw ?? item as ThemeItem
 }
+useSeoMeta({ title: 'Themes', description: 'Explore available themes.' })
 </script>
 
 <template>

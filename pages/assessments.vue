@@ -609,6 +609,7 @@ onMounted(() => {
     initialLoading.value = false
   }, 800)
 })
+useSeoMeta({ title: 'Assessments', description: 'View and manage assessments.' })
 </script>
 
 <template>
@@ -757,13 +758,7 @@ onMounted(() => {
         <!-- Student Avatar & Details -->
         <template #item.student="{ item }">
           <div class="d-flex align-center py-2">
-            <VAvatar
-              size="34"
-              class="me-3"
-              color="grey-50"
-            >
-              <span class="text-caption font-weight-medium">{{ item.initials.slice(0, 2) }}</span>
-            </VAvatar>
+            <UiStudentAvatar class="me-3">{{ item.initials.slice(0, 2) }}</UiStudentAvatar>
             <div class="d-flex flex-column">
               <span class="text-body-1 font-weight-medium text-high-emphasis">{{ item.name }}</span>
               <span class="text-body-2 text-medium-emphasis">{{ item.studentId }}</span>
@@ -810,7 +805,7 @@ onMounted(() => {
 
         <!-- Action Buttons -->
         <template #item.action="{ item }">
-          <div class="d-flex justify-center gap-2">
+          <div class="d-flex justify-center gap-1">
             <template v-if="activeTab === 'project'">
               <!-- Approve Button -->
               <VTooltip
@@ -861,6 +856,7 @@ onMounted(() => {
                     v-bind="props"
                     icon="ri-history-line"
                     variant="outlined"
+                    color="secondary"
                     size="small"
                     class="action-btn"
                     @click="openScoreHistory(item)"
@@ -903,14 +899,7 @@ onMounted(() => {
               @click="toggleStudentExpand(`${student.studentId}-${student.name}`)"
             >
               <div class="d-flex align-center flex-wrap ga-2 flex-grow-1">
-                <VAvatar
-                  size="34"
-                  color="grey-50"
-                  class="border"
-                  style="border-color: rgba(var(--v-theme-on-surface), 0.08) !important;"
-                >
-                  <span class="text-caption font-weight-medium text-high-emphasis">{{ student.initials.slice(0, 2) }}</span>
-                </VAvatar>
+                <UiStudentAvatar>{{ student.initials.slice(0, 2) }}</UiStudentAvatar>
                 <span class="text-body-1 font-weight-medium text-high-emphasis">{{ student.name }}</span>
                 <span class="text-body-2 text-medium-emphasis">{{ student.studentId }}</span>
                 <span class="text-medium-emphasis d-none d-sm-inline">•</span>
@@ -1110,14 +1099,7 @@ onMounted(() => {
                   >
                     <!-- Student details and book -->
                     <div class="d-flex align-center gap-3 flex-grow-1" style="min-width: 200px">
-                      <VAvatar
-                        color="grey-50"
-                        class="border"
-                        size="40"
-                        style="border-color: rgba(var(--v-theme-on-surface), 0.08) !important;"
-                      >
-                        <span class="text-caption font-weight-medium text-high-emphasis">{{ item.initials.slice(0, 2) }}</span>
-                      </VAvatar>
+                      <UiStudentAvatar>{{ item.initials.slice(0, 2) }}</UiStudentAvatar>
                       <div class="d-flex flex-column">
                         <span class="text-body-1 font-weight-medium text-high-emphasis">{{ item.name }}</span>
                         <span class="text-body-2 text-medium-emphasis">{{ item.studentId }} • {{ item.book }}</span>

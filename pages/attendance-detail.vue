@@ -210,8 +210,8 @@ const journalStageColor = (status: string) => {
 
 const deliveryDetails: Record<DeliveryStatus, { icon: string, color: string, text: string }> = {
   Sending: { icon: 'ri-time-line', color: 'info', text: 'Sending: waiting for a delivery update from WhatsApp.' },
-  Sent: { icon: 'ri-check-line', color: 'secondary', text: 'Sent: WhatsApp has accepted the message, but it has not reached the parent’s device yet.' },
-  Delivered: { icon: 'ri-check-double-line', color: 'secondary', text: 'Delivered: the message has reached the parent’s device but has not been read yet.' },
+  Sent: { icon: 'ri-check-line', color: 'warning', text: 'Sent: WhatsApp has accepted the message, but it has not reached the parent’s device yet.' },
+  Delivered: { icon: 'ri-check-double-line', color: 'warning', text: 'Delivered: the message has reached the parent’s device but has not been read yet.' },
   Read: { icon: 'ri-check-double-line', color: 'info', text: 'Read: the parent has read the message on WhatsApp.' },
   Failed: { icon: 'ri-error-warning-line', color: 'error', text: 'Failed: the message could not be sent. Open the journal to retry or mark it as sent.' },
   'Marked as Sent': { icon: 'ri-external-link-line', color: 'success', text: 'Marked as Sent: manually marked as sent by the teacher. Delivery outside the system is not tracked.' },
@@ -319,6 +319,7 @@ const handlePresenceSubmit = (payload: { students: any[], isStartClass: boolean 
   })
   showToast('Attendance updated successfully.', 'success')
 }
+useSeoMeta({ title: 'Attendance detail', description: 'View class attendance details.' })
 </script>
 
 <template>
@@ -374,11 +375,11 @@ const handlePresenceSubmit = (payload: { students: any[], isStartClass: boolean 
       >
         <template #item.name="{ item }">
           <div class="d-flex align-center py-2 gap-3">
-            <VAvatar size="34" color="grey-100" class="text-subtitle-1 font-weight-medium text-high-emphasis border">
+            <UiStudentAvatar>
               {{ avatarText(item.name) }}
-            </VAvatar>
+            </UiStudentAvatar>
             <div class="d-flex flex-column justify-center">
-              <span class="text-body-1 font-weight-medium text-high-emphasis leading-normal">{{ item.name }}</span>
+              <span class="text-body-1 font-weight-medium text-high-emphasis leading-normal">{{ item.name }} <VIcon icon="ri-external-link-line" color="primary" size="14" aria-hidden="true" /></span>
               <span class="text-body-2 text-medium-emphasis">{{ item.id }}</span>
             </div>
             <VChip v-if="item.isMain" color="info" size="small" class="font-weight-medium text-caption px-3 ms-auto me-4">
@@ -426,9 +427,9 @@ const handlePresenceSubmit = (payload: { students: any[], isStartClass: boolean 
       <!-- Dynamic Custom Column Slots -->
       <template #item.studentName="{ item }">
         <div class="d-flex align-center gap-3 py-2">
-          <VAvatar size="34" color="grey-100" class="text-body-1 font-weight-medium text-high-emphasis border">
+          <UiStudentAvatar>
             {{ avatarText(item.name) }}
-          </VAvatar>
+          </UiStudentAvatar>
           <div class="d-flex flex-column justify-center">
             <span class="text-body-1 font-weight-medium text-high-emphasis leading-normal">{{ item.name }} <VIcon icon="ri-external-link-line" color="primary" size="14" aria-hidden="true" /></span>
             <div class="d-flex align-center mt-0.5">
@@ -544,9 +545,9 @@ const handlePresenceSubmit = (payload: { students: any[], isStartClass: boolean 
 
             <VMenu location="bottom end">
               <template #activator="{ props }">
-                <VBtn v-bind="props" icon="ri-more-2-fill" variant="text" size="small" color="primary" rounded="pill" :aria-label="`More journal actions for ${item.name}`" />
+                <VBtn v-bind="props" icon="ri-more-2-fill" variant="outlined" size="small" color="secondary" class="table-action-button" :aria-label="`More journal actions for ${item.name}`" />
               </template>
-              <VList density="compact">
+              <VList density="compact" class="journal-action-menu">
                 <VListItem v-if="demoRecord(item)!.sendCount < DEMO_SEND_LIMIT && !['Sent', 'Sent (Manual)'].includes(demoRecord(item)!.journal.status)" prepend-icon="ri-eye-line" title="View" @click="handleActionClick(item)" />
                 <template v-if="demoRecord(item)!.journal.status !== 'Sending'">
                   <VTooltip :disabled="demoRecord(item)!.sendCount < DEMO_SEND_LIMIT" location="top" :text="`Journal locked after ${DEMO_SEND_LIMIT} successful or manual sends.`">
@@ -613,6 +614,10 @@ const handlePresenceSubmit = (payload: { students: any[], isStartClass: boolean 
 </template>
 
 <style lang="scss" scoped>
+.journal-action-menu :deep(.v-list-item-title) {
+  font-size: 0.8125rem;
+}
+
 .attendance-detail-page {
   .gap-2 {
     gap: 8px;

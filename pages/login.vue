@@ -53,6 +53,7 @@ definePageMeta({
   layout: "blank",
   middleware: ["guest"],
 });
+useSeoMeta({ title: 'Sign in', description: 'Sign in to your account.' })
 </script>
 
 <template>

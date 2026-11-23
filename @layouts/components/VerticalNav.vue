@@ -29,11 +29,23 @@ interface Props {
 
 const refNav = ref()
 
-const isHovered = useElementHover(refNav)
+const isPointerOverNav = useElementHover(refNav)
+const suppressHover = ref(false)
+const isHovered = computed(() => isPointerOverNav.value && !suppressHover.value)
+
+watch(isPointerOverNav, value => {
+  if (!value)
+    suppressHover.value = false
+})
 
 provide(injectionKeyIsVerticalNavHovered, isHovered)
 
 const configStore = useLayoutConfigStore()
+
+const toggleCollapsed = () => {
+  configStore.isVerticalNavCollapsed = !configStore.isVerticalNavCollapsed
+  suppressHover.value = configStore.isVerticalNavCollapsed
+}
 
 const resolveNavItemComponent = (item: NavLink | NavSectionTitle | NavGroup): unknown => {
   if ('heading' in item)
@@ -84,8 +96,11 @@ const hideTitleAndIcon = configStore.isVerticalNavMini(isHovered)
         <NuxtLink
           to="/"
           class="app-logo app-title-wrapper"
+          aria-label="Timedoor Academy"
         >
-          <VNodeRenderer :nodes="layoutConfig.app.logo" />
+          <span class="nav-logo" :class="{ 'nav-logo-mini': hideTitleAndIcon }">
+            <VNodeRenderer :nodes="layoutConfig.app.logo" />
+          </span>
         </NuxtLink>
         <!-- 👉 Vertical nav actions -->
         <!-- Show toggle collapsible in >md and close button in <md -->
@@ -96,7 +111,7 @@ const hideTitleAndIcon = configStore.isVerticalNavMini(isHovered)
             class="d-none nav-unpin"
             :class="configStore.isVerticalNavCollapsed && 'd-lg-block'"
             v-bind="layoutConfig.icons.verticalNavUnPinned"
-            @click="configStore.isVerticalNavCollapsed = !configStore.isVerticalNavCollapsed"
+            @click="toggleCollapsed"
           />
           <Component
             :is="layoutConfig.app.iconRenderer || 'div'"
@@ -104,7 +119,7 @@ const hideTitleAndIcon = configStore.isVerticalNavMini(isHovered)
             class="d-none nav-pin"
             :class="!configStore.isVerticalNavCollapsed && 'd-lg-block'"
             v-bind="layoutConfig.icons.verticalNavPinned"
-            @click="configStore.isVerticalNavCollapsed = !configStore.isVerticalNavCollapsed"
+            @click="toggleCollapsed"
           />
           <Component
             :is="layoutConfig.app.iconRenderer || 'div'"
@@ -176,6 +191,16 @@ const hideTitleAndIcon = configStore.isVerticalNavMini(isHovered)
     line-height: 1.75rem;
     text-transform: uppercase;
   }
+}
+
+.nav-logo {
+  display: block;
+  overflow: hidden;
+  line-height: 0;
+}
+
+.nav-logo-mini {
+  inline-size: 30px;
 }
 </style>
 

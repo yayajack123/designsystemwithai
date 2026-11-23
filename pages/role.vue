@@ -2,6 +2,7 @@
 definePageMeta({
   sidebarRoute: 'role',
 })
+useSeoMeta({ title: 'Roles', description: 'Manage roles.' })
 </script>
 
 <template>

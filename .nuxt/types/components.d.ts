@@ -87,7 +87,9 @@ interface _GlobalComponents {
   AccountSettingsSecurity: typeof import("../../components/sections/account-settings/AccountSettingsSecurity.vue")['default']
   ThemeCard: typeof import("../../components/themes/ThemeCard.vue")['default']
   UiAutoComplete: typeof import("../../components/ui/UiAutoComplete.vue")['default']
+  UiConfirmDialog: typeof import("../../components/ui/UiConfirmDialog.vue")['default']
   UiSectionHeader: typeof import("../../components/ui/UiSectionHeader.vue")['default']
+  UiStudentAvatar: typeof import("../../components/ui/UiStudentAvatar.vue")['default']
   UiTableView: typeof import("../../components/ui/UiTableView.vue")['default']
   NuxtWelcome: typeof import("../../node_modules/.pnpm/nuxt@3.21.9_@types+node@20.14.12_@vue+compiler-sfc@3.5.42_cac@6.7.14_db0@0.3.4_esbuild@_192ef103f6339b99b537d08ff3dd7d3c/node_modules/nuxt/dist/app/components/welcome.vue")['default']
   NuxtLayout: typeof import("../../node_modules/.pnpm/nuxt@3.21.9_@types+node@20.14.12_@vue+compiler-sfc@3.5.42_cac@6.7.14_db0@0.3.4_esbuild@_192ef103f6339b99b537d08ff3dd7d3c/node_modules/nuxt/dist/app/components/nuxt-layout")['default']
@@ -187,7 +189,9 @@ interface _GlobalComponents {
   LazyAccountSettingsSecurity: LazyComponent<typeof import("../../components/sections/account-settings/AccountSettingsSecurity.vue")['default']>
   LazyThemeCard: LazyComponent<typeof import("../../components/themes/ThemeCard.vue")['default']>
   LazyUiAutoComplete: LazyComponent<typeof import("../../components/ui/UiAutoComplete.vue")['default']>
+  LazyUiConfirmDialog: LazyComponent<typeof import("../../components/ui/UiConfirmDialog.vue")['default']>
   LazyUiSectionHeader: LazyComponent<typeof import("../../components/ui/UiSectionHeader.vue")['default']>
+  LazyUiStudentAvatar: LazyComponent<typeof import("../../components/ui/UiStudentAvatar.vue")['default']>
   LazyUiTableView: LazyComponent<typeof import("../../components/ui/UiTableView.vue")['default']>
   LazyNuxtWelcome: LazyComponent<typeof import("../../node_modules/.pnpm/nuxt@3.21.9_@types+node@20.14.12_@vue+compiler-sfc@3.5.42_cac@6.7.14_db0@0.3.4_esbuild@_192ef103f6339b99b537d08ff3dd7d3c/node_modules/nuxt/dist/app/components/welcome.vue")['default']>
   LazyNuxtLayout: LazyComponent<typeof import("../../node_modules/.pnpm/nuxt@3.21.9_@types+node@20.14.12_@vue+compiler-sfc@3.5.42_cac@6.7.14_db0@0.3.4_esbuild@_192ef103f6339b99b537d08ff3dd7d3c/node_modules/nuxt/dist/app/components/nuxt-layout")['default']>

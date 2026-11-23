@@ -107,6 +107,7 @@ const copySessionCode = async (code: string) => {
   }
   snackbar.value = true
 }
+useSeoMeta({ title: 'Student detail', description: 'View student details and learning sessions.' })
 </script>
 
 <template>
@@ -127,15 +128,7 @@ const copySessionCode = async (code: string) => {
       />
 
       <div class="d-flex align-center gap-3">
-        <VAvatar
-          size="34"
-          color="#F0EFF0"
-          class="student-avatar"
-        >
-          <span class="text-body-1 font-weight-regular text-high-emphasis">
-            {{ student.initials.slice(0, 2) }}
-          </span>
-        </VAvatar>
+        <UiStudentAvatar>{{ student.initials.slice(0, 2) }}</UiStudentAvatar>
 
         <div class="d-flex flex-column">
           <h1 class="student-name text-h6 font-weight-medium mb-0">
@@ -696,10 +689,6 @@ const copySessionCode = async (code: string) => {
 .back-btn {
   border-color: rgba(var(--v-theme-on-surface), 0.12) !important;
   border-radius: 6px;
-}
-
-.student-avatar {
-  border-radius: 500px;
 }
 
 .student-name {

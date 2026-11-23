@@ -169,6 +169,7 @@ const handleViewDetail = (item: CourseItem) => {
   selectedCourse.value = item
   showDetailDialog.value = true
 }
+useSeoMeta({ title: 'Courses', description: 'Manage courses and subjects.' })
 </script>
 
 <template>

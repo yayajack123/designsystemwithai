@@ -3,6 +3,7 @@ definePageMeta({
   middleware: ['auth'],
   sidebarRoute: 'account-settings',
 })
+useSeoMeta({ title: 'Profile', description: 'Manage your profile and account settings.' })
 </script>
 
 <template>

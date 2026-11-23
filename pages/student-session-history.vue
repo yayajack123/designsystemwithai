@@ -50,6 +50,7 @@ const chapterProgress = (chapter: NonNullable<typeof history.value>['chapters'][
   ? Math.round(chapter.lessons.reduce((sum, item) => sum + item.progress, 0) / chapter.lessons.length) : 0
 const progressLabel = (value: number) => value >= 100 ? 'Done' : value > 0 ? 'In progress' : 'Not started'
 const formatDateTime = (value: string) => `${formatMeetingDate(value)}, ${formatMeetingTime(value)} WIB`
+useSeoMeta({ title: 'Student learning progress', description: 'View student session history and learning progress.' })
 </script>
 
 <template>
