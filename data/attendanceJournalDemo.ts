@@ -14,6 +14,7 @@ export interface AttendanceJournalStudent {
   bookStatus: 'Completed' | 'Idle' | 'Incomplete'
   books?: AttendanceJournalBook[]
   hasLaptop: boolean
+  rentals?: ('Laptop' | 'Mouse' | 'Rent IoT' | 'Keyboard')[]
   presence: 'On time' | 'Late 5 minutes' | 'Absent'
   notes: string
   studentType: 'My Student' | 'Replacement'
@@ -28,8 +29,9 @@ export const attendanceJournalStudents: AttendanceJournalStudent[] = [
   {
     id: 's1', studentId: 's1', name: 'I Wayan Sahadewa Putra', sessionText: 'Session 1',
     bookTitle: 'Python Game Dev', bookStatus: 'Completed', hasLaptop: true, presence: 'On time',
+    rentals: ['Laptop', 'Mouse', 'Rent IoT', 'Keyboard'],
     books: [{ title: 'Python Game Dev', status: 'Completed' }, { title: 'Scratch Basic', status: 'Completed' }],
-    notes: 'Memahami dasar sprite dan mulai membuat animasi sederhana.', studentType: 'My Student',
+    notes: 'Memahami dasar sprite dan mulai membuat animasi sederhana. Masih perlu latihan mengatur perpindahan karakter agar gerakannya lebih halus. Pertemuan berikutnya akan melanjutkan latihan collision dan penambahan skor.', studentType: 'My Student',
     status: 'Sent', actionText: 'View', actionIcon: 'ri-eye-line',
   },
   {
@@ -42,7 +44,7 @@ export const attendanceJournalStudents: AttendanceJournalStudent[] = [
   {
     id: 's3', studentId: 's3', name: 'Winston Arya Liaudo', sessionText: 'Session 1',
     bookTitle: 'Web Developer', bookStatus: 'Completed', hasLaptop: true, presence: 'On time',
-    notes: 'Berlatih menyusun struktur halaman dengan HTML.', studentType: 'My Student',
+    notes: '', studentType: 'My Student',
     status: '-', actionText: 'Create Journal', actionIcon: 'ri-add-line',
   },
   {
@@ -55,13 +57,13 @@ export const attendanceJournalStudents: AttendanceJournalStudent[] = [
     id: 's9', studentId: 's9', name: 'Techia Esploriani', sessionText: 'Session 1',
     bookTitle: 'Python Game Dev', bookStatus: 'Completed', hasLaptop: true, presence: 'On time',
     books: [{ title: 'Python Game Dev', status: 'Completed' }, { title: 'Web Developer', status: 'Completed' }],
-    notes: 'Mengerjakan tantangan logika dengan mandiri.', studentType: 'My Student',
+    notes: 'Menyelesaikan tantangan logika secara mandiri dan berhasil menemukan kesalahan pada perulangan. Perlu latihan tambahan untuk memecah persoalan menjadi fungsi kecil sebelum mulai menulis kode.', studentType: 'My Student',
     status: 'Draft', actionText: 'Edit', actionIcon: 'ri-edit-line',
   },
   {
     id: 's10', studentId: 's10', name: 'Made Arya', sessionText: 'Session 1',
     bookTitle: 'Web Developer', bookStatus: 'Completed', hasLaptop: true, presence: 'On time',
-    notes: 'Berlatih menyusun halaman web.', studentType: 'My Student',
+    notes: '', studentType: 'My Student',
     status: 'Sent', actionText: 'View', actionIcon: 'ri-eye-line',
   },
   {
@@ -77,15 +79,15 @@ export const attendanceJournalStudents: AttendanceJournalStudent[] = [
     status: 'Revision', actionText: 'Edit', actionIcon: 'ri-edit-line',
   },
   ...[
-    { id: 's15', name: 'Komang Aditya', status: 'Sending' as const },
-    { id: 's16', name: 'Ni Luh Sari', status: 'Failed' as const },
-    { id: 's17', name: 'Gede Pratama', status: 'Sent' as const },
-    { id: 's18', name: 'Ayu Puspita', status: 'Sent (Manual)' as const },
-    { id: 's19', name: 'Made Wijaya', status: 'Failed' as const },
+    { id: 's15', name: 'Komang Aditya', status: 'Sending' as const, notes: 'Sudah memahami penggunaan CSS Grid.' },
+    { id: 's16', name: 'Ni Luh Sari', status: 'Failed' as const, notes: 'Berhasil membuat form kontak dengan validasi sederhana. Masih membutuhkan pendampingan saat menghubungkan label dengan input dan menampilkan pesan kesalahan yang sesuai.' },
+    { id: 's17', name: 'Gede Pratama', status: 'Sent' as const, notes: '' },
+    { id: 's18', name: 'Ayu Puspita', status: 'Sent (Manual)' as const, notes: 'Aktif berdiskusi dan membantu teman mengatur layout.' },
+    { id: 's19', name: 'Made Wijaya', status: 'Failed' as const, notes: 'Merapikan navigasi halaman dan memperbaiki tautan yang belum sesuai.\nLatihan berikutnya: menyesuaikan layout untuk layar ponsel dan menguji navigasi dengan keyboard.' },
   ].map(student => ({
     ...student, studentId: student.id, sessionText: 'Session 1', bookTitle: 'Web Developer',
     bookStatus: 'Completed' as const, hasLaptop: true, presence: 'On time' as const,
-    notes: 'Mengerjakan latihan pengembangan web.', studentType: 'My Student' as const,
+    studentType: 'My Student' as const,
     actionText: 'View', actionIcon: 'ri-eye-line',
   })),
 ]
@@ -146,6 +148,7 @@ const makeJournalRecord = (student: AttendanceJournalStudent, status: 'Draft' | 
     },
     parentPhone: '6280000000000',
     sendCount: status === 'Sent' ? 1 : 0,
+    deliveryStatusUpdatedAt: sentAt,
   }
 }
 
@@ -153,12 +156,13 @@ export const attendanceJournalSeedRecords: DailyJournalDemo[] = [
   makeJournalRecord(attendanceJournalStudents[0], 'Sent'),
   makeJournalRecord(attendanceJournalStudents[1], 'Draft'),
   makeJournalRecord(attendanceJournalStudents[4], 'Draft'),
-  { ...makeJournalRecord(attendanceJournalStudents[5], 'Sent'), journalStage: 'Sent', deliveryStatus: 'Delivered' },
-  { ...makeJournalRecord(attendanceJournalStudents[6], 'Sent'), journalStage: 'Revised & Sent', deliveryStatus: 'Read', sendCount: 2 },
+  { ...makeJournalRecord(attendanceJournalStudents[5], 'Sent'), journalStage: 'Sent', deliveryStatus: 'Delivered', deliveryStatusUpdatedAt: '2026-10-26T09:31:00+08:00' },
+  { ...makeJournalRecord(attendanceJournalStudents[6], 'Sent'), journalStage: 'Revised & Sent', deliveryStatus: 'Read', deliveryStatusUpdatedAt: '2026-10-26T09:35:00+08:00', sendCount: 2 },
   { ...makeJournalRecord(attendanceJournalStudents[7], 'Draft'), journalStage: 'Revision', deliveryStatus: null, sendCount: 1 },
   ...attendanceJournalStudents.slice(8).map((student, index): DailyJournalDemo => {
     const isSent = index === 2 || index === 3
     const record = makeJournalRecord(student, isSent ? 'Sent' : 'Draft')
+    record.deliveryStatusUpdatedAt = '2026-10-26T09:30:00+08:00'
     if (index === 0) return { ...record, journal: { ...record.journal, status: 'Sending' }, journalStage: 'Created', deliveryStatus: 'Sending' }
     if (index === 1) return { ...record, journal: { ...record.journal, status: 'Failed' }, journalStage: 'Created', deliveryStatus: 'Failed' }
     if (index === 2) return { ...record, journalStage: 'Sent', deliveryStatus: 'Sent' }

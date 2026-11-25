@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onBeforeUnmount, type ObjectDirective } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { avatarText } from '@core/utils/formatters'
 import UiSectionHeader from '@/components/ui/UiSectionHeader.vue'
 import UiTableView from '@/components/ui/UiTableView.vue'
+import UiConfirmDialog from '@/components/ui/UiConfirmDialog.vue'
 import PresenceDialog from '@/components/dialogs/PresenceDialog.vue'
 import { findStudentByName } from '@/data/students'
-import { attendanceJournalId, attendanceJournalStudents, type AttendanceJournalStudent } from '@/data/attendanceJournalDemo'
+import { attendanceJournalId, attendanceJournalStudents, attendanceJournalSeedRecords, type AttendanceJournalStudent } from '@/data/attendanceJournalDemo'
 import { DEMO_SEND_LIMIT, getDeliveryStatus, getJournalStage, journalPublicPath, useDailyJournalDemo, type DeliveryStatus } from '@/composables/useDailyJournalDemo'
 
 definePageMeta({
@@ -142,6 +143,90 @@ watch(classSession, (newVal) => {
 
 // ─────────────────────── Filter & Search ───────────────────────
 const searchQuery = ref('')
+const openNotes = ref<Record<string, boolean>>({})
+const openRentals = ref<Record<string, boolean>>({})
+const openDelivery = ref<Record<string, boolean>>({})
+const overflowingNotes = ref<Record<string, boolean>>({})
+const notePreviews = ref<Record<string, string>>({})
+const noteObservers = new Map<HTMLElement, ResizeObserver>()
+type NoteMeasurement = { id: string, text: string }
+const noteMeasurements = new WeakMap<HTMLElement, NoteMeasurement>()
+const measureNote = (element: HTMLElement) => {
+  const note = noteMeasurements.get(element)
+  if (!note || !element.clientWidth) return
+  const style = getComputedStyle(element)
+  const probe = document.createElement('div')
+  Object.assign(probe.style, {
+    position: 'fixed', visibility: 'hidden', pointerEvents: 'none',
+    width: `${element.clientWidth}px`, font: style.font, lineHeight: style.lineHeight,
+    letterSpacing: style.letterSpacing, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere',
+  })
+  probe.setAttribute('aria-hidden', 'true')
+  document.body.append(probe)
+  const limit = parseFloat(style.lineHeight) * 2 + 1
+  const fits = (text: string, showMore = false) => {
+    probe.textContent = text
+    if (showMore) {
+      const action = document.createElement('span')
+      action.style.whiteSpace = 'nowrap'
+      action.textContent = 'Show more'
+      probe.append(action)
+    }
+    return probe.getBoundingClientRect().height <= limit
+  }
+  const text = note.text.trim() ? `Notes: ${note.text}` : 'Belum ada catatan'
+  const overflow = !fits(text)
+  let preview = text
+  if (overflow) {
+    const characters = Array.from(text)
+    let low = 0
+    let high = characters.length
+    while (low < high) {
+      const middle = Math.ceil((low + high) / 2)
+      if (fits(`${characters.slice(0, middle).join('').trimEnd()}… `, true)) low = middle
+      else high = middle - 1
+    }
+    preview = `${characters.slice(0, low).join('').trimEnd()}…`
+  }
+  probe.remove()
+  overflowingNotes.value[note.id] = overflow
+  notePreviews.value[note.id] = preview
+}
+const vNoteOverflow: ObjectDirective<HTMLElement, NoteMeasurement> = {
+  mounted(element, binding) {
+    noteMeasurements.set(element, binding.value)
+    const measure = () => measureNote(element)
+    const observer = new ResizeObserver(measure)
+    noteObservers.set(element, observer)
+    observer.observe(element)
+    document.fonts.ready.then(() => { if (element.isConnected) measure() })
+  },
+  updated(element, binding) {
+    const previous = noteMeasurements.get(element)
+    noteMeasurements.set(element, binding.value)
+    if (previous?.id !== binding.value.id || previous?.text !== binding.value.text) measureNote(element)
+  },
+  beforeUnmount(element) {
+    noteObservers.get(element)?.disconnect()
+    noteObservers.delete(element)
+  },
+}
+onBeforeUnmount(() => noteObservers.forEach(observer => observer.disconnect()))
+const studentToRemove = ref<StudentDetail | null>(null)
+const removeDialogOpen = ref(false)
+const requestRemove = (student: StudentDetail) => {
+  studentToRemove.value = student
+  removeDialogOpen.value = true
+}
+const removeStudent = () => {
+  const student = studentToRemove.value
+  if (!student) return
+  studentsList.value = studentsList.value.filter(item => item.id !== student.id)
+  removeDialogOpen.value = false
+  studentToRemove.value = null
+  showToast(`${student.name} removed from this session.`)
+}
+watch(classId, () => { removeDialogOpen.value = false; studentToRemove.value = null })
 const filteredStudents = computed(() => {
   return studentsList.value.filter(s => {
     const query = searchQuery.value.toLowerCase().trim()
@@ -162,12 +247,11 @@ const teacherHeaders = computed(() => [
 
 const headers = computed(() => [
   { title: 'STUDENT NAME', key: 'studentName', sortable: true, minWidth: '260px' },
-  { title: 'BOOK', key: 'book', sortable: true, minWidth: '180px' },
-  { title: 'ADDONS', key: 'addons', sortable: true, align: 'center' as const, width: '90px' },
-  { title: 'PRESENCE', key: 'presence', sortable: true, minWidth: '140px' },
-  { title: 'NOTES', key: 'notes', sortable: false, minWidth: '200px' },
+  { title: 'BOOK & ADD ONS', key: 'book', sortable: true, minWidth: '240px' },
+  { title: 'PRESENCE', key: 'presence', sortable: true, minWidth: '280px', width: '300px' },
   { title: 'STATUS', key: 'status', sortable: true, minWidth: '130px' },
-  { title: 'MEETING JOURNAL', key: 'action', sortable: false, width: '180px' }
+  { title: 'MEETING JOURNAL', key: 'action', sortable: false, width: '180px' },
+  { title: 'ACTION', key: 'actions', sortable: false, width: '90px' },
 ])
 
 // ─────────────────────── Helpers ───────────────────────
@@ -180,6 +264,11 @@ const getBookBadgeColor = (status: 'Completed' | 'Idle' | 'Incomplete') => {
 const getStudentBooks = (item: StudentDetail) => item.books?.length
   ? item.books
   : [{ title: item.bookTitle, status: item.bookStatus }]
+
+const getStudentRentals = (item: StudentDetail) => item.rentals ?? (item.hasLaptop ? ['Laptop'] : [])
+const rentalIcons: Record<string, string> = {
+  Laptop: 'ri-macbook-line', Mouse: 'ri-mouse-line', 'Rent IoT': 'ri-cpu-line', Keyboard: 'ri-keyboard-line',
+}
 
 const getPresenceCircleColor = (presence: 'On time' | 'Late 5 minutes' | 'Absent') => {
   if (presence === 'On time') return 'primary'
@@ -221,6 +310,20 @@ const deliveryForStudent = (item: StudentDetail): DeliveryStatus | null => {
   if (record) return getDeliveryStatus(record)
   if (item.status === 'Sent (Manual)') return 'Marked as Sent'
   return item.status === 'Sending' || item.status === 'Sent' || item.status === 'Failed' ? item.status : null
+}
+const deliveryTooltip = (item: StudentDetail) => {
+  const status = deliveryForStudent(item)
+  if (!status) return ''
+  const record = demoRecord(item)
+  const timestamp = record?.deliveryStatusUpdatedAt
+    ?? (status === 'Sent' || status === 'Marked as Sent' ? record?.journal.sentAt : undefined)
+  // Legacy demo records use fixture times until delivery events supply their own timestamps.
+  const seed = attendanceJournalSeedRecords.find(seed => seed.id === attendanceJournalId(classId.value, item.id) && getDeliveryStatus(seed) === status)
+  const fixtureTime = seed?.deliveryStatusUpdatedAt ?? '2026-10-26T09:30:00+08:00'
+  const date = new Date(timestamp || fixtureTime)
+  const validDate = Number.isNaN(date.getTime()) ? new Date(fixtureTime) : date
+  const time = `${new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Makassar', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }).format(validDate)} WITA (Asia/Makassar)`
+  return `${deliveryDetails[status].text}\n${time}`
 }
 
 // ─────────────────────── Interactive Actions ───────────────────────
@@ -312,6 +415,11 @@ const handlePresenceSubmit = (payload: { students: any[], isStartClass: boolean 
       return {
         ...student,
         hasLaptop: updated.hasLaptop,
+        ...(student.rentals ? {
+          rentals: updated.hasLaptop
+            ? ['Laptop' as const, ...student.rentals.filter(rental => rental !== 'Laptop')]
+            : student.rentals.filter(rental => rental !== 'Laptop'),
+        } : {}),
         presence: updated.isPresent ? 'On time' : 'Absent',
       }
     }
@@ -442,11 +550,35 @@ useSeoMeta({ title: 'Attendance detail', description: 'View class attendance det
       </template>
 
       <template #item.book="{ item }">
-        <div class="d-flex flex-column py-2 gap-1 align-start">
+        <div class="d-flex flex-column py-4 gap-1 align-start">
           <span class="text-body-2 text-high-emphasis leading-normal">{{ getStudentBooks(item)[0].title }}</span>
-          <VChip :color="getBookBadgeColor(getStudentBooks(item)[0].status)" variant="tonal" size="small" class="font-weight-medium text-caption">
-            {{ getStudentBooks(item)[0].status }}
-          </VChip>
+          <div class="d-flex flex-wrap align-center gap-2">
+            <VChip :color="getBookBadgeColor(getStudentBooks(item)[0].status)" variant="tonal" size="small" class="font-weight-medium text-caption">
+              {{ getStudentBooks(item)[0].status }}
+            </VChip>
+            <VChip v-for="rental in getStudentRentals(item).slice(0, 2)" :key="rental" color="primary" variant="outlined" size="small" class="text-caption">
+              <VIcon :icon="rentalIcons[rental]" size="14" class="me-1" aria-hidden="true" />
+              {{ rental }}
+            </VChip>
+            <VTooltip
+              v-if="getStudentRentals(item).length > 2"
+              v-model="openRentals[item.id]"
+              :text="getStudentRentals(item).join('\n')"
+              location="top"
+              max-width="320"
+              content-class="attendance-notes-tooltip"
+              open-on-hover open-on-focus open-on-click :transition="false"
+              @click:outside="openRentals[item.id] = false"
+            >
+              <template #activator="{ props }">
+                <VBtn v-bind="props" variant="text" color="primary" size="small" class="px-1 text-none"
+                  :aria-label="`All rentals for ${item.name}`"
+                  @keydown.esc.stop="openRentals[item.id] = false">
+                  +{{ getStudentRentals(item).length - 2 }} more
+                </VBtn>
+              </template>
+            </VTooltip>
+          </div>
           <VBtn
             v-if="item.books && item.books.length > 1"
             variant="text"
@@ -470,27 +602,45 @@ useSeoMeta({ title: 'Attendance detail', description: 'View class attendance det
         </div>
       </template>
 
-      <template #item.addons="{ item }">
-        <div class="d-flex align-center justify-center">
-          <VAvatar v-if="item.hasLaptop" size="24" color="rgba(var(--v-theme-primary), 0.12)" class="rounded-circle text-primary border-none" aria-label="Laptop" title="Laptop">
-            <VIcon icon="ri-macbook-line" size="14" />
-          </VAvatar>
-          <VIcon v-else icon="ri-subtract-line" color="disabled" size="16" />
-        </div>
-      </template>
-
       <template #item.presence="{ item }">
-        <div class="d-flex align-center gap-2">
-          <VAvatar :color="getPresenceCircleColor(item.presence)" size="20" class="rounded-circle text-white">
-            <VIcon :icon="getPresenceIcon(item.presence)" size="12" />
-          </VAvatar>
-          <span class="text-body-2 text-high-emphasis">{{ item.presence }}</span>
-        </div>
-      </template>
-
-      <template #item.notes="{ item }">
-        <div class="text-body-2 text-medium-emphasis text-wrap py-2 journal-note-cell">
-          {{ item.notes }}
+        <div class="d-flex flex-column gap-2 py-4">
+          <div class="d-flex align-center gap-2">
+            <VAvatar :color="getPresenceCircleColor(item.presence)" size="20" class="rounded-circle text-white">
+              <VIcon :icon="getPresenceIcon(item.presence)" size="12" />
+            </VAvatar>
+            <span class="text-body-2 text-high-emphasis">{{ item.presence }}</span>
+          </div>
+          <div class="attendance-note-preview rounded pa-2 d-flex align-start gap-2">
+            <VIcon icon="ri-sticky-note-line" size="14" class="mt-1 text-medium-emphasis" aria-hidden="true" />
+            <div class="attendance-note-content">
+              <div v-note-overflow="{ id: item.id, text: item.notes }" class="attendance-note-text text-body-2 text-medium-emphasis">
+                <span>{{ notePreviews[item.id] ?? (item.notes.trim() ? `Notes: ${item.notes}` : 'Belum ada catatan') }}{{ overflowingNotes[item.id] ? ' ' : '' }}</span>
+                <VTooltip
+                  v-if="overflowingNotes[item.id]"
+                  v-model="openNotes[item.id]"
+                  :text="item.notes"
+                  location="top"
+                  max-width="320"
+                  content-class="attendance-notes-tooltip"
+                  open-on-hover
+                  open-on-focus
+                  open-on-click
+                  :transition="false"
+                  @click:outside="openNotes[item.id] = false"
+                >
+                  <template #activator="{ props }">
+                    <button
+                      v-bind="props"
+                      type="button"
+                      class="attendance-show-more text-primary text-decoration-underline"
+                      :aria-label="`Show more notes for ${item.name}`"
+                      @keydown.esc.stop="openNotes[item.id] = false"
+                    >Show more</button>
+                  </template>
+                </VTooltip>
+              </div>
+            </div>
+          </div>
         </div>
       </template>
 
@@ -501,13 +651,16 @@ useSeoMeta({ title: 'Attendance detail', description: 'View class attendance det
               {{ getJournalStatus(item) }}
             </VChip>
           </div>
-          <VTooltip v-if="deliveryForStudent(item)" :text="deliveryDetails[deliveryForStudent(item)!].text" location="top">
+          <VTooltip v-if="deliveryForStudent(item)" v-model="openDelivery[item.id]" :text="deliveryTooltip(item)" location="top"
+            max-width="360" content-class="attendance-notes-tooltip" open-on-hover open-on-focus open-on-click :transition="false"
+            @click:outside="openDelivery[item.id] = false">
             <template #activator="{ props }">
-              <span v-bind="props" tabindex="0" role="img" :aria-label="deliveryDetails[deliveryForStudent(item)!].text">
+              <VBtn v-bind="props" variant="text" size="small" icon :aria-label="deliveryTooltip(item)"
+                @keydown.esc.stop="openDelivery[item.id] = false">
                 <VAvatar :color="deliveryDetails[deliveryForStudent(item)!].color" size="24" class="text-white">
                   <VIcon :icon="deliveryDetails[deliveryForStudent(item)!].icon" size="15" />
                 </VAvatar>
-              </span>
+              </VBtn>
             </template>
           </VTooltip>
         </div>
@@ -571,7 +724,26 @@ useSeoMeta({ title: 'Attendance detail', description: 'View class attendance det
           </template>
         </div>
       </template>
+      <template #item.actions="{ item }">
+        <VBtn icon="ri-delete-bin-line" variant="outlined" color="error" size="small" class="table-action-button"
+          :aria-label="`Remove ${item.name} from this session`" @click="requestRemove(item)" />
+      </template>
     </UiTableView>
+
+    <UiConfirmDialog v-model="removeDialogOpen" title="Remove student?" aria-label="Remove student?">
+      Remove {{ studentToRemove?.name }} from this attendance session? Student and journal data will remain available.
+      <template #actions>
+        <VBtn
+          color="secondary"
+          variant="outlined"
+          rounded="xl"
+          class="px-6"
+          style="border-color: rgba(var(--v-theme-on-surface), 0.12) !important;"
+          @click="removeDialogOpen = false"
+        >Back</VBtn>
+        <VBtn color="error" rounded="xl" class="px-6" @click="removeStudent">Remove</VBtn>
+      </template>
+    </UiConfirmDialog>
 
     <VDialog v-model="isBooksDialogOpen" max-width="480">
       <VCard v-if="selectedBooksStudent" :title="`All books · ${selectedBooksStudent.name}`">
@@ -619,6 +791,35 @@ useSeoMeta({ title: 'Attendance detail', description: 'View class attendance det
 }
 
 .attendance-detail-page {
+  .attendance-note-preview {
+    background: rgba(var(--v-theme-on-surface), 0.04);
+    width: 260px;
+    max-width: 100%;
+  }
+  .attendance-note-content { min-width: 0; flex: 1; }
+  .attendance-note-text {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
+  .attendance-show-more {
+    display: inline;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    letter-spacing: inherit;
+    white-space: nowrap;
+    cursor: pointer;
+    &:focus-visible {
+      outline: 2px solid rgb(var(--v-theme-primary));
+      outline-offset: 2px;
+      border-radius: 2px;
+    }
+  }
   .gap-2 {
     gap: 8px;
   }
@@ -651,13 +852,13 @@ useSeoMeta({ title: 'Attendance detail', description: 'View class attendance det
     }
   }
 
-  .journal-note-cell {
-    max-width: 220px;
-    min-width: 150px;
-    line-height: 1.4;
-    white-space: normal;
-  }
-
   .book-dialog-trigger { text-transform: none; }
+}
+</style>
+
+<style>
+.attendance-notes-tooltip {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 </style>

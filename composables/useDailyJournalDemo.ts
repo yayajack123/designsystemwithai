@@ -21,6 +21,7 @@ export interface DailyJournalDemo {
   sendCount: number
   journalStage?: JournalStage
   deliveryStatus?: DeliveryStatus | null
+  deliveryStatusUpdatedAt?: string
   marketingPageSnapshot?: MarketingPageSnapshot
 }
 
@@ -118,6 +119,7 @@ export const useDailyJournalDemo = () => {
     const revision = getJournalStage(record) === 'Revision' || getJournalStage(record) === 'Sent'
     record.journalStage = manual ? (revision ? 'Revised & Sent' : 'Sent') : (revision ? 'Revision' : 'Created')
     record.deliveryStatus = manual ? 'Marked as Sent' : 'Sending'
+    record.deliveryStatusUpdatedAt = new Date().toISOString()
     if (manual) {
       record.sendCount++
       record.journal.sentAt = new Date().toISOString()
@@ -130,6 +132,7 @@ export const useDailyJournalDemo = () => {
     if (!record || record.journal.status !== 'Sending') return
     record.journal.status = success ? 'Sent' : 'Failed'
     record.deliveryStatus = success ? 'Sent' : 'Failed'
+    record.deliveryStatusUpdatedAt = new Date().toISOString()
     if (success) record.journalStage = record.journalStage === 'Revision' ? 'Revised & Sent' : 'Sent'
     if (success) {
       record.sendCount++
